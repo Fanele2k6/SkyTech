@@ -201,6 +201,8 @@ namespace CM_Project.Controllers
         //    return RedirectToAction("LogIn");
         //}
 
+        //this is the controller
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult ShopOwnerReg(ShopOwnerViewModel model)
