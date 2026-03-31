@@ -19,7 +19,7 @@ namespace CM_Project.Controllers
         private readonly EmailServices _services;// = null;  // ← add this
 
 
-        // ✅ Fix it to include EmailService
+        // ✅ Fix it to include email
         public AuthenticationController(ApplicationDbContext context, EmailServices services)
         {
             db = context;
