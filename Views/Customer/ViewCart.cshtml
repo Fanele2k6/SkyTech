@@ -1,0 +1,243 @@
+﻿@model List<CM_Project.Models.CartItem>
+
+@{
+    Layout = "~/Views/Shared/_MinimalLayout.cshtml";
+}
+
+@section Styles {
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://api.fontshare.com/v2/css?f[]=clash-display@400,500,600,700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="~/CSS/ShoppingPageStyle.css">
+}
+
+<div class="cart-page">
+
+    @* ── Flash messages ── *@
+    @if (TempData["Success"] != null)
+    {
+        <div style="background:rgba(22,163,74,.08);border:1.5px solid rgba(22,163,74,.25);border-radius:10px;padding:.8rem 1rem;font-size:.875rem;font-weight:600;color:#15803d;display:flex;align-items:center;gap:.5rem;margin-bottom:1rem">
+            <i class="fas fa-circle-check"></i> @TempData["Success"]
+        </div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div style="background:rgba(220,38,38,.08);border:1.5px solid rgba(220,38,38,.25);border-radius:10px;padding:.8rem 1rem;font-size:.875rem;font-weight:600;color:#b91c1c;display:flex;align-items:center;gap:.5rem;margin-bottom:1rem">
+            <i class="fas fa-circle-exclamation"></i> @TempData["Error"]
+        </div>
+    }
+
+    @if (Model == null || !Model.Any())
+    {
+        <!-- ══ EMPTY STATE ══ -->
+        <div class="cart-topbar">
+            <div class="cart-logo">LOKAL</div>
+            <a href="@Url.Action("ShoppingPage", "Customer")" class="back-link">
+                <i class="fas fa-arrow-left"></i>
+                <span>Continue Shopping</span>
+            </a>
+        </div>
+
+        <div class="cart-empty">
+            <i class="fas fa-bag-shopping"></i>
+            <h2>Your cart is empty</h2>
+            <p>Browse our products and add something you like.</p>
+            <a href="@Url.Action("ShoppingPage", "Customer")" class="btn-shop">
+                <i class="fas fa-arrow-left"></i> Browse Products
+            </a>
+        </div>
+    }
+    else
+    {
+        @* ── Calculate totals ── *@
+        double subtotal = 0;
+        const double delivery = 50;
+        double discount = 0;
+
+        <!-- ══ TOP BAR ══ -->
+        <div class="cart-topbar">
+            <div class="cart-logo">LOKAL</div>
+            <a href="@Url.Action("ShoppingPage", "Customer")" class="back-link">
+                <i class="fas fa-arrow-left"></i>
+                <span>Continue Shopping</span>
+            </a>
+        </div>
+
+        <!-- Section label -->
+        <div class="cart-section-label">
+            <div class="cart-section-icon"><i class="fas fa-bag-shopping"></i></div>
+            <span class="cart-section-title">
+                Your Cart
+                <span class="cart-section-count">
+                    (@Model.Count item@(Model.Count != 1 ? "s" : ""))
+                </span>
+            </span>
+        </div>
+
+        <div class="cart-layout">
+
+            <!-- ══ LEFT: item list ══ -->
+            <div>
+                @foreach (var item in Model)
+                {
+                    subtotal += item.SubTotal;
+
+                    <div class="cart-card">
+                        <div class="cart-inner">
+
+                            <!-- Image — fully null safe -->
+                            <div class="c-img">
+                                @if (item.Products?.ProductPictures != null && item.Products.ProductPictures.Any())
+                                {
+                                    var pic = item.Products.ProductPictures.First();
+                                    if (pic?.FileData != null)
+                                    {
+                                        <img src="data:@pic.FileType;base64,@Convert.ToBase64String(pic.FileData)"
+                                             alt="@(item.Products?.ProdName ?? item.ProdName)" />
+                                    }
+                                    else
+                                    {
+                                        <i class="fas fa-image"></i>
+                                    }
+                                }
+                                else
+                                {
+                                    <i class="fas fa-image"></i>
+                                }
+                            </div>
+
+                            <!-- Info — uses ProdName fallback if Products is null -->
+                            <div class="c-info">
+                                <div class="c-name">@(item.Products?.ProdName ?? item.ProdName)</div>
+                                <div class="c-shop">LOKAL Store</div>
+                                <div class="c-price">R @item.PriceAtTimeAdded.ToString("N2")</div>
+                            </div>
+
+                            <!-- Actions -->
+                            <div class="c-actions">
+                                @using (Html.BeginForm("UpdateCart", "Customer", FormMethod.Post))
+                                {
+                                    @Html.AntiForgeryToken()
+                                    @Html.Hidden("id", item.CartItemId)
+                                    <div class="qty-form">
+                                        <input type="number" name="quantity"
+                                               value="@item.ProdQuantity" min="1" />
+                                        <button type="submit" class="qty-update">
+                                            <i class="fas fa-sync-alt"></i>
+                                            <span class="hide-xs">Update</span>
+                                        </button>
+                                    </div>
+                                }
+
+                                @using (Html.BeginForm("RemoveFromCart", "Customer", FormMethod.Post))
+                                {
+                                    @Html.AntiForgeryToken()
+                                    @Html.Hidden("id", item.CartItemId)
+                                    <button type="submit" class="rm-btn">
+                                        <i class="fas fa-trash-alt"></i>
+                                        <span class="hide-xs">Remove</span>
+                                    </button>
+                                }
+                            </div>
+
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <!-- ══ RIGHT: summary + pay ══ -->
+            @{
+                double preTax = subtotal + delivery;
+                if (preTax > 500) { discount = Math.Round(preTax * 0.10, 2); }
+                double grandTotal = preTax - discount;
+            }
+
+            <div class="summary-card">
+                <h3>
+                    <i class="fas fa-receipt" style="color:var(--blue);margin-right:.4rem"></i>
+                    Order Summary
+                </h3>
+
+                @* Per-item rows — null safe *@
+                @foreach (var item in Model)
+                {
+                    <div class="sum-row">
+                        <span class="sr-label">
+                            @(item.Products?.ProdName ?? item.ProdName)
+                            <span style="color:var(--text-muted)"> ×@item.ProdQuantity</span>
+                        </span>
+                        <span class="sr-amount">R @item.SubTotal.ToString("N2")</span>
+                    </div>
+                }
+
+                <div class="sum-row">
+                    <span class="sr-label">
+                        <i class="fas fa-truck" style="color:var(--blue);margin-right:.3rem"></i>
+                        Delivery
+                    </span>
+                    <span class="sr-amount">R @delivery.ToString("N2")</span>
+                </div>
+
+                @if (discount > 0)
+                {
+                    <div class="sum-row discount">
+                        <span class="sr-label">
+                            Discount
+                            <span class="discount-pill">10% off</span>
+                        </span>
+                        <span class="sr-amount">− R @discount.ToString("N2")</span>
+                    </div>
+                }
+
+                <div class="sum-row total-row">
+                    <span class="sr-label">Total Due</span>
+                    <span class="sr-amount">R @grandTotal.ToString("N2")</span>
+                </div>
+
+                @* ── Checkout form ── *@
+                @using (Html.BeginForm("Checkout", "Customer", FormMethod.Post))
+                {
+                    @Html.AntiForgeryToken()
+                    @Html.Hidden("Amount", grandTotal)
+                    @Html.Hidden("ProductName", "LOKAL Order")
+
+                    <div class="addr-field">
+                        <label>
+                            <i class="fas fa-location-dot"></i> Delivery Address
+                        </label>
+                        <input type="text"
+                               name="deliveryAddress"
+                               value="@(ViewBag.Address ?? "")"
+                               placeholder="e.g. 15 Main Road, Durban"
+                               required />
+                    </div>
+
+                    <button type="submit" class="pay-btn">
+                        <i class="fas fa-lock"></i>
+                        Pay R @grandTotal.ToString("N2") Securely
+                    </button>
+                }
+
+                <div class="secure-note">
+                    <i class="fas fa-shield-halved" style="color:var(--blue)"></i>
+                    256-bit SSL · Secured by PayStack
+                </div>
+                <div class="ps-strip">
+                    <i class="fas fa-credit-card" style="color:var(--blue)"></i>
+                    Visa · Mastercard · Bank Transfer · USSD
+                </div>
+
+                @if (discount > 0)
+                {
+                    <div class="savings-banner">
+                        🎉 You saved R @discount.ToString("N2") on this order!
+                    </div>
+                }
+            </div>
+
+        </div>
+    }
+
+</div>

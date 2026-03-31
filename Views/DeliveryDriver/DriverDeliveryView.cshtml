@@ -1,0 +1,331 @@
+﻿@using CM_Project.Models
+@model CM_Project.Models.Order
+@{
+    ViewBag.Title = "Delivery #" + Model.OrderId;
+    Layout = "~/Views/Shared/_MinimalLayout.cshtml";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://api.fontshare.com/v2/css?f[]=clash-display@400,500,600,700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="~/CSS/DriverStyle.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <style>
+        .leaflet-top, .leaflet-bottom { z-index: 400 }
+        .map-container #map { height: 460px }
+    </style>
+}
+
+<div class="d-wrap">
+
+    <!-- ══ SIDEBAR ══ -->
+    <aside class="d-sidebar">
+        <div class="d-brand">
+            <div class="d-brand-icon"><i class="fas fa-truck-fast"></i></div>
+            <div>
+                <div class="d-brand-name">LOKAL</div>
+                <div class="d-brand-sub">Driver Portal</div>
+            </div>
+        </div>
+        <nav class="d-nav">
+            <div class="d-nav-label">NAVIGATION</div>
+            <a href="@Url.Action("DriverDash","DeliveryDriver")" class="d-link">
+                <i class="fas fa-grid-2"></i><span>Dashboard</span>
+            </a>
+            <a href="@Url.Action("MyDeliveries","DeliveryDriver")" class="d-link active">
+                <i class="fas fa-bag-shopping"></i><span>My Deliveries</span>
+            </a>
+            <div class="d-nav-label" style="margin-top:1rem">ACCOUNT</div>
+            <a href="@Url.Action("DriverProfile","DeliveryDriver")" class="d-link">
+                <i class="fas fa-circle-user"></i><span>Profile</span>
+            </a>
+        </nav>
+        <div class="d-sidebar-foot">
+            <div class="d-foot-avatar"><i class="fas fa-user-tie"></i></div>
+            <div>
+                <div class="d-foot-name">@(ViewBag.DriverName ?? "Driver")</div>
+                <div class="d-foot-role">Delivery Driver</div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- ══ MAIN ══ -->
+    <main class="d-main">
+
+        <div class="d-topbar">
+            <div>
+                <div class="d-page-title">Delivery #@Model.OrderId</div>
+                <div class="d-page-sub">
+                    Status: <span id="order-status" style="font-weight:700;color:var(--blue)">@Model.Status</span>
+                </div>
+            </div>
+            <a href="@Url.Action("MyDeliveries","DeliveryDriver")" class="btn btn-outline">
+                <i class="fas fa-arrow-left"></i> Back
+            </a>
+        </div>
+
+        <!-- Order info card -->
+        <div class="d-card" style="margin-bottom:1.3rem">
+            <div class="d-card-head">
+                <div class="d-card-title">
+                    <i class="fas fa-receipt" style="color:var(--blue);margin-right:.4rem"></i>Order Details
+                </div>
+                @{
+                    string sc = Model.Status == OrderStatus.Pending         ? "badge-pending"
+                              : Model.Status == OrderStatus.Assigned        ? "badge-assigned"
+                              : Model.Status == OrderStatus.OutForDelivery  ? "badge-out"
+                                                                            : "badge-delivered";
+                }
+                <span class="badge @sc">@Model.Status</span>
+            </div>
+
+            <div class="d-card-body">
+                <div class="order-meta-grid">
+
+                    <div class="meta-block">
+                        <div class="mk"><i class="fas fa-location-dot" style="color:var(--blue)"></i> DELIVERY ADDRESS</div>
+                        <div class="mv">@(Model.DeliveryAddress ?? "—")</div>
+                    </div>
+
+                    <div class="meta-block">
+                        <div class="mk"><i class="fas fa-clock" style="color:var(--blue)"></i> ORDERED ON</div>
+                        <div class="mv">@Model.OrderedOn.ToString("dd MMM yyyy · HH:mm")</div>
+                    </div>
+
+                    <div class="meta-block">
+                        <div class="mk"><i class="fas fa-money-bill" style="color:var(--blue)"></i> ORDER TOTAL</div>
+                        <div class="mv" style="font-family:var(--font-display);font-size:1.1rem;font-weight:700;color:var(--blue-deep)">
+                            R @Model.TotalAmount.ToString("N2")
+                        </div>
+                    </div>
+
+                    <div class="meta-block">
+                        <div class="mk"><i class="fas fa-box" style="color:var(--blue)"></i> ITEMS ORDERED</div>
+                        <div class="mv" style="font-family:var(--font-display);font-size:1.1rem;font-weight:700;color:var(--blue-deep)">
+                            @(Model.OrderItems?.Sum(i => i.Quantity) ?? 0) items
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Items table -->
+                <div class="d-card" style="margin-top:1rem">
+                    <div class="d-card-head">
+                        <div class="d-card-title">
+                            <i class="fas fa-box-open" style="color:var(--blue);margin-right:.4rem"></i>
+                            Items in this Order
+                        </div>
+                    </div>
+                    <div class="d-card-body">
+                        <table class="table">
+                            <tbody>
+                                @if (Model.OrderItems != null && Model.OrderItems.Any())
+                                {
+                                    @foreach (var item in Model.OrderItems)
+                                    {
+                                        <tr>
+                                            <td>
+                                                &bull; @(item.Products?.ProdName ?? item.ProdName)
+                                                &nbsp;&nbsp;&bull; @item.Quantity (qty)
+                                                &nbsp;&nbsp;&bull; R @item.PriceAtTimeOfPurchase.ToString("N2")
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                                else
+                                {
+                                    <tr><td style="color:var(--text-muted)">No items found.</td></tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Action buttons -->
+                <div class="delivery-btn-row">
+
+                    @using (Html.BeginForm("StartDelivery", "DeliveryDriver", FormMethod.Post, new { id = "startForm" }))
+                    {
+                        @Html.AntiForgeryToken()
+                        @Html.Hidden("id", Model.OrderId)
+                        @Html.Hidden("driverId", Model.DriverId)
+                        <button type="submit" id="startBtn" class="btn btn-primary">
+                            <i class="fas fa-play"></i> Start Delivery
+                        </button>
+                    }
+
+                    @using (Html.BeginForm("CompleteDelivery", "DeliveryDriver", FormMethod.Post, new { id = "completeForm" }))
+                    {
+                        @Html.AntiForgeryToken()
+                        @Html.Hidden("id", Model.OrderId)
+                        @Html.Hidden("driverId", Model.DriverId)
+                        <button type="submit" id="completeBtn" class="btn btn-success">
+                            <i class="fas fa-circle-check"></i> Mark as Delivered
+                        </button>
+                    }
+
+                </div>
+            </div>
+        </div>
+
+        <!-- Route info bar -->
+        <div class="route-info-bar" id="route-info" style="display:none">
+            <i class="fas fa-route"></i>
+            <span id="route-text"></span>
+        </div>
+
+        <!-- MAP -->
+        <div class="map-container d-card" style="margin-top:.9rem">
+            <div class="d-card-head">
+                <div class="d-card-title">
+                    <i class="fas fa-map-location-dot" style="color:var(--blue);margin-right:.4rem"></i>Route Map
+                </div>
+                <button class="btn btn-outline btn-sm" onclick="loadRoute()">
+                    <i class="fas fa-arrows-rotate"></i> Show Route
+                </button>
+            </div>
+            <div id="map"></div>
+        </div>
+
+    </main>
+</div>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+    // ✅ System.Text.Json.JsonSerializer instead of Json.Encode
+    const customerAddress = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.DeliveryAddress ?? ""));
+    const orderId         = @Model.OrderId;
+    const driverId        = @(Model.DriverId ?? 0);
+
+    // ── Map init ──
+    const map = L.map('map').setView([-29.8587, 31.0218], 13);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    let routeLayer = null, startMarker = null, endMarker = null, liveMarker = null, watchId = null;
+
+    // ── Geocode helper ──
+    async function geocode(address) {
+        const url = 'https://nominatim.openstreetmap.org/search?format=json&countrycodes=za&q=' + encodeURIComponent(address);
+        const arr = await (await fetch(url)).json();
+        return arr?.length ? { lat: parseFloat(arr[0].lat), lon: parseFloat(arr[0].lon), name: arr[0].display_name } : null;
+    }
+
+    // ── OSRM route ──
+    async function getRoute(s, e) {
+        const url = `https://router.project-osrm.org/route/v1/driving/${s.lon},${s.lat};${e.lon},${e.lat}?overview=full&geometries=geojson`;
+        const data = await (await fetch(url)).json();
+        if (data?.code !== 'Ok') throw new Error('No route found');
+        return data.routes[0];
+    }
+
+    // ── Draw route ──
+    async function loadRoute() {
+        const e = await geocode(customerAddress);
+        if (!e) { alert('Could not resolve delivery address.'); return; }
+
+        if (!navigator.geolocation) { alert('Geolocation not supported.'); return; }
+
+        navigator.geolocation.getCurrentPosition(async pos => {
+            const s = { lat: pos.coords.latitude, lon: pos.coords.longitude, name: 'Your Location' };
+            const r = await getRoute(s, e).catch(err => { alert(err.message); return null; });
+            if (!r) return;
+
+            if (routeLayer)  map.removeLayer(routeLayer);
+            if (startMarker) map.removeLayer(startMarker);
+            if (endMarker)   map.removeLayer(endMarker);
+
+            routeLayer  = L.geoJSON(r.geometry, { style: { color: '#5f9ea0', weight: 5, opacity: .85 } }).addTo(map);
+            startMarker = L.marker([s.lat, s.lon]).bindPopup('<b>📍 Your Location</b>').addTo(map).openPopup();
+            endMarker   = L.marker([e.lat, e.lon]).bindPopup('<b>🏠 Delivery</b><br/>' + e.name).addTo(map);
+
+            const coords = r.geometry.coordinates.map(c => [c[1], c[0]]);
+            map.fitBounds(coords, { padding: [40, 40] });
+            showRouteInfo(r.distance, r.duration);
+            startLiveTracking();
+        }, () => alert('Unable to get your location.'));
+    }
+
+    // ── Live GPS tracking ──
+    function startLiveTracking() {
+        if (watchId || !navigator.geolocation) return;
+        watchId = navigator.geolocation.watchPosition(pos => {
+            const lat = pos.coords.latitude, lon = pos.coords.longitude;
+            const icon = L.icon({ iconUrl: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png', iconSize: [32, 32] });
+            if (!liveMarker) liveMarker = L.marker([lat, lon], { icon }).addTo(map).bindPopup('You (Driver)');
+            else liveMarker.setLatLng([lat, lon]);
+        }, err => console.warn('GPS:', err.message), { enableHighAccuracy: true, maximumAge: 2000 });
+    }
+
+    function showRouteInfo(dist, dur) {
+        document.getElementById('route-info').style.display = 'flex';
+        document.getElementById('route-text').textContent =
+            `Distance: ${(dist / 1000).toFixed(2)} km  ·  Est. ${Math.ceil(dur / 60)} min`;
+    }
+
+    // ── START DELIVERY ──
+    $('#startForm').submit(async function (e) {
+        e.preventDefault();
+        if (!navigator.geolocation) { alert('Geolocation not supported.'); return; }
+
+        navigator.geolocation.getCurrentPosition(async pos => {
+            const lat = pos.coords.latitude, lon = pos.coords.longitude;
+            const end = await geocode(customerAddress);
+            if (!end) { alert('Cannot resolve delivery address.'); return; }
+
+            const start = { lat, lon, name: 'Driver Location' };
+            const r = await getRoute(start, end).catch(() => null);
+
+            if (r) {
+                if (routeLayer) map.removeLayer(routeLayer);
+                routeLayer = L.geoJSON(r.geometry, { style: { color: '#16a34a', weight: 5 } }).addTo(map);
+                showRouteInfo(r.distance, r.duration);
+                if (!liveMarker) {
+                    liveMarker = L.marker([lat, lon], {
+                        icon: L.icon({ iconUrl: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png', iconSize: [32, 32] })
+                    }).addTo(map).bindPopup('Driver Start').openPopup();
+                }
+                if (endMarker) map.removeLayer(endMarker);
+                endMarker = L.marker([end.lat, end.lon]).addTo(map).bindPopup('Delivery Address');
+                map.fitBounds(r.geometry.coordinates.map(c => [c[1], c[0]]), { padding: [40, 40] });
+            }
+
+            const token = $('input[name="__RequestVerificationToken"]', '#startForm').val();
+            const res = await fetch('@Url.Action("StartDelivery","DeliveryDriver")', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `id=${orderId}&driverId=${driverId}&__RequestVerificationToken=${encodeURIComponent(token)}`
+            });
+
+            if (res.ok) {
+                $('#order-status').text('OutForDelivery');
+                $('#startBtn').prop('disabled', true);
+                $('#completeBtn').prop('disabled', false);
+            } else {
+                alert('Could not start delivery.');
+            }
+        }, () => alert('Unable to get your location.'));
+    });
+
+    // ── COMPLETE DELIVERY ──
+    $('#completeForm').submit(async function (e) {
+        e.preventDefault();
+        const token = $('input[name="__RequestVerificationToken"]', this).val();
+        const res = await fetch('@Url.Action("CompleteDelivery","DeliveryDriver")', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: `id=${orderId}&driverId=${driverId}&__RequestVerificationToken=${encodeURIComponent(token)}`
+        });
+
+        if (res.ok) {
+            $('#order-status').text('Delivered');
+            $('#completeBtn').prop('disabled', true);
+        } else {
+            alert('Failed to complete delivery.');
+        }
+    });
+</script>
