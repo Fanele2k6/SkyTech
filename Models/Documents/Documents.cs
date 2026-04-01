@@ -19,8 +19,8 @@ namespace CM_Project.Models.Documents
         public int OwnerId { get; set; }
         [ForeignKey("OwnerId")]   // ✅ explicitly tie FK to OwnerId
         public virtual ShopOwner ShopOwner { get; set; }
-
-        public byte[] FileData { get; set; }
+       // public byte[] FileData { get; set; }
+        public string FilePath {get; set;} //path
         public string FileName { get; set; }
         public string FileType { get; set; }
         public DateTime SavedOn { get; set; }
@@ -36,8 +36,8 @@ namespace CM_Project.Models.Documents
         public int OwnerId { get; set; }
         [ForeignKey("OwnerId")]   // ✅ explicitly tie FK to OwnerId
         public virtual ShopOwner ShopOwner { get; set; }
-
-        public byte[] FileData { get; set; }
+       // public byte[] FileData { get; set; }
+        public string FilePath {get; set;} //path
         public string FileName { get; set; }
         public string FileType { get; set; }
         public DateTime SavedOn { get; set; }
@@ -65,8 +65,10 @@ namespace CM_Project.Models.Documents
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int LicenceId { get; set; }
         public int DriverId { get; set; }
+        [ForeignKey("DriverId")] //forcing the compiler to consider this as foreign key NOT as property
         public virtual DeliveryDriver Driver { get; set; }
-        public byte[] FileData { get; set; }
+      //  public byte[] FileData { get; set; } 
+        Public string FilePath {get; set;} //use path instead of bytes saving directlt to the database
         public string FileName { get; set; }
         public string FileType { get; set; }
         public DateTime SavedOn { get; set; }
@@ -78,8 +80,10 @@ namespace CM_Project.Models.Documents
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int DriverIdentityBookId { get; set; }
         public int DriverId { get; set; }
+        [ForeignKey("DriverId")] //forcing the compiler to consider this as foreign key NOT as property
         public virtual DeliveryDriver Driver { get; set; }
-        public byte[] FileData { get; set; }
+       // public byte[] FileData { get; set; }
+        public string FilePath {get; set;} //use path instead of bytes saving directlt to the database
         public string FileName { get; set; }
         public string FileType { get; set; }
         public DateTime SavedOn { get; set; }
