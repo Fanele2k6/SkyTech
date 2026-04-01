@@ -88,14 +88,13 @@
                         <div class="cart-inner">
 
                             <!-- Image — fully null safe -->
-                            <div class="c-img">
+                              <div class="c-img">
                                 @if (item.Products?.ProductPictures != null && item.Products.ProductPictures.Any())
                                 {
                                     var pic = item.Products.ProductPictures.First();
-                                    if (pic?.FileData != null)
+                                    if (pic?.FilePath != null)
                                     {
-                                        <img src="data:@pic.FileType;base64,@Convert.ToBase64String(pic.FileData)"
-                                             alt="@(item.Products?.ProdName ?? item.ProdName)" />
+                                        <img src="@pic.FilePath" alt="@(item.Products?.ProdName ?? item.ProdName)" />
                                     }
                                     else
                                     {
