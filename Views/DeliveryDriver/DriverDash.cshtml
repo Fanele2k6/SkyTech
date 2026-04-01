@@ -3,6 +3,9 @@
 @{
     ViewBag.Title = "Driver Dashboard";
     Layout = "~/Views/Shared/_MinimalLayout.cshtml";
+
+     bool restricted = ViewBag.ApplicationStatus == ApplicationStat.Pending
+                   || ViewBag.ApplicationStatus == ApplicationStat.Rejected;
 }
 
 @section Styles {
@@ -28,7 +31,7 @@
         </div>
         <nav class="d-nav">
             <div class="d-nav-label">NAVIGATION</div>
-            <a href="@Url.Action("DriverDash","DeliveryDriver")" class="d-link active">
+            <a href="@Url.Action("DriverDash", "DeliveryDriver")" class="d-link active")>
                 <i class="fas fa-grid-2"></i><span>Dashboard</span>
             </a>
             <a href="@Url.Action("MyDeliveries","DeliveryDriver")" class="d-link">

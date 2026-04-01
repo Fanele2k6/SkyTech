@@ -13,7 +13,8 @@ namespace CM_Project.Models
         public virtual Cart Carts { get; set; }
 
         public int ProdId { get; set; }
-        public virtual AddProduct Products { get; set; }
+        [ForeignKey("ProdId")]
+        public virtual AddProduct AddProduct { get; set; }
         public string ProdName { get; set; }
         public int ProdQuantity { get; set; }
         public double PriceAtTimeAdded { get; set; }

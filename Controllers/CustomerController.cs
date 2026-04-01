@@ -1,4 +1,5 @@
 ﻿using CM_Project.Models;
+using CM_Project.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -20,7 +21,8 @@ namespace CM_Project.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult ScanProduct(string barcode)
         {
-            int currentId = HttpContext.Session.GetInt32("UserId").Value;
+            // The ! tells the compiler "trust me, this won't be null"
+            int currentId = HttpContext.Session.GetInt32("UserId")!.Value;
 
             DeleteExpiredOrders(currentId);
 
@@ -34,7 +36,8 @@ namespace CM_Project.Controllers
         [HttpGet]
         public IActionResult ShoppingPage(string search, SelectCategory? category)
         {
-            int currentId = HttpContext.Session.GetInt32("UserId").Value;
+            // The ! tells the compiler "trust me, this won't be null"
+            int currentId = HttpContext.Session.GetInt32("UserId")!.Value;
             DeleteExpiredOrders(currentId);
 
             var products = db.AddProducts
@@ -137,7 +140,7 @@ namespace CM_Project.Controllers
             // ✅ ThenInclude loads Products AND ProductPictures
             var cart = db.Carts
                 .Include(c => c.CartItems)
-                    .ThenInclude(ci => ci.Products)
+                    .ThenInclude(ci => ci.AddProduct)
                         .ThenInclude(p => p.ProductPictures)
                 .FirstOrDefault(c => c.CustomerId == currentId && !c.IsCheckedOut);
 
@@ -179,12 +182,13 @@ namespace CM_Project.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult Checkout(string deliveryAddress)
         {
-            int currentId = HttpContext.Session.GetInt32("UserId").Value;
+            // The ! tells the compiler "trust me, this won't be null"
+            int currentId = HttpContext.Session.GetInt32("UserId")!.Value;
 
             // ✅ Load cart with Products included
             var cart = db.Carts
                 .Include(c => c.CartItems)
-                    .ThenInclude(ci => ci.Products)
+                    .ThenInclude(ci => ci.AddProduct)
                 .FirstOrDefault(c => c.CustomerId == currentId && !c.IsCheckedOut);
 
             if (cart == null || !cart.CartItems.Any())
@@ -195,7 +199,7 @@ namespace CM_Project.Controllers
 
             // ✅ Null-safe: fall back to stored price if Products is null
             double totalAmount = cart.CartItems.Sum(ci =>
-                (ci.Products != null ? ci.Products.ProdPrice : ci.PriceAtTimeAdded) * ci.ProdQuantity);
+                (ci.AddProduct != null ? ci.AddProduct.ProdPrice : ci.PriceAtTimeAdded) * ci.ProdQuantity);
 
             if (!string.IsNullOrWhiteSpace(deliveryAddress))
             {
@@ -206,7 +210,7 @@ namespace CM_Project.Controllers
 
             // ✅ Include Products so stock check doesn't crash
             var cartItems = db.CartItems
-                .Include(c => c.Products)
+                .Include(c => c.AddProduct)
                 .Where(c => c.Carts.CustomerId == currentId)
                 .ToList();
 
@@ -251,9 +255,11 @@ namespace CM_Project.Controllers
                 Status = OrderStatus.Pending,
                 PaymentExpiry = DateTime.Now.AddMinutes(2),
                 TotalAmount = totalAmount,
+                PaymentReference = "",
                 DeliveryAddress = string.IsNullOrWhiteSpace(deliveryAddress)
                                     ? address
                                     : deliveryAddress.Trim(),
+
                 OrderItems = cart.CartItems.Select(ci => new OrderItem
                 {
                     ProdId = ci.ProdId,
@@ -301,7 +307,8 @@ namespace CM_Project.Controllers
 
         public IActionResult OrderHistory()
         {
-            int currentId = HttpContext.Session.GetInt32("UserId").Value;
+            // The ! tells the compiler "trust me, this won't be null"
+            int currentId = HttpContext.Session.GetInt32("UserId")!.Value;
             DeleteExpiredOrders(currentId);
 
             var orders = db.Orders
@@ -317,7 +324,8 @@ namespace CM_Project.Controllers
 
         public IActionResult CustomerProfile()
         {
-            int currentId = HttpContext.Session.GetInt32("UserId").Value;
+            // The ! tells the compiler "trust me, this won't be null"
+            int currentId = HttpContext.Session.GetInt32("UserId")!.Value;
             DeleteExpiredOrders(currentId);
             return View(db.Customers.Where(c => c.CustomerId == currentId).ToList());
         }

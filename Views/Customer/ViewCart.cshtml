@@ -89,12 +89,12 @@
 
                             <!-- Image — fully null safe -->
                               <div class="c-img">
-                                @if (item.Products?.ProductPictures != null && item.Products.ProductPictures.Any())
+                                @if (item.AddProduct?.ProductPictures != null && item.AddProduct.ProductPictures.Any())
                                 {
-                                    var pic = item.Products.ProductPictures.First();
+                                    var pic = item.AddProduct.ProductPictures.First();
                                     if (pic?.FilePath != null)
                                     {
-                                        <img src="@pic.FilePath" alt="@(item.Products?.ProdName ?? item.ProdName)" />
+                                        <img src="@pic.FilePath" alt="@(item.AddProduct?.ProdName ?? item.ProdName)" />
                                     }
                                     else
                                     {
@@ -109,7 +109,7 @@
 
                             <!-- Info — uses ProdName fallback if Products is null -->
                             <div class="c-info">
-                                <div class="c-name">@(item.Products?.ProdName ?? item.ProdName)</div>
+                                <div class="c-name">@(item.AddProduct?.ProdName ?? item.ProdName)</div>
                                 <div class="c-shop">LOKAL Store</div>
                                 <div class="c-price">R @item.PriceAtTimeAdded.ToString("N2")</div>
                             </div>
@@ -164,7 +164,7 @@
                 {
                     <div class="sum-row">
                         <span class="sr-label">
-                            @(item.Products?.ProdName ?? item.ProdName)
+                            @(item.AddProduct?.ProdName ?? item.ProdName)
                             <span style="color:var(--text-muted)"> ×@item.ProdQuantity</span>
                         </span>
                         <span class="sr-amount">R @item.SubTotal.ToString("N2")</span>

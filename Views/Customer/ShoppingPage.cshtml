@@ -32,7 +32,7 @@
 
             <div class="search-bar">
 
-                <form method="get" action="@Url.Action("ShoppingPage","Customer")">
+                <form method="get" action="@Url.Action("ShoppingPage", "Customer")">
 
                     <button type="submit" class="fas fa-search search-icon">
                     </button>
@@ -46,7 +46,7 @@
             </div>
 
             <!--Cart icon-->
-            <a href="@Url.Action("ViewCart","Customer")" class="cart-btn" aria-label="Cart">
+            <a href="@Url.Action("ViewCart", "Customer")" class="cart-btn" aria-label="Cart">
                 <i class="fas fa-bag-shopping"></i>
                 <span class="cart-count" id="cartCount">@ViewBag.NumberOfCartItems</span>
             </a>
@@ -55,14 +55,14 @@
         <!--CATEGORIES section -->
         <div class="cat-strip-wrap">
             <div class="cat-strip">
-                <a href="@Url.Action("ShoppingPage","Customer")"
-                   class="cat-pill @(ViewBag.SelectedCategory == null ? "active" : "")">
+                <a href="@Url.Action("ShoppingPage", "Customer")"
+                       class="cat-pill @(ViewBag.SelectedCategory == null ? "active" : "")">
                     <i class="fas fa-border-all"></i> All
                 </a>
                 @foreach (SelectCategory cat in Enum.GetValues(typeof(SelectCategory)))
                 {
-                    <a href="@Url.Action("ShoppingPage","Customer", new { category = cat })"
-                       class="cat-pill @(ViewBag.SelectedCategory != null && ViewBag.SelectedCategory.Equals(cat) ? "active" : "")">
+                    <a href="@Url.Action("ShoppingPage", "Customer", new { category = cat })"
+                           class="cat-pill @(ViewBag.SelectedCategory != null && ViewBag.SelectedCategory.Equals(cat) ? "active" : "")">
                         @cat
                     </a>
                 }
@@ -101,7 +101,9 @@
 
 
         <div class="product-grid">
-            @{int cardIdx = 0;}
+            @{
+                int cardIdx = 0;
+            }
             @foreach (var item in Model)
             {
                 bool inStock = item.ProdQuantity > 0;
@@ -113,7 +115,7 @@
                         @if (item.ProductPictures != null && item.ProductPictures.Any())
                         {
                             var pic = item.ProductPictures.First();
-                           <img src="@pic.FilePath" alt="@pic.FileName" class="p-img" />
+                            <img src="@pic.FilePath" alt="@pic.FileName" class="p-img" />
                         }
                         else
                         {
@@ -150,7 +152,6 @@
                         </div>
 
                         <!--Allow adding to cart if product is available-->
-
                         @if (inStock)
                         {
                             using (Html.BeginForm("AddToCart", "Customer", FormMethod.Post, new { @class = "add-form" }))
@@ -206,7 +207,9 @@
 
         <div class="product-grid">
 
-            @{ cardIdx++; }
+            @{
+                cardIdx++;
+            }
 
             @foreach (CM_Project.Models.AddProduct item in ViewBag.PopularPicks)
             {
@@ -220,7 +223,7 @@
                         {
                             var pic = item.ProductPictures.First();
 
-                           <img src="@pic.FilePath" alt="@pic.FileName" class="p-img" />
+                            <img src="@pic.FilePath" alt="@pic.FileName" class="p-img" />
                         }
                         else
                         {
@@ -330,7 +333,9 @@
         </div>
         <div class="product-grid">
 
-            @{ cardIdx++; }
+            @{
+                cardIdx++;
+            }
 
             @foreach (CM_Project.Models.AddProduct item in ViewBag.Groceries)
             {
@@ -344,7 +349,7 @@
                         {
                             var pic = item.ProductPictures.First();
 
-                           <img src="@pic.FilePath" alt="@pic.FileName" class="p-img" />
+                            <img src="@pic.FilePath" alt="@pic.FileName" class="p-img" />
                         }
                         else
                         {
@@ -436,7 +441,7 @@
     <!-- ══ BOTTOM NAV ══ -->
     <nav class="bottom-nav">
 
-        <a href="@Url.Action("ShoppingPage","Customer")" class="bn-item active">
+        <a href="@Url.Action("ShoppingPage", "Customer")" class="bn-item active">
             <div class="bn-icon"><i class="fas fa-house"></i></div>
             <span>Home</span>
         </a>
@@ -446,7 +451,7 @@
             <span>Wishlist</span>
         </a>
 
-        <a href="@Url.Action("ViewCart","Customer")" class="bn-item">
+        <a href="@Url.Action("ViewCart", "Customer")" class="bn-item">
             <div class="bn-icon cart-nav-wrap">
                 <i class="fas fa-bag-shopping"></i>
                 <span class="bn-badge">@ViewBag.NumberOfCartItems</span>
@@ -454,7 +459,7 @@
             <span>Cart</span>
         </a>
 
-        <a href="@Url.Action("CustomerProfile","Customer")" class="bn-item">
+        <a href="@Url.Action("CustomerProfile", "Customer")" class="bn-item">
             <div class="bn-icon"><i class="far fa-user-circle"></i></div>
             <span>Account</span>
         </a>
@@ -486,49 +491,49 @@
     </div> *@
 
     <script>
-        // qty stepper
-        function stepQty(btn, dir) {
-            const row = btn.closest('.qty-stepper');
-            const input = row.querySelector('.qty-input');
-            const max = parseInt(row.querySelector('[data-max]')?.dataset.max) || 99;
-            input.value = Math.max(1, Math.min(max, (parseInt(input.value) || 1) + dir));
-        }
+            // qty stepper
+            function stepQty(btn, dir) {
+                const row = btn.closest('.qty-stepper');
+                const input = row.querySelector('.qty-input');
+                const max = parseInt(row.querySelector('[data-max]')?.dataset.max) || 99;
+                input.value = Math.max(1, Math.min(max, (parseInt(input.value) || 1) + dir));
+            }
 
-        // modal
-        // const modal = document.getElementById('scannerModal');
-        // const triggers = ['openScanner', 'openScanner2', 'openScanner3'].map(id => document.getElementById(id));
-        // document.getElementById('closeScanner').addEventListener('click', () => modal.classList.remove('active'));
-        // triggers.forEach(b => b && b.addEventListener('click', () => modal.classList.add('active')));
-        // modal.addEventListener('click', e => { if (e.target === modal) modal.classList.remove('active'); });
+            // modal
+            // const modal = document.getElementById('scannerModal');
+            // const triggers = ['openScanner', 'openScanner2', 'openScanner3'].map(id => document.getElementById(id));
+            // document.getElementById('closeScanner').addEventListener('click', () => modal.classList.remove('active'));
+            // triggers.forEach(b => b && b.addEventListener('click', () => modal.classList.add('active')));
+            // modal.addEventListener('click', e => { if (e.target === modal) modal.classList.remove('active'); });
 
-        // add-to-cart button feedback
-        document.querySelectorAll('.add-form').forEach(form => {
-            form.addEventListener('submit', function () {
-                const btn = this.querySelector('.add-btn');
-                btn.innerHTML = '<i class="fas fa-check"></i> Added!';
-                btn.style.background = '#16a34a';
-                btn.style.boxShadow = '0 4px 14px rgba(22,163,74,0.3)';
-                setTimeout(() => {
-                    btn.innerHTML = '<i class="fas fa-bag-shopping"></i> Add';
-                    btn.style.background = '';
-                    btn.style.boxShadow = '';
-                }, 1800);
+            // add-to-cart button feedback
+            document.querySelectorAll('.add-form').forEach(form => {
+                form.addEventListener('submit', function () {
+                    const btn = this.querySelector('.add-btn');
+                    btn.innerHTML = '<i class="fas fa-check"></i> Added!';
+                    btn.style.background = '#16a34a';
+                    btn.style.boxShadow = '0 4px 14px rgba(22,163,74,0.3)';
+                    setTimeout(() => {
+                        btn.innerHTML = '<i class="fas fa-bag-shopping"></i> Add';
+                        btn.style.background = '';
+                        btn.style.boxShadow = '';
+                    }, 1800);
+                });
             });
-        });
 
-        // staggered card entrance
-        document.querySelectorAll('.p-card').forEach(c => {
-            c.style.opacity = '0'; c.style.transform = 'translateY(20px)';
-        });
-        window.addEventListener('load', () => {
-            document.querySelectorAll('.p-card').forEach((c, i) => {
-                setTimeout(() => {
-                    c.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
-                    c.style.opacity = '1';
-                    c.style.transform = 'translateY(0)';
-                }, 60 + i * 55);
+            // staggered card entrance
+            document.querySelectorAll('.p-card').forEach(c => {
+                c.style.opacity = '0'; c.style.transform = 'translateY(20px)';
             });
-        });
+            window.addEventListener('load', () => {
+                document.querySelectorAll('.p-card').forEach((c, i) => {
+                    setTimeout(() => {
+                        c.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
+                        c.style.opacity = '1';
+                        c.style.transform = 'translateY(0)';
+                    }, 60 + i * 55);
+                });
+            });
     </script>
 </body>
 </html>

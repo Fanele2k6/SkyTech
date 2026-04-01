@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace SkyTech.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260401161812_Initial")]
-    partial class Initial
+    [Migration("20260401181018_ItemsTables")]
+    partial class ItemsTables
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -115,14 +115,11 @@ namespace SkyTech.Migrations
                     b.Property<int>("ProdQuantity")
                         .HasColumnType("int");
 
-                    b.Property<int>("ProductsProdId")
-                        .HasColumnType("int");
-
                     b.HasKey("CartItemId");
 
                     b.HasIndex("CartId");
 
-                    b.HasIndex("ProductsProdId");
+                    b.HasIndex("ProdId");
 
                     b.ToTable("CartItems");
                 });
@@ -497,9 +494,6 @@ namespace SkyTech.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("ProductsProdId")
-                        .HasColumnType("int");
-
                     b.Property<int>("Quantity")
                         .HasColumnType("int");
 
@@ -507,7 +501,7 @@ namespace SkyTech.Migrations
 
                     b.HasIndex("OrderId");
 
-                    b.HasIndex("ProductsProdId");
+                    b.HasIndex("ProdId");
 
                     b.ToTable("OrderItems");
                 });
@@ -700,15 +694,15 @@ namespace SkyTech.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("CM_Project.Models.AddProduct", "Products")
+                    b.HasOne("CM_Project.Models.AddProduct", "AddProduct")
                         .WithMany("CartItems")
-                        .HasForeignKey("ProductsProdId")
+                        .HasForeignKey("ProdId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Carts");
+                    b.Navigation("AddProduct");
 
-                    b.Navigation("Products");
+                    b.Navigation("Carts");
                 });
 
             modelBuilder.Entity("CM_Project.Models.Documents.BusRegCertificate", b =>
@@ -795,7 +789,7 @@ namespace SkyTech.Migrations
 
                     b.HasOne("CM_Project.Models.AddProduct", "Products")
                         .WithMany()
-                        .HasForeignKey("ProductsProdId")
+                        .HasForeignKey("ProdId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
