@@ -79,8 +79,26 @@ namespace CM_Project.Controllers
         public IActionResult AddProductPage(AddProductViewModel model)
         {
             if (!ModelState.IsValid) return View("AddProductPage");
+           // int currentId = HttpContext.Session.GetInt32("UserId").Value;
 
-            int currentId = HttpContext.Session.GetInt32("UserId").Value;
+           
+            // Check if session has a value at all
+            var sessionId = HttpContext.Session.GetInt32("UserId");
+            if (sessionId == null)
+            {
+                TempData["Error"] = "Session expired. Please log in again.";
+                return RedirectToAction("LogIn", "Authentication");
+            }
+
+            int currentId = sessionId.Value;
+
+            // Verify this OwnerId actually exists in the shopowners table
+            var ownerExists = db.shopowners.Any(o => o.OwnerId == currentId);
+            if (!ownerExists)
+            {
+                TempData["Error"] = $"Owner with ID {currentId} not found. Session may be storing the wrong ID.";
+                return View("AddProductPage");
+            }
 
             var addProduct = new AddProduct
             {
@@ -99,12 +117,25 @@ namespace CM_Project.Controllers
 
             if (model.ProductPicture != null && model.ProductPicture.Length > 0)
             {
-                using var ms = new MemoryStream();
-                model.ProductPicture.CopyTo(ms);
+                // using var ms = new MemoryStream();
+                // model.ProductPicture.CopyTo(ms);
+
+                 var pictureFolder = Path.Combine(_webHostEnvironment.WebRootPath, "Uploads", "ProductPicture");
+                 Directory.CreateDirectory(pictureFolder);
+                
+                 var fileName = $"{currentId}_{Guid.NewGuid()}{Path.GetExtension(model.ProductPicture.FileName)}";
+                 var filePath = Path.Combine(pictureFolder, fileName);
+                
+                 using (var stream = new FileStream(filePath, FileMode.Create))
+                 {
+                     model.ProductPicture.CopyTo(stream);
+                 }
+
                 addProduct.ProductPictures.Add(new ProductPicture
                 {
                     OwnerId = currentId,
-                    FileData = ms.ToArray(),
+                   // FileData = ms.ToArray(),
+                    FilePath = $"/Uploads/ProductPicture/{fileName}",
                     FileName = Path.GetFileName(model.ProductPicture.FileName),
                     FileType = model.ProductPicture.ContentType,
                     SavedOn = DateTime.Now
@@ -155,31 +186,73 @@ namespace CM_Project.Controllers
             product.ProdPrice = model.ProdPrice;
             product.ProdSize = model.ProdSize;
 
+
             if (ProductPicture != null && ProductPicture.Length > 0)
             {
-                using var ms = new MemoryStream();
-                ProductPicture.CopyTo(ms);
-                byte[] fileBytes = ms.ToArray();
+                // Save new file to disk
+                var pictureFolder = Path.Combine(_webHostEnvironment.WebRootPath, "Uploads", "ProductPicture");
+                Directory.CreateDirectory(pictureFolder);
+            
+                var fileName = $"{currentId}_{Guid.NewGuid()}{Path.GetExtension(ProductPicture.FileName)}";
+                var filePath = Path.Combine(pictureFolder, fileName);
+            
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    ProductPicture.CopyTo(stream);
+                }
+            
                 var existingPic = product.ProductPictures.FirstOrDefault();
-
                 if (existingPic != null)
                 {
-                    existingPic.FileData = fileBytes;
+                    // Delete old file from disk before replacing
+                    var oldFullPath = Path.Combine(_webHostEnvironment.WebRootPath, existingPic.FilePath.TrimStart('/'));
+                    if (System.IO.File.Exists(oldFullPath))
+                        System.IO.File.Delete(oldFullPath);
+            
+                    // Update existing record with new path
+                    existingPic.FilePath = $"/Uploads/ProductPicture/{fileName}";
                     existingPic.FileName = Path.GetFileName(ProductPicture.FileName);
                     existingPic.FileType = ProductPicture.ContentType;
                     existingPic.SavedOn = DateTime.Now;
                 }
                 else
                 {
+                    // No picture existed before, add a new one
                     product.ProductPictures.Add(new ProductPicture
                     {
                         OwnerId = currentId,
-                        FileData = fileBytes,
+                        FilePath = $"/Uploads/ProductPicture/{fileName}",
                         FileName = Path.GetFileName(ProductPicture.FileName),
                         FileType = ProductPicture.ContentType,
                         SavedOn = DateTime.Now
                     });
                 }
+
+            // if (ProductPicture != null && ProductPicture.Length > 0)
+            // {
+            //     using var ms = new MemoryStream();
+            //     ProductPicture.CopyTo(ms);
+            //     byte[] fileBytes = ms.ToArray();
+            //     var existingPic = product.ProductPictures.FirstOrDefault();
+
+            //     if (existingPic != null)
+            //     {
+            //         existingPic.FileData = fileBytes;
+            //         existingPic.FileName = Path.GetFileName(ProductPicture.FileName);
+            //         existingPic.FileType = ProductPicture.ContentType;
+            //         existingPic.SavedOn = DateTime.Now;
+            //     }
+            //     else
+            //     {
+            //         product.ProductPictures.Add(new ProductPicture
+            //         {
+            //             OwnerId = currentId,
+            //             FileData = fileBytes,
+            //             FileName = Path.GetFileName(ProductPicture.FileName),
+            //             FileType = ProductPicture.ContentType,
+            //             SavedOn = DateTime.Now
+            //         });
+            //     }
             }
 
             db.SaveChanges();
