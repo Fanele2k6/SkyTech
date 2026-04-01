@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace SkyTech.Migrations
 {
     /// <inheritdoc />
-    public partial class CleanTables : Migration
+    public partial class Initial : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -73,7 +73,6 @@ namespace SkyTech.Migrations
                     BankType = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     ShopName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     ShopAddress = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
-                    Shoptype = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Password = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     UserType = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     ApplicationStatus = table.Column<int>(type: "int", nullable: false),
@@ -130,7 +129,7 @@ namespace SkyTech.Migrations
                     DriverIdentityBookId = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     DriverId = table.Column<int>(type: "int", nullable: false),
-                    FileData = table.Column<byte[]>(type: "varbinary(max)", nullable: false),
+                    FilePath = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     FileName = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     FileType = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     SavedOn = table.Column<DateTime>(type: "datetime2", nullable: false)
@@ -153,7 +152,7 @@ namespace SkyTech.Migrations
                     LicenceId = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     DriverId = table.Column<int>(type: "int", nullable: false),
-                    FileData = table.Column<byte[]>(type: "varbinary(max)", nullable: false),
+                    FilePath = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     FileName = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     FileType = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     SavedOn = table.Column<DateTime>(type: "datetime2", nullable: false)
@@ -235,7 +234,7 @@ namespace SkyTech.Migrations
                     CertId = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     OwnerId = table.Column<int>(type: "int", nullable: false),
-                    FileData = table.Column<byte[]>(type: "varbinary(max)", nullable: false),
+                    FilePath = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     FileName = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     FileType = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     SavedOn = table.Column<DateTime>(type: "datetime2", nullable: false)
@@ -258,7 +257,7 @@ namespace SkyTech.Migrations
                     OwnerIdentityBookId = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     OwnerId = table.Column<int>(type: "int", nullable: false),
-                    FileData = table.Column<byte[]>(type: "varbinary(max)", nullable: false),
+                    FilePath = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     FileName = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     FileType = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     SavedOn = table.Column<DateTime>(type: "datetime2", nullable: false)
@@ -367,8 +366,7 @@ namespace SkyTech.Migrations
                     ProdPictureId = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     OwnerId = table.Column<int>(type: "int", nullable: false),
-                    ShopOwnerOwnerId = table.Column<int>(type: "int", nullable: false),
-                    FileData = table.Column<byte[]>(type: "varbinary(max)", nullable: false),
+                    FilePath = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     FileName = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     FileType = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     SavedOn = table.Column<DateTime>(type: "datetime2", nullable: false),
@@ -383,8 +381,8 @@ namespace SkyTech.Migrations
                         principalTable: "AddProducts",
                         principalColumn: "ProdId");
                     table.ForeignKey(
-                        name: "FK_ProductPicture_shopowners_ShopOwnerOwnerId",
-                        column: x => x.ShopOwnerOwnerId,
+                        name: "FK_ProductPicture_shopowners_OwnerId",
+                        column: x => x.OwnerId,
                         principalTable: "shopowners",
                         principalColumn: "OwnerId",
                         onDelete: ReferentialAction.Cascade);
@@ -456,9 +454,9 @@ namespace SkyTech.Migrations
                 column: "AddProductProdId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_ProductPicture_ShopOwnerOwnerId",
+                name: "IX_ProductPicture_OwnerId",
                 table: "ProductPicture",
-                column: "ShopOwnerOwnerId");
+                column: "OwnerId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Staffs_OwnerId",

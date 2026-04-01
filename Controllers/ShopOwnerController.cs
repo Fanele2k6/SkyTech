@@ -18,12 +18,14 @@ namespace CM_Project.Controllers
     {
         private readonly ApplicationDbContext db;
         private readonly EmailServices _services = null;  // ← add this
+        private readonly IWebHostEnvironment _webHostEnvironment;
 
 
-        public ShopOwnerController(ApplicationDbContext context, EmailServices services)
+        public ShopOwnerController(ApplicationDbContext context, EmailServices services, IWebHostEnvironment webHostEnvironment)
         {
             db = context;
             _services = services;
+            _webHostEnvironment = webHostEnvironment;
         }
         //public ShopOwnerController(ApplicationDbContext context) { db = context; }
 
