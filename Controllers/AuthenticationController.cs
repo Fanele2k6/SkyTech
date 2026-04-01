@@ -336,6 +336,7 @@ namespace CM_Project.Controllers
                 VehicleType = model.VehicleType,
                 VehicleNumber = model.VehicleNumber,
                 AccountNumber = model.AccountNumber,
+                BankType = model.BankType, //this was missing
                 IsAvailable = true,
                 ApplicationStatus = Status.Pending,
                 Password = model.Password,

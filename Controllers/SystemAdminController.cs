@@ -11,12 +11,14 @@ namespace CM_Project.Controllers
     {
         private readonly ApplicationDbContext db;
         private readonly EmailServices _services;
+        private readonly IWebHostEnvironment _webHostEnvironment;
 
         // ✅ ONE constructor only
-        public SystemAdminController(ApplicationDbContext context, EmailServices services)
+        public SystemAdminController(ApplicationDbContext context, EmailServices services, IWebHostEnvironment webHostEnvironment)
         {
             db = context;
             _services = services;
+            _webHostEnvironment = webHostEnvironment;
         }
 
         public IActionResult SystemAdminDash() => View();
@@ -32,17 +34,41 @@ namespace CM_Project.Controllers
             return View(applications);
         }
 
-        public IActionResult DownloadBusRegCert(int id)
-        {
-            var doc = db.BusRegCertificates.Find(id);
-            return doc == null ? NotFound() : File(doc.FileData, doc.FileType);
-        }
+        // public IActionResult DownloadBusRegCert(int id)
+        // {
+        //     var doc = db.BusRegCertificates.Find(id);
+        //     return doc == null ? NotFound() : File(doc.FileData, doc.FileType);
+        // }
 
-        public IActionResult DownloadOwnerID(int id)
-        {
-            var doc = db.OwnerIdentityBooks.Find(id);
-            return doc == null ? NotFound() : File(doc.FileData, doc.FileType);
-        }
+        // public IActionResult DownloadOwnerID(int id)
+        // {
+        //     var doc = db.OwnerIdentityBooks.Find(id);
+        //     return doc == null ? NotFound() : File(doc.FileData, doc.FileType);
+        // }
+
+        public IActionResult DownloadBusRegCert(int id)
+       {
+           var doc = db.BusRegCertificates.Find(id);
+           if (doc == null) return NotFound();
+    
+           var fullPath = Path.Combine(_webHostEnvironment.WebRootPath, doc.FilePath.TrimStart('/'));
+           if (!System.IO.File.Exists(fullPath)) return NotFound();
+    
+           var fileBytes = System.IO.File.ReadAllBytes(fullPath);
+           return File(fileBytes, doc.FileType, doc.FileName);
+       }
+    
+       public IActionResult DownloadOwnerID(int id)
+       {
+           var doc = db.OwnerIdentityBooks.Find(id);
+           if (doc == null) return NotFound();
+    
+           var fullPath = Path.Combine(_webHostEnvironment.WebRootPath, doc.FilePath.TrimStart('/'));
+           if (!System.IO.File.Exists(fullPath)) return NotFound();
+    
+           var fileBytes = System.IO.File.ReadAllBytes(fullPath);
+           return File(fileBytes, doc.FileType, doc.FileName);
+       }
 
         public IActionResult ApproveAppl(int id)
         {
@@ -79,17 +105,41 @@ namespace CM_Project.Controllers
             return View(applications);
         }
 
-        public IActionResult DownloadDriverIdentityBooks(int id)
-        {
-            var doc = db.DriverIdentityBooks.Find(id);
-            return doc == null ? NotFound() : File(doc.FileData, doc.FileType);
-        }
+        // public IActionResult DownloadDriverIdentityBooks(int id)
+        // {
+        //     var doc = db.DriverIdentityBooks.Find(id);
+        //     return doc == null ? NotFound() : File(doc.FileData, doc.FileType);
+        // }
 
-        public IActionResult DownloadLicence(int id)
-        {
-            var doc = db.DriversLicences.Find(id);
-            return doc == null ? NotFound() : File(doc.FileData, doc.FileType);
-        }
+        // public IActionResult DownloadLicence(int id)
+        // {
+        //     var doc = db.DriversLicences.Find(id);
+        //     return doc == null ? NotFound() : File(doc.FileData, doc.FileType);
+        // }
+
+           public IActionResult DownloadDriverIdentityBooks(int id)
+           {
+               var doc = db.DriverIdentityBooks.Find(id);
+               if (doc == null) return NotFound();
+        
+               var fullPath = Path.Combine(_webHostEnvironment.WebRootPath, doc.FilePath.TrimStart('/'));
+               if (!System.IO.File.Exists(fullPath)) return NotFound();
+        
+               var fileBytes = System.IO.File.ReadAllBytes(fullPath);
+               return File(fileBytes, doc.FileType, doc.FileName);
+           }
+        
+           public IActionResult DownloadLicence(int id)
+           {
+               var doc = db.DriversLicences.Find(id);
+               if (doc == null) return NotFound();
+        
+               var fullPath = Path.Combine(_webHostEnvironment.WebRootPath, doc.FilePath.TrimStart('/'));
+               if (!System.IO.File.Exists(fullPath)) return NotFound();
+        
+               var fileBytes = System.IO.File.ReadAllBytes(fullPath);
+               return File(fileBytes, doc.FileType, doc.FileName);
+           }
 
         public IActionResult ApproveDriverAppl(int id)
         {
