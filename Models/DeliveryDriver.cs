@@ -36,8 +36,10 @@ namespace CM_Project.Models
         public bool IsAvailable { get; set; }
         public Status ApplicationStatus { get; set; }
 
-        public virtual ICollection<DriverIdentityBook> DriverIdentityBooks { get; set; }
-        public virtual ICollection<DriversLicence> DriversLicences { get; set; }
+        //Navigation properties
+        //Added =  sign as you said
+        public virtual ICollection<DriverIdentityBook> DriverIdentityBooks { get; set; } = new List<DriverIdentityBook>();
+        public virtual ICollection<DriversLicence> DriversLicences { get; set; } = new List<DriversLicence>();
 
         [Required, StringLength(100, MinimumLength = 8), DataType(DataType.Password)]
         public string Password { get; set; }
