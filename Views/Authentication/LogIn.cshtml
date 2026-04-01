@@ -13,6 +13,22 @@
   
 }
 
+@section Scripts{
+    
+    <script>    
+        function togglePw() {
+            var f = document.getElementById('pwField');
+            var i = document.getElementById('pwIcon');
+            if (f.type === 'password') {
+                f.type = 'text';
+                i.className = 'fas fa-eye-slash';
+            } else {
+                f.type = 'password';
+                i.className = 'fas fa-eye';
+            }
+        }</script>
+}
+
 <div class="orb orb-1"></div>
 <div class="orb orb-2"></div>
 
@@ -26,17 +42,17 @@
 
         <div class="panel-logo">
             <div class="panel-logo-icon"><i class="fas fa-store"></i></div>
-            <span class="panel-logo-text">LOKAL</span>
+            <span class="panel-logo-text">SkyTech</span>
         </div>
 
         <div class="panel-body">
             <h2>Your local<br>marketplace,<br>made simple.</h2>
-            <p>Shop from spaza stores in your neighbourhood — fast delivery and trusted products.</p>
+            <p>Shop from our stores in your neighbourhood — fast delivery and trusted products.</p>
         </div>
 
         <div class="panel-chips">
             <div class="panel-chip"><i class="fas fa-shield-halved"></i> Secure &amp; encrypted login</div>
-            <div class="panel-chip"><i class="fas fa-truck-fast"></i> Same-day delivery available</div>
+            <div class="panel-chip"><i class="fas fa-truck-fast"></i> 3-5 days delivery available</div>
             <div class="panel-chip"><i class="fas fa-map-marker-alt"></i> Nationwide coverage</div>
         </div>
     </div>
@@ -45,7 +61,7 @@
     <div class="login-form">
         <div class="form-top">
             <h2>Welcome back 👋</h2>
-            <p>Sign in to your LOKAL account</p>
+            <p>Sign in to your SkyTech account</p>
         </div>
 
         @using (Html.BeginForm("LogIn", "Authentication", FormMethod.Post))
@@ -99,26 +115,11 @@
 
             <div class="divider"><span>or</span></div>
 
-            <a href="@Url.Action("Home","Authentication")" class="btn-back">
-                <i class="fas fa-arrow-left"></i> Back to Home
-            </a>
-
             <div class="signup-row" style="margin-top:1.2rem">
                 Don't have an account?
-                <a href="@Url.Action("CustomerReg","Authentication")">Create one</a>
+                <a href="@Url.Action("Home","Authentication")">Create one</a>
             </div>
         }
     </div>
 </div>
 
-<script>function togglePw() {
-    var f = document.getElementById('pwField');
-    var i = document.getElementById('pwIcon');
-    if (f.type === 'password') {
-        f.type = 'text';
-        i.className = 'fas fa-eye-slash';
-    } else {
-        f.type = 'password';
-        i.className = 'fas fa-eye';
-    }
-}</script>
