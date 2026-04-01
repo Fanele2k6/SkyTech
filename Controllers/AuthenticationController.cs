@@ -17,13 +17,18 @@ namespace CM_Project.Controllers
     {
         private readonly ApplicationDbContext db;
         private readonly EmailServices _services;// = null;  // ← add this
+        
+        //Added this namespace, angikazi ngokwanele ukuthi owani
+        //But ngoba engu web host environment i think uyena owenza kukhandeke i path ku wwwroot, kungasaveki ku db
+        private readonly IWebHostEnvironment _webHostEnvironment; 
 
 
         // ✅ Fix it to include email
-        public AuthenticationController(ApplicationDbContext context, EmailServices services)
+        public AuthenticationController(ApplicationDbContext context, EmailServices services, IWebHostEnvironment webHostEnvironment)
         {
             db = context;
             _services = services;
+            _webHostEnvironment = webHostEnvironment;
         }
         public IActionResult Home() => View();
 
@@ -240,14 +245,30 @@ namespace CM_Project.Controllers
             //int currentId = shopOwner.OwnerId;
             if (model.OwnerIdentityBook != null && model.OwnerIdentityBook.Length > 0)
             {
-                using var ms = new MemoryStream();
-                model.OwnerIdentityBook.CopyTo(ms);
+                // using var ms = new MemoryStream();
+                // model.OwnerIdentityBook.CopyTo(ms);
+                
+                
+                var idFolder = Path.Combine(_webHostEnvironment.WebRootPath, "Uploads", "OwnerIdBook"); //Path
+                Directory.CreateDirectory(idFolder); //this one creates a new folder if it does not exist
+
+                // Build a unique filename using the  ID + a random GUID + the original file extension
+                //this prevents ovewriting the file if users upload the file with the same name
+                var idFileName = $"{shopOwner.OwnerId}_{Guid.NewGuid()}{Path.GetExtension(model.OwnerIdentityBook.FileName)}";
+                var idFilePath = Path.Combine(idFolder, idFileName); // Combine the folder path and the filename to get the full path where the file will be saved
+
+                using (var stream = new FileStream(idFilePath, FileMode.Create))
+                {
+                    model.OwnerIdentityBook.CopyTo(stream);
+                }
+                
                 db.OwnerIdentityBooks.Add(new OwnerIdentityBook
                 {
                     OwnerId = shopOwner.OwnerId,
                     FileName = model.OwnerIdentityBook.FileName,
                     FileType = model.OwnerIdentityBook.ContentType,
-                    FileData = ms.ToArray(),
+                   // FileData = ms.ToArray(), Remove this one
+                     FilePath = $"/Uploads/OwnerIdBook/{idFileName}", //Store relative path
                     SavedOn = DateTime.Now
                 });
                 //db.SaveChanges();
@@ -255,14 +276,27 @@ namespace CM_Project.Controllers
 
             if (model.BusRegCertificate != null && model.BusRegCertificate.Length > 0)
             {
-                using var ms = new MemoryStream();
-                model.BusRegCertificate.CopyTo(ms);
+                // using var ms = new MemoryStream();
+                // model.BusRegCertificate.CopyTo(ms);
+
+                 var busRegFolder = Path.Combine(_webHostEnvironment.WebRootPath, "Uploads", "RegCertificate");//path
+                 Directory.CreateDirectory(busRegFolder); //creating new folder if does not exist
+                
+                 var busRegFileName = $"{shopOwner.OwnerId}_{Guid.NewGuid()}{Path.GetExtension(model.BusRegCertificate.FileName)}";
+                 var busRegFilePath = Path.Combine(busRegFolder, busRegFileName);
+                
+                 using (var stream = new FileStream(busRegFilePath, FileMode.Create))
+                 {
+                     model.BusRegCertificate.CopyTo(stream);
+                 }
+
                 db.BusRegCertificates.Add(new BusRegCertificate
                 {
                     OwnerId = shopOwner.OwnerId,
                     FileName = model.BusRegCertificate.FileName,
                     FileType = model.BusRegCertificate.ContentType,
-                    FileData = ms.ToArray(),
+                   // FileData = ms.ToArray(),
+                   FilePath = $"/Uploads/RegCertificate/{busRegFileName}", //store relative path
                     SavedOn = DateTime.Now
                 });
                 //db.SaveChanges();
@@ -305,7 +339,6 @@ namespace CM_Project.Controllers
                 IsAvailable = true,
                 ApplicationStatus = Status.Pending,
                 Password = model.Password,
-                ConfirmPassword = model.ConfirmPassword,
                 UserType = "Driver",
                 RegisteredOn = DateTime.Now
             };
@@ -313,32 +346,59 @@ namespace CM_Project.Controllers
             db.DeliveryDrivers.Add(driver);
             db.SaveChanges();
 
-            int currentId = driver.DriverId;
+            //int currentId = driver.DriverId;
 
-            if (DriversLicences != null && DriversLicences.Length > 0)
+            if (model.DriversLicences != null && model.DriversLicences.Length > 0)
             {
-                using var ms = new MemoryStream();
-                DriversLicences.CopyTo(ms);
+                // using var ms = new MemoryStream();
+                // DriversLicences.CopyTo(ms);
+
+                 var licenceFolder = Path.Combine(_webHostEnvironment.WebRootPath, "Uploads", "DrivingLicence"); //Path
+                 Directory.CreateDirectory(licenceFolder); // creates folder if it doesn't exist
+                
+                 var licenceFileName = $"{driver.DriverId}_{Guid.NewGuid()}{Path.GetExtension(model.DriversLicence.FileName)}";
+                 var licenceFilePath = Path.Combine(licenceFolder, licenceFileName);
+                
+                 using (var stream = new FileStream(licenceFilePath, FileMode.Create))
+                 {
+                     model.DriversLicence.CopyTo(stream);
+                 }
+
+                
                 db.DriversLicences.Add(new DriversLicence
                 {
-                    DriverId = currentId,
-                    FileName = DriversLicences.FileName,
-                    FileType = DriversLicences.ContentType,
-                    FileData = ms.ToArray(),
+                    DriverId = driver.DriverId,
+                    FileName = model.DriversLicences.FileName,
+                    FileType = model.DriversLicences.ContentType,
+                  //  FileData = ms.ToArray(),
+                   FilePath = $"/Uploads/DrivingLicence/{licenceFileName}", // store relative path
                     SavedOn = DateTime.Now
                 });
             }
 
-            if (DriverIdentityBooks != null && DriverIdentityBooks.Length > 0)
+            if (model.DriverIdentityBooks != null && model.DriverIdentityBooks.Length > 0)
             {
-                using var ms = new MemoryStream();
-                DriverIdentityBooks.CopyTo(ms);
+                // using var ms = new MemoryStream();
+                // DriverIdentityBooks.CopyTo(ms);
+                
+                  var idFolder = Path.Combine(_webHostEnvironment.WebRootPath, "Uploads", "DriverIdDocument");
+                  Directory.CreateDirectory(idFolder);
+                
+                  var idFileName = $"{driver.DriverId}_{Guid.NewGuid()}{Path.GetExtension(model.DriverIdentityBook.FileName)}";
+                  var idFilePath = Path.Combine(idFolder, idFileName);
+                
+                  using (var stream = new FileStream(idFilePath, FileMode.Create))
+                  {
+                      model.DriverIdentityBook.CopyTo(stream);
+                  }
+                
                 db.DriverIdentityBooks.Add(new DriverIdentityBook
                 {
-                    DriverId = currentId,
-                    FileName = DriverIdentityBooks.FileName,
-                    FileType = DriverIdentityBooks.ContentType,
-                    FileData = ms.ToArray(),
+                    DriverId = driver.DriverId,
+                    FileName = model.DriverIdentityBooks.FileName,
+                    FileType = model.DriverIdentityBooks.ContentType,
+                   // FileData = ms.ToArray(),
+                   FilePath = $"/Uploads/DriverIdDocument/{idFileName}",
                     SavedOn = DateTime.Now
                 });
             }
