@@ -1,7 +1,7 @@
 ﻿@model IEnumerable<CM_Project.Models.AddProduct>
 @using CM_Project.Models
 @{
-    ViewBag.Title = "LOKAL • Shop";
+    ViewBag.Title = "SkyTech • Shop";
     Layout = "~/Views/Shared/_MinimalLayout.cshtml";
 }
 
@@ -18,7 +18,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LOKAL • Shopping</title>
+    <title>SkyTech • Shopping</title>
 </head>
 <body>
 
@@ -71,14 +71,13 @@
 
         <!-- ══ HERO ══ -->
         <section class="hero">
+
             <div class="hero-inner">
                 <div class="hero-tag"><i class="fas fa-bolt"></i> Start Shopping Today</div>
                 <h1 class="hero-title">Daily<br /><span>Deals</span></h1>
                 <p class="hero-sub">Up to 10% off · for products over R500</p>
-                @*<div class="hero-scan-chip" id="openScanner3">
-                    <i class="fas fa-camera"></i> Scan for coupon
-                </div>*@
             </div>
+
             <div class="hero-art">
                 <div class="hero-circle c1"></div>
                 <div class="hero-circle c2"></div>
@@ -109,6 +108,8 @@
                 <div class="p-card" style="animation-delay:@(cardIdx * 60)">
 
                     <div class="p-img-wrap">
+
+                        <!--Checks if the pictue exists-->
                         @if (item.ProductPictures != null && item.ProductPictures.Any())
                         {
                             var pic = item.ProductPictures.First();
@@ -119,24 +120,37 @@
                         {
                             <div class="p-img-placeholder"><i class="fas fa-image"></i></div>
                         }
+
+
                         @if (!inStock)
-                        {<div class="p-oos-badge">Out of stock</div>}
+                        {
+                            <div class="p-oos-badge">Out of stock</div>
+                        }
                         <div class="p-img-shine"></div>
+
                     </div>
 
                     <div class="p-body">
                         <div class="p-shop">@item.Owner.ShopName</div>
                         <div class="p-name">@item.ProdName</div>
                         <div class="p-meta-row">
+
                             <div class="p-price">R&nbsp;@item.ProdPrice</div>
                             @if (inStock)
-                            {<div class="p-stock-chip">@item.ProdQuantity left</div>}
+                            {
+                                <div class="p-stock-chip">@item.ProdQuantity left</div>
+                            }
+
                         </div>
+
+
                         <div class="p-stars">
                             <i class="fas fa-star"></i><i class="fas fa-star"></i>
                             <i class="fas fa-star"></i><i class="fas fa-star"></i>
                             <i class="fas fa-star"></i><span>(77)</span>
                         </div>
+
+                        <!--Allow adding to cart if product is available-->
 
                         @if (inStock)
                         {
@@ -144,6 +158,7 @@
                             {
                                 @Html.AntiForgeryToken()
                                 @Html.Hidden("id", item.ProdId)
+
                                 <div class="add-row">
                                     <div class="qty-stepper">
                                         <button type="button" class="qty-btn" onclick="stepQty(this,-1)">−</button>
@@ -158,11 +173,13 @@
                         }
                         else
                         {
+                            <!--Disable button so no one can add to cart-->
                             <div class="add-row">
                                 <button class="add-btn oos" disabled>Notify me</button>
                             </div>
                         }
                     </div>
+
                 </div>
                 cardIdx++;
             }
@@ -173,11 +190,11 @@
             <div class="scan-banner-left">
                 <div class="scan-banner-icon"><i class="fas fa-barcode"></i></div>
                 <div>
-                    <div class="scan-banner-title">Scan &amp; Verify</div>
-                    <div class="scan-banner-sub">Check product origin instantly</div>
+                    @* <div class="scan-banner-title">Scan &amp; Verify</div> *@
+                    <div class="scan-banner-sub">Trusted Tech & Appliances — Affordable for You</div>
                 </div>
             </div>
-            <button class="scan-banner-btn" id="openScanner2">Use Scanner</button>
+            <button class="scan-banner-btn" id="openScanner2">U</button>
         </div>
 
         <!--======================================================POPULAR PICKS============================================================================== ══ -->
@@ -297,11 +314,11 @@
             <div class="scan-banner-left">
                 <div class="scan-banner-icon"><i class="fas fa-barcode"></i></div>
                 <div>
-                    <div class="scan-banner-title">Scan &amp; Verify</div>
-                    <div class="scan-banner-sub">Check product origin instantly</div>
+                    @* <div class="scan-banner-title">Scan &amp; Verify</div> *@
+                    <div class="scan-banner-sub">Trusted Tech & Appliances — Affordable for You</div>
                 </div>
             </div>
-            <button class="scan-banner-btn" id="openScanner2">Use Scanner</button>
+            @* <button class="scan-banner-btn" id="openScanner2">Use Scanner</button> *@
         </div>
 
 
@@ -386,7 +403,7 @@
                                                min="1"
                                                max="@item.ProdQuantity"
                                                class="qty-input" />
-
+                                        
                                         <button type="button"
                                                 class="qty-btn"
                                                 onclick="stepQty(this,1)"
@@ -423,14 +440,17 @@
 
     <!-- ══ BOTTOM NAV ══ -->
     <nav class="bottom-nav">
+
         <a href="@Url.Action("ShoppingPage","Customer")" class="bn-item active">
             <div class="bn-icon"><i class="fas fa-house"></i></div>
             <span>Home</span>
         </a>
-        <a href="#" class="bn-item">
+
+        <a href="@Url.Action("WishList", "Customer")" class="bn-item">
             <div class="bn-icon"><i class="far fa-heart"></i></div>
             <span>Wishlist</span>
         </a>
+
         <a href="@Url.Action("ViewCart","Customer")" class="bn-item">
             <div class="bn-icon cart-nav-wrap">
                 <i class="fas fa-bag-shopping"></i>
@@ -438,13 +458,14 @@
             </div>
             <span>Cart</span>
         </a>
+
         <a href="@Url.Action("CustomerProfile","Customer")" class="bn-item">
             <div class="bn-icon"><i class="far fa-user-circle"></i></div>
             <span>Account</span>
         </a>
     </nav>
 
-    <!-- ══ SCANNER MODAL ══ -->
+    @* <!-- ══ SCANNER MODAL ══ -->
     <div id="scannerModal" class="modal-overlay">
         <div class="modal-box">
             <div class="modal-glow"></div>
@@ -467,7 +488,7 @@
                 </button>
             }
         </div>
-    </div>
+    </div> *@
 
     <script>
         // qty stepper
@@ -479,11 +500,11 @@
         }
 
         // modal
-        const modal = document.getElementById('scannerModal');
-        const triggers = ['openScanner', 'openScanner2', 'openScanner3'].map(id => document.getElementById(id));
-        document.getElementById('closeScanner').addEventListener('click', () => modal.classList.remove('active'));
-        triggers.forEach(b => b && b.addEventListener('click', () => modal.classList.add('active')));
-        modal.addEventListener('click', e => { if (e.target === modal) modal.classList.remove('active'); });
+        // const modal = document.getElementById('scannerModal');
+        // const triggers = ['openScanner', 'openScanner2', 'openScanner3'].map(id => document.getElementById(id));
+        // document.getElementById('closeScanner').addEventListener('click', () => modal.classList.remove('active'));
+        // triggers.forEach(b => b && b.addEventListener('click', () => modal.classList.add('active')));
+        // modal.addEventListener('click', e => { if (e.target === modal) modal.classList.remove('active'); });
 
         // add-to-cart button feedback
         document.querySelectorAll('.add-form').forEach(form => {
