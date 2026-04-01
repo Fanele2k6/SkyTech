@@ -104,7 +104,7 @@ namespace CM_Project.Controllers
         {
             if (!ModelState.IsValid) return View(model);
 
-            if (db.Customers.Any(d => d.Email == model.Email))
+            if (db.Customers.Any(d => d.Email == model.Email) || db.DeliveryDrivers.Any(d => d.Email == model.Email) || db.shopowners.Any(d => d.Email == model.Email))
             {
                 ModelState.AddModelError("Email", "Email already exists");
                 return View(model);
@@ -144,7 +144,7 @@ namespace CM_Project.Controllers
             if (!ModelState.IsValid)
                 return View(model);
 
-            if (db.shopowners.Any(d => d.Email == model.Email))
+            if (db.Customers.Any(d => d.Email == model.Email) || db.DeliveryDrivers.Any(d => d.Email == model.Email) || db.shopowners.Any(d => d.Email == model.Email))
             {
                 ModelState.AddModelError("Email", "Email already exists");
                 return View(model);
@@ -243,12 +243,11 @@ namespace CM_Project.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult DeliveryDriverReg(DeliveryDriverViewModel model,
-            IFormFile DriverIdentityBooks, IFormFile DriversLicences)
+        public IActionResult DeliveryDriverReg(DeliveryDriverViewModel model)
         {
             if (!ModelState.IsValid) return View(model);
 
-            if (db.DeliveryDrivers.Any(d => d.Email == model.Email))
+            if (db.Customers.Any(d => d.Email == model.Email) || db.DeliveryDrivers.Any(d => d.Email == model.Email) || db.shopowners.Any(d => d.Email == model.Email))
             {
                 ModelState.AddModelError("Email", "Email already exists");
                 return View(model);
@@ -277,8 +276,7 @@ namespace CM_Project.Controllers
             db.SaveChanges();
 
             //int currentId = driver.DriverId;
-
-            if (model.DriversLicence != null && model.DriversLicence.Length > 0)
+                if (model.DriversLicence != null && model.DriversLicence.Length > 0)
             {
                 // using var ms = new MemoryStream();
                 // DriversLicences.CopyTo(ms);

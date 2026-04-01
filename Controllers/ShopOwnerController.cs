@@ -321,22 +321,57 @@ namespace CM_Project.Controllers
             return View(db.shopowners.Where(p => p.OwnerId == currentId).ToList());
         }
 
+        //public IActionResult ReceivedOrders()
+        //{
+        //    var orders = db.Orders
+        //        .Include(o => o.OrderItems)
+        //        .Include(o => o.Driver)
+        //        .OrderByDescending(o => o.OrderedOn)
+        //        .ToList();
+        //    return View(orders);
+        //}
+
         public IActionResult ReceivedOrders()
         {
+            int currentId = HttpContext.Session.GetInt32("UserId")!.Value;
+
             var orders = db.Orders
                 .Include(o => o.OrderItems)
+                    .ThenInclude(i => i.Products)
                 .Include(o => o.Driver)
+                .Where(o => o.OrderItems.Any(i => i.Products.OwnerId == currentId))
                 .OrderByDescending(o => o.OrderedOn)
                 .ToList();
+
             return View(orders);
         }
 
+        //public IActionResult AssignDriver(int id)
+        //{
+        //    var order = db.Orders.Include(o => o.OrderItems).FirstOrDefault(o => o.OrderId == id);
+
+        //    ViewBag.DeliveryDrivers = db.DeliveryDrivers
+        //        .Where(d => d.IsAvailable && d.ApplicationStatus == Status.Approved)
+        //        .ToList();
+
+        //    return View(order);
+        //}
+
         public IActionResult AssignDriver(int id)
         {
-            var order = db.Orders.Include(o => o.OrderItems).FirstOrDefault(o => o.OrderId == id);
+            int currentId = HttpContext.Session.GetInt32("UserId")!.Value;
+
+            // Make sure this order actually belongs to this shop owner
+            var order = db.Orders
+                .Include(o => o.OrderItems)
+                    .ThenInclude(i => i.Products)
+                .FirstOrDefault(o => o.OrderId == id
+                    && o.OrderItems.Any(i => i.Products.OwnerId == currentId));
+
+            if (order == null) return Forbid(); // stops other owners accessing it via URL
 
             ViewBag.DeliveryDrivers = db.DeliveryDrivers
-                .Where(d => d.IsAvailable && d.ApplicationStatus == Status.Approved)
+                .Where(d => d.IsAvailable)
                 .ToList();
 
             return View(order);

@@ -12,6 +12,10 @@
     <link rel="stylesheet" href="~/CSS/RegistrationForms.css">
 }
 
+@section Scripts {
+    <script src="~/MyScripts/PasswordProgressBar.js"></script>
+}
+
 <main class="so-main">
 
     @if (TempData["Message"] != null)
@@ -90,22 +94,7 @@
                         @Html.ValidationMessageFor(m => m.ShopAddress, "", new { @class = "text-danger" })
                     </div>
 
-                    @* <!-- Shop Type Dropdown -->
-                    <div class="so-form-group">
-                        <label class="so-label"><i class="fas fa-tag"></i> Shop Type</label>
-                        @Html.DropDownListFor(
-                            m => m.Shoptype,
-                            new List<SelectListItem>
-                            {
-                                new SelectListItem { Text = "-- Select Shop Type --", Value = "" },
-                                new SelectListItem { Text = "Informal", Value = "Informal" },
-                                new SelectListItem { Text = "Formal",   Value = "Formal"   }
-                            },
-                            new { @class = "so-input" }
-                        )
-                        @Html.ValidationMessageFor(m => m.Shoptype, "", new { @class = "text-danger" })
-                    </div> *@
-
+                   
                     <!-- File: Identity Book -->
                     <div class="so-form-group file-input-group">
                         <label class="so-label"><i class="fas fa-id-card"></i> Certified Identity Book</label>
@@ -171,6 +160,4 @@
 
 </main>
 
-@section Scripts {
-    <script src="~/MyScripts/PasswordProgressBar.js"></script>
-}
+

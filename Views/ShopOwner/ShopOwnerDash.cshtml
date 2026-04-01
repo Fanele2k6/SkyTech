@@ -17,7 +17,6 @@
 }
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    @*<script src="~/MyScripts/Sidebar_Respond.js"></script>*@
     <script>
               var labels    = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.WeeklySalesLabels ?? new string[] { "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun" }));
         var salesData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.WeeklySalesData ?? new int[] { 0, 0, 0, 0, 0, 0, 0 }));
@@ -73,7 +72,9 @@
         </div>
         <nav class="so-nav">
             <div class="so-nav-label">OVERVIEW</div>
+
             <a href="@Url.Action("ShopOwnerDash","ShopOwner")" class="so-link active"><i class="fas fa-grid-2"></i><span>Dashboard</span></a>
+
             <div class="so-nav-label" style="margin-top:1rem">INVENTORY</div>
             <a href="@Url.Action("AddProductPage","ShopOwner")" class="so-link @(restricted?"disabled-link":"")"><i class="fas fa-circle-plus"></i><span>Add Product</span></a>
             <a href="@Url.Action("TrackStockLevelPage","ShopOwner")" class="so-link @(restricted?"disabled-link":"")"><i class="fas fa-boxes-stacked"></i><span>Track Stock</span></a>
