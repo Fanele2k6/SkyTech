@@ -143,7 +143,10 @@ namespace CM_Project.ViewModels
         [DataType(DataType.Password)]
         public string ConfirmPassword { get; set; }
 
-       
+          //driver file uploads
+      public IFormFile DriverIdentityBook { get; set; }
+      public IFormFile DriversLicence { get; set; }
+     
     }
     
     public class StaffViewModel
