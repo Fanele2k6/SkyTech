@@ -10,6 +10,7 @@ namespace CM_Project.Models
 
     public class ShopOwner
     {
+        //i removed the shop type propery
         [Key]
         public int OwnerId { get; set; }
 
