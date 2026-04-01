@@ -113,8 +113,7 @@
                         @if (item.ProductPictures != null && item.ProductPictures.Any())
                         {
                             var pic = item.ProductPictures.First();
-                            <img src="data:@pic.FileType;base64,@Convert.ToBase64String(pic.FileData)"
-                                 alt="@pic.FileName" class="p-img" />
+                           <img src="@pic.FilePath" alt="@pic.FileName" class="p-img" />
                         }
                         else
                         {
@@ -221,9 +220,7 @@
                         {
                             var pic = item.ProductPictures.First();
 
-                            <img src="data:@pic.FileType;base64,@Convert.ToBase64String(pic.FileData)"
-                                 alt="@pic.FileName"
-                                 class="p-img" />
+                           <img src="@pic.FilePath" alt="@pic.FileName" class="p-img" />
                         }
                         else
                         {
@@ -347,9 +344,7 @@
                         {
                             var pic = item.ProductPictures.First();
 
-                            <img src="data:@pic.FileType;base64,@Convert.ToBase64String(pic.FileData)"
-                                 alt="@pic.FileName"
-                                 class="p-img" />
+                           <img src="@pic.FilePath" alt="@pic.FileName" class="p-img" />
                         }
                         else
                         {
