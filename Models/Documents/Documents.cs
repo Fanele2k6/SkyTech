@@ -68,7 +68,7 @@ namespace CM_Project.Models.Documents
         [ForeignKey("DriverId")] //forcing the compiler to consider this as foreign key NOT as property
         public virtual DeliveryDriver Driver { get; set; }
       //  public byte[] FileData { get; set; } 
-        Public string FilePath {get; set;} //use path instead of bytes saving directlt to the database
+        public string FilePath {get; set;} //use path instead of bytes saving directlt to the database
         public string FileName { get; set; }
         public string FileType { get; set; }
         public DateTime SavedOn { get; set; }

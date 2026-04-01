@@ -349,7 +349,7 @@ namespace CM_Project.Controllers
 
             //int currentId = driver.DriverId;
 
-            if (model.DriversLicences != null && model.DriversLicences.Length > 0)
+            if (model.DriversLicence != null && model.DriversLicence.Length > 0)
             {
                 // using var ms = new MemoryStream();
                 // DriversLicences.CopyTo(ms);
@@ -369,15 +369,15 @@ namespace CM_Project.Controllers
                 db.DriversLicences.Add(new DriversLicence
                 {
                     DriverId = driver.DriverId,
-                    FileName = model.DriversLicences.FileName,
-                    FileType = model.DriversLicences.ContentType,
+                    FileName = model.DriversLicence.FileName,
+                    FileType = model.DriversLicence.ContentType,
                   //  FileData = ms.ToArray(),
                    FilePath = $"/Uploads/DrivingLicence/{licenceFileName}", // store relative path
                     SavedOn = DateTime.Now
                 });
             }
 
-            if (model.DriverIdentityBooks != null && model.DriverIdentityBooks.Length > 0)
+            if (model.DriverIdentityBook != null && model.DriverIdentityBook.Length > 0)
             {
                 // using var ms = new MemoryStream();
                 // DriverIdentityBooks.CopyTo(ms);
@@ -396,8 +396,8 @@ namespace CM_Project.Controllers
                 db.DriverIdentityBooks.Add(new DriverIdentityBook
                 {
                     DriverId = driver.DriverId,
-                    FileName = model.DriverIdentityBooks.FileName,
-                    FileType = model.DriverIdentityBooks.ContentType,
+                    FileName = model.DriverIdentityBook.FileName,
+                    FileType = model.DriverIdentityBook.ContentType,
                    // FileData = ms.ToArray(),
                    FilePath = $"/Uploads/DriverIdDocument/{idFileName}",
                     SavedOn = DateTime.Now
