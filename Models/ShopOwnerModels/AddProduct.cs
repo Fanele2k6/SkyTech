@@ -33,8 +33,8 @@ namespace CM_Project.Models
         [Required] public string ProdSize { get; set; }
         [Required] public int ProdQuantity { get; set; }
 
-        public virtual ICollection<ProductPicture> ProductPictures { get; set; }
-        public virtual ICollection<CartItem> CartItems { get; set; }
+        public virtual ICollection<ProductPicture> ProductPictures { get; set; } = new List<ProductPicture>();
+        public virtual ICollection<CartItem> CartItems { get; set; } = new List<CartItem>();
 
         public ProdStatus Status { get; set; }
 

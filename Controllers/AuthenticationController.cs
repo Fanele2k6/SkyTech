@@ -135,78 +135,7 @@ namespace CM_Project.Controllers
         [HttpGet]
         public IActionResult ShopOwnerReg() => View();
 
-        //[HttpPost]
-        //[ValidateAntiForgeryToken]
-        //public IActionResult ShopOwnerReg(ShopOwnerViewModel model, IFormFile BusRegCertificate, IFormFile OwnerIdentityBook)
-        //{
-        //    if (!ModelState.IsValid)
-        //        return View(model);
 
-        //    if (db.shopowners.Any(d => d.Email == model.Email))
-        //    {
-        //        ModelState.AddModelError("Email", "Email already exists");
-        //        return View(model);
-        //    }
-
-        //    var shopOwner = new ShopOwner
-        //    {
-        //        IdBookNumber = model.IdBookNumber,
-        //        Names = model.Names,
-        //        Surname = model.Surname,
-        //        Email = model.Email,
-        //        ResidentialAddress = model.ResidentialAddress,
-        //        AccountNumber = model.AccountNumber,
-        //        BankType = model.BankType,
-        //        ShopName = model.ShopName,
-        //        ShopAddress = model.ShopAddress,
-        //        Shoptype = model.Shoptype,
-        //        Password = model.Password,
-        //        ApplicationStatus = ApplicationStat.Pending,
-        //        UserType = "ShopOwner",
-        //        RegisteredOn = DateTime.Now
-        //    };
-
-        //    db.shopowners.Add(shopOwner);
-        //    db.SaveChanges();
-
-        //    int currentId = shopOwner.OwnerId;
-
-        //    if (OwnerIdentityBook != null && OwnerIdentityBook.Length > 0)
-        //    {
-        //        using var ms = new MemoryStream();
-        //        OwnerIdentityBook.CopyTo(ms);
-        //        db.OwnerIdentityBooks.Add(new OwnerIdentityBook
-        //        {
-        //            OwnerId = currentId,
-        //            FileName = OwnerIdentityBook.FileName,
-        //            FileType = OwnerIdentityBook.ContentType,
-        //            FileData = ms.ToArray(),
-        //            SavedOn = DateTime.Now
-        //        });
-        //    }
-
-        //    if (BusRegCertificate != null && BusRegCertificate.Length > 0)
-        //    {
-        //        using var ms = new MemoryStream();
-        //        BusRegCertificate.CopyTo(ms);
-        //        db.BusRegCertificates.Add(new BusRegCertificate
-        //        {
-        //            OwnerId = currentId,
-        //            FileName = BusRegCertificate.FileName,
-        //            FileType = BusRegCertificate.ContentType,
-        //            FileData = ms.ToArray(),
-        //            SavedOn = DateTime.Now
-        //        });
-        //    }
-
-        //    db.SaveChanges();
-
-        //    _services.CustomerRegConfirmation(model.Email, model.Names);
-        //    TempData["Message"] = "Registration successful";
-        //    return RedirectToAction("LogIn");
-        //}
-
-        //this is the controller
 
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -232,7 +161,7 @@ namespace CM_Project.Controllers
                 BankType = model.BankType,
                 ShopName = model.ShopName,
                 ShopAddress = model.ShopAddress,
-                Shoptype = model.Shoptype,
+                //Shoptype = model.Shoptype,
                 Password = model.Password,
                 ApplicationStatus = ApplicationStat.Pending,
                 UserType = "ShopOwner",
@@ -349,7 +278,7 @@ namespace CM_Project.Controllers
 
             //int currentId = driver.DriverId;
 
-            if (model.DriversLicences != null && model.DriversLicences.Length > 0)
+            if (model.DriversLicence != null && model.DriversLicence.Length > 0)
             {
                 // using var ms = new MemoryStream();
                 // DriversLicences.CopyTo(ms);
@@ -369,15 +298,15 @@ namespace CM_Project.Controllers
                 db.DriversLicences.Add(new DriversLicence
                 {
                     DriverId = driver.DriverId,
-                    FileName = model.DriversLicences.FileName,
-                    FileType = model.DriversLicences.ContentType,
+                    FileName = model.DriversLicence.FileName,
+                    FileType = model.DriversLicence.ContentType,
                   //  FileData = ms.ToArray(),
                    FilePath = $"/Uploads/DrivingLicence/{licenceFileName}", // store relative path
                     SavedOn = DateTime.Now
                 });
             }
 
-            if (model.DriverIdentityBooks != null && model.DriverIdentityBooks.Length > 0)
+            if (model.DriverIdentityBook != null && model.DriverIdentityBook.Length > 0)
             {
                 // using var ms = new MemoryStream();
                 // DriverIdentityBooks.CopyTo(ms);
@@ -396,8 +325,8 @@ namespace CM_Project.Controllers
                 db.DriverIdentityBooks.Add(new DriverIdentityBook
                 {
                     DriverId = driver.DriverId,
-                    FileName = model.DriverIdentityBooks.FileName,
-                    FileType = model.DriverIdentityBooks.ContentType,
+                    FileName = model.DriverIdentityBook.FileName,
+                    FileType = model.DriverIdentityBook.ContentType,
                    // FileData = ms.ToArray(),
                    FilePath = $"/Uploads/DriverIdDocument/{idFileName}",
                     SavedOn = DateTime.Now

@@ -27,8 +27,8 @@ namespace CM_Project.Models
         [Required] public string BankType { get; set; }
         [Required, MaxLength(100)] public string ShopName { get; set; }
 
-        [MaxLength(200)] public string ShopAddress { get; set; }
-        public string Shoptype { get; set; }
+        [Required, MaxLength(200)] public string ShopAddress { get; set; }
+        //public string Shoptyp/e { get; set; }
 
         // Navigation properties for related documents
         public virtual ICollection<BusRegCertificate> BussRegCertificates { get; set; } = new List<BusRegCertificate>();

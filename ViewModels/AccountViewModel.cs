@@ -79,7 +79,7 @@ namespace CM_Project.ViewModels
         [Required, MaxLength(50)] public string BankType { get; set; }
         [Required, MaxLength(100)] public string ShopName { get; set; }
         [MaxLength(200)] public string ShopAddress { get; set; }
-        [Required] public string Shoptype { get; set; }
+        //[Required] pu/blic string Shoptype { get; set; }
 
         // File uploads
         public IFormFile OwnerIdentityBook { get; set; }
