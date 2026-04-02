@@ -55,6 +55,8 @@ namespace CM_Project.Controllers
 
             // EF Core: EF.Functions.DateDiffWeek replaces SqlFunctions.DatePart
             var weeklySales = db.OrderItems
+                 .Include(o => o.Order)        // Added the two includes Order and Products
+                 .Include(o => o.Products)
                 .Where(o => o.Products.OwnerId == currentId && o.Order.Status == OrderStatus.Delivered)
                 .AsEnumerable() // pulls to memory first
                 .GroupBy(o => System.Globalization.ISOWeek.GetWeekOfYear(o.Order.OrderedOn))
