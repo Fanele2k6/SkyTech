@@ -3,6 +3,7 @@ using CM_Project.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Identity.Client;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,6 +17,20 @@ namespace CM_Project.Controllers
         private readonly ApplicationDbContext db;
 
         public CustomerController(ApplicationDbContext context) { db = context; }
+
+
+        public IActionResult ProductDetails(int id)  // ← receive product id from URL
+        {
+            var product = db.AddProducts
+                .Include(p => p.ProductPictures)
+                .Include(p => p.Owner)
+                .FirstOrDefault(p => p.ProdId == id);  // ← use product id, not userId
+
+            if (product == null) return NotFound();
+
+            return View(product);  // single product, not a list
+        }
+
 
         [HttpGet]
         public IActionResult ShoppingPage(string search, SelectCategory? category)

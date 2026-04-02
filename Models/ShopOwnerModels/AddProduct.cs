@@ -19,11 +19,19 @@ namespace CM_Project.Models
         Out_Of_Stock // 2
     }
 
+    public enum SelectType
+    {
+        Pre_Owned, //0
+        New, //1
+        Refurbished
+    }
+
     public class AddProduct
     {
         [Key]
         public int ProdId { get; set; }
         public int OwnerId { get; set; }
+        [ForeignKey("OwnerId")]
         public virtual ShopOwner Owner { get; set; }
 
         [Required] public string ProdName { get; set; }
@@ -32,6 +40,7 @@ namespace CM_Project.Models
         [Required] public double ProdPrice { get; set; }
         [Required] public string ProdSize { get; set; }
         [Required] public int ProdQuantity { get; set; }
+        [Required] public SelectType ProdType { get; set; }
 
         public virtual ICollection<ProductPicture> ProductPictures { get; set; } = new List<ProductPicture>();
         public virtual ICollection<CartItem> CartItems { get; set; } = new List<CartItem>();
