@@ -31,5 +31,26 @@ namespace CM_Project.Models
         // ── Cart tables ──────────────────────────────────────
         public DbSet<Cart> Carts { get; set; }
         public DbSet<CartItem> CartItems { get; set; }
+
+
+
+        //protected override void OnModelCreating(ModelBuilder modelBuilder)
+        //{
+        //    base.OnModelCreating(modelBuilder);
+
+        //    // Keep cascade on OrderItems (deleting Order also deletes its items) ✅
+        //    modelBuilder.Entity<OrderItem>()
+        //        .HasOne(oi => oi.Order)
+        //        .WithMany(o => o.OrderItems)
+        //        .HasForeignKey(oi => oi.OrderId)
+        //        .OnDelete(DeleteBehavior.Cascade);  // ← delete order = delete its items
+
+        //    // Break the cycle HERE instead — on the Customer → Order path
+        //    modelBuilder.Entity<Order>()
+        //        .HasOne(o => o.Customers)
+        //        .WithMany()
+        //        .HasForeignKey(o => o.CustomerId)
+        //        .OnDelete(DeleteBehavior.NoAction);  // ← stops the cycle
+        //}
     }
 }

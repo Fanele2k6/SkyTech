@@ -33,5 +33,10 @@ namespace CM_Project.Models
         public bool IsArchived { get; set; } = false;
 
         public virtual ICollection<OrderItem> OrderItems { get; set; }
+
+        //Need to have shop owner Id to know which store order belongs to
+        public int OwnerId { get; set; }
+        [ForeignKey("OwnerId")]
+        public virtual ShopOwner ShopOwner { get; set; }
     }
 }
