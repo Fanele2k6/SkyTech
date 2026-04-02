@@ -41,17 +41,18 @@ namespace CM_Project.Controllers
             var drivers = db.DeliveryDrivers
                 .Count(d => d.ApplicationStatus == Status.Approved && d.IsAvailable);
 
-            var pendingOrdersCount = db.OrderItems
-                .Where(i => i.Products.OwnerId == currentId && i.Order.Status == OrderStatus.Pending)
-                .Select(i => i.OrderId).Distinct().Count();
+            //Now filters directly on Order.OwnerId instead of OrderItems
+            var pendingOrdersCount = db.Orders
+                .Where(i => i.OwnerId == currentId && i.Status == OrderStatus.Pending)
+                .Count();
 
-            var completed = db.OrderItems
-                .Where(i => i.Products.OwnerId == currentId && i.Order.Status == OrderStatus.Delivered)
-                .Select(i => i.OrderId).Distinct().Count();
+            var completed = db.Orders
+                .Where(i => i.OwnerId == currentId && i.Status == OrderStatus.Delivered)
+                .Count();
 
-            var totalStoreSales = db.OrderItems
-                .Where(oi => oi.Order.Status == OrderStatus.Delivered && oi.Products.OwnerId == currentId)
-                .Sum(oi => (double?)oi.PriceAtTimeOfPurchase * oi.Quantity) ?? 0;
+            var totalStoreSales = db.Orders
+                .Where(oi => oi.Status == OrderStatus.Delivered && oi.OwnerId == currentId)
+                .Sum(oi => (double?)oi.TotalAmount) ?? 0;
 
             // EF Core: EF.Functions.DateDiffWeek replaces SqlFunctions.DatePart
             var weeklySales = db.OrderItems
@@ -295,7 +296,7 @@ namespace CM_Project.Controllers
                 .Include(o => o.OrderItems)
                     .ThenInclude(i => i.Products)
                 .Include(o => o.Driver)
-                .Where(o => o.OrderItems.Any(i => i.Products.OwnerId == currentId))
+                .Where(o => o.OwnerId == currentId)
                 .OrderByDescending(o => o.OrderedOn)
                 .ToList();
 

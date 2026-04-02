@@ -201,10 +201,8 @@ namespace CM_Project.Controllers
         [ValidateAntiForgeryToken]
         public IActionResult Checkout(string deliveryAddress)
         {
-            // The ! tells the compiler "trust me, this won't be null"
             int currentId = HttpContext.Session.GetInt32("UserId")!.Value;
 
-            // ✅ Load cart with Products included
             var cart = db.Carts
                 .Include(c => c.CartItems)
                     .ThenInclude(ci => ci.AddProduct)
@@ -216,9 +214,12 @@ namespace CM_Project.Controllers
                 return RedirectToAction("ViewCart");
             }
 
-            // ✅ Null-safe: fall back to stored price if Products is null
-            double totalAmount = cart.CartItems.Sum(ci =>
-                (ci.AddProduct != null ? ci.AddProduct.ProdPrice : ci.PriceAtTimeAdded) * ci.ProdQuantity);
+            var customer = db.Customers.FirstOrDefault(c => c.CustomerId == currentId);
+            if (customer == null)
+            {
+                TempData["Error"] = "Customer not found.";
+                return RedirectToAction("ViewCart");
+            }
 
             if (!string.IsNullOrWhiteSpace(deliveryAddress))
             {
@@ -227,80 +228,204 @@ namespace CM_Project.Controllers
                     deliveryAddress.Trim(), currentId);
             }
 
-            // ✅ Include Products so stock check doesn't crash
-            var cartItems = db.CartItems
-                .Include(c => c.AddProduct)
-                .Where(c => c.Carts.CustomerId == currentId)
+            var address = string.IsNullOrWhiteSpace(deliveryAddress)
+                ? customer.Address
+                : deliveryAddress.Trim();
+
+            // Group cart items by store (OwnerId)
+            var itemsByStore = cart.CartItems
+                .Where(ci => ci.AddProduct != null)
+                .GroupBy(ci => ci.AddProduct.OwnerId)
                 .ToList();
 
-            var address = db.Customers
-                .Where(a => a.CustomerId == currentId)
-                .Select(a => a.Address)
-                .FirstOrDefault();
-
-            var customer = db.Customers.FirstOrDefault(c => c.CustomerId == currentId);
-
-            if (customer == null)
+            // Check stock for all items before creating any orders
+            foreach (var storeGroup in itemsByStore)
             {
-                TempData["Error"] = "Customer not found.";
-                return RedirectToAction("ViewCart");
-            }
-
-            foreach (var item in cartItems)
-            {
-                var product = db.AddProducts.Find(item.ProdId);
-                if (product == null) continue;
-
-                if (product.ProdQuantity < item.ProdQuantity)
+                foreach (var item in storeGroup)
                 {
-                    TempData["Error"] = product.ProdName + " does not have enough stock available.";
-                    return RedirectToAction("ViewCart");
+                    var product = db.AddProducts.Find(item.ProdId);
+                    if (product == null) continue;
+                    if (product.ProdQuantity < item.ProdQuantity)
+                    {
+                        TempData["Error"] = product.ProdName + " does not have enough stock available.";
+                        return RedirectToAction("ViewCart");
+                    }
                 }
-
-                product.ProdQuantity -= item.ProdQuantity;
-                product.Status = product.ProdQuantity == 0 ? ProdStatus.Out_Of_Stock
-                               : product.ProdQuantity <= 5 ? ProdStatus.Low_stock
-                                                            : ProdStatus.In_Stock;
             }
 
             double deliveryFee = 50;
-            double subtotal = cartItems.Sum(i => i.SubTotal);
-            double total = subtotal + deliveryFee;
+            var createdOrderIds = new List<int>();
 
-            var order = new Order
+            // Create one order per store
+            foreach (var storeGroup in itemsByStore)
             {
-                CustomerId = currentId,
-                OrderedOn = DateTime.Now,
-                Status = OrderStatus.Pending,
-                PaymentExpiry = DateTime.Now.AddMinutes(2),
-                TotalAmount = totalAmount,
-                PaymentReference = "",
-                DeliveryAddress = string.IsNullOrWhiteSpace(deliveryAddress)
-                                    ? address
-                                    : deliveryAddress.Trim(),
+                int storeOwnerId = storeGroup.Key;
 
-                OrderItems = cart.CartItems.Select(ci => new OrderItem
+                double storeSubtotal = storeGroup.Sum(ci =>
+                    (ci.AddProduct != null ? ci.AddProduct.ProdPrice : ci.PriceAtTimeAdded) * ci.ProdQuantity);
+
+                double storeTotalAmount = storeSubtotal + deliveryFee;
+
+                var order = new Order
                 {
-                    ProdId = ci.ProdId,
-                    ProdName = ci.ProdName,
-                    Quantity = ci.ProdQuantity,
-                    PriceAtTimeOfPurchase = ci.PriceAtTimeAdded
-                }).ToList()
-            };
+                    CustomerId = currentId,
+                    OwnerId = storeOwnerId,   // each order belongs to one store
+                    OrderedOn = DateTime.Now,
+                    Status = OrderStatus.Pending,
+                    PaymentExpiry = DateTime.Now.AddMinutes(1),
+                    TotalAmount = storeTotalAmount,
+                    PaymentReference = "",
+                    DeliveryAddress = address,
+                    OrderItems = storeGroup.Select(ci => new OrderItem
+                    {
+                        ProdId = ci.ProdId,
+                        ProdName = ci.ProdName,
+                        Quantity = ci.ProdQuantity,
+                        PriceAtTimeOfPurchase = ci.PriceAtTimeAdded
+                    }).ToList()
+                };
 
-            db.Orders.Add(order);
+                db.Orders.Add(order);
+                db.SaveChanges(); // save each order to get its OrderId
+
+                createdOrderIds.Add(order.OrderId);
+
+                // Deduct stock for this store's items
+                foreach (var item in storeGroup)
+                {
+                    var product = db.AddProducts.Find(item.ProdId);
+                    if (product == null) continue;
+                    product.ProdQuantity -= item.ProdQuantity;
+                    product.Status = product.ProdQuantity == 0 ? ProdStatus.Out_Of_Stock
+                                   : product.ProdQuantity <= 5 ? ProdStatus.Low_stock
+                                                                 : ProdStatus.In_Stock;
+                }
+            }
+
+            // Mark cart as checked out
+            cart.IsCheckedOut = true;
             db.SaveChanges();
 
+            // Calculate grand total across all store orders
+            double grandTotal = db.Orders
+                .Where(o => createdOrderIds.Contains(o.OrderId))
+                .Sum(o => o.TotalAmount);
+
+            // Redirect to payment with all order IDs
             return RedirectToAction("PaymentPage", "Payment", new
             {
-                orderId = order.OrderId,
-                amount = total,
+                orderIds = string.Join(",", createdOrderIds),
+                amount = grandTotal,
                 customerEmail = customer.Email,
                 customerName = customer.FirstName,
                 itemCount = cart.CartItems.Sum(i => i.ProdQuantity),
                 deliveryAddress
             });
         }
+
+
+        //public IActionResult Checkout(string deliveryAddress)
+        //{
+        //    // The ! tells the compiler "trust me, this won't be null"
+        //    int currentId = HttpContext.Session.GetInt32("UserId")!.Value;
+
+        //    // ✅ Load cart with Products included
+        //    var cart = db.Carts
+        //        .Include(c => c.CartItems)
+        //            .ThenInclude(ci => ci.AddProduct)
+        //        .FirstOrDefault(c => c.CustomerId == currentId && !c.IsCheckedOut);
+
+        //    if (cart == null || !cart.CartItems.Any())
+        //    {
+        //        TempData["Error"] = "Your cart is empty.";
+        //        return RedirectToAction("ViewCart");
+        //    }
+
+        //    // ✅ Null-safe: fall back to stored price if Products is null
+        //    double totalAmount = cart.CartItems.Sum(ci =>
+        //        (ci.AddProduct != null ? ci.AddProduct.ProdPrice : ci.PriceAtTimeAdded) * ci.ProdQuantity);
+
+        //    if (!string.IsNullOrWhiteSpace(deliveryAddress))
+        //    {
+        //        db.Database.ExecuteSqlRaw(
+        //            "UPDATE Customers SET Address = {0} WHERE CustomerId = {1}",
+        //            deliveryAddress.Trim(), currentId);
+        //    }
+
+        //    // ✅ Include Products so stock check doesn't crash
+        //    var cartItems = db.CartItems
+        //        .Include(c => c.AddProduct)
+        //        .Where(c => c.Carts.CustomerId == currentId)
+        //        .ToList();
+
+        //    var address = db.Customers
+        //        .Where(a => a.CustomerId == currentId)
+        //        .Select(a => a.Address)
+        //        .FirstOrDefault();
+
+        //    var customer = db.Customers.FirstOrDefault(c => c.CustomerId == currentId);
+
+        //    if (customer == null)
+        //    {
+        //        TempData["Error"] = "Customer not found.";
+        //        return RedirectToAction("ViewCart");
+        //    }
+
+        //    foreach (var item in cartItems)
+        //    {
+        //        var product = db.AddProducts.Find(item.ProdId);
+        //        if (product == null) continue;
+
+        //        if (product.ProdQuantity < item.ProdQuantity)
+        //        {
+        //            TempData["Error"] = product.ProdName + " does not have enough stock available.";
+        //            return RedirectToAction("ViewCart");
+        //        }
+
+        //        product.ProdQuantity -= item.ProdQuantity;
+        //        product.Status = product.ProdQuantity == 0 ? ProdStatus.Out_Of_Stock
+        //                       : product.ProdQuantity <= 5 ? ProdStatus.Low_stock
+        //                                                    : ProdStatus.In_Stock;
+        //    }
+
+        //    double deliveryFee = 50;
+        //    double subtotal = cartItems.Sum(i => i.SubTotal);
+        //    double total = subtotal + deliveryFee;
+
+        //    var order = new Order
+        //    {
+        //        CustomerId = currentId,
+        //        OrderedOn = DateTime.Now,
+        //        Status = OrderStatus.Pending,
+        //        PaymentExpiry = DateTime.Now.AddMinutes(2),
+        //        TotalAmount = totalAmount,
+        //        PaymentReference = "",
+        //        DeliveryAddress = string.IsNullOrWhiteSpace(deliveryAddress)
+        //                            ? address
+        //                            : deliveryAddress.Trim(),
+
+        //        OrderItems = cart.CartItems.Select(ci => new OrderItem
+        //        {
+        //            ProdId = ci.ProdId,
+        //            ProdName = ci.ProdName,
+        //            Quantity = ci.ProdQuantity,
+        //            PriceAtTimeOfPurchase = ci.PriceAtTimeAdded
+        //        }).ToList()
+        //    };
+
+        //    db.Orders.Add(order);
+        //    db.SaveChanges();
+
+        //    return RedirectToAction("PaymentPage", "Payment", new
+        //    {
+        //        orderId = order.OrderId,
+        //        amount = total,
+        //        customerEmail = customer.Email,
+        //        customerName = customer.FirstName,
+        //        itemCount = cart.CartItems.Sum(i => i.ProdQuantity),
+        //        deliveryAddress
+        //    });
+        //}
 
         private void DeleteExpiredOrders(int customerId)
         {

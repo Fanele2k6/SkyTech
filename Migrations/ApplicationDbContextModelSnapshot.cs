@@ -451,6 +451,9 @@ namespace SkyTech.Migrations
                     b.Property<DateTime>("OrderedOn")
                         .HasColumnType("datetime2");
 
+                    b.Property<int>("OwnerId")
+                        .HasColumnType("int");
+
                     b.Property<DateTime?>("PaymentExpiry")
                         .HasColumnType("datetime2");
 
@@ -469,6 +472,8 @@ namespace SkyTech.Migrations
                     b.HasIndex("CustomerId");
 
                     b.HasIndex("DriverId");
+
+                    b.HasIndex("OwnerId");
 
                     b.ToTable("Orders");
                 });
@@ -763,15 +768,24 @@ namespace SkyTech.Migrations
                 {
                     b.HasOne("CM_Project.Models.Customer", "Customers")
                         .WithMany()
-                        .HasForeignKey("CustomerId");
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.NoAction);
 
                     b.HasOne("CM_Project.Models.DeliveryDriver", "Driver")
                         .WithMany()
                         .HasForeignKey("DriverId");
 
+                    b.HasOne("CM_Project.Models.ShopOwner", "ShopOwner")
+                        .WithMany()
+                        .HasForeignKey("OwnerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.Navigation("Customers");
 
                     b.Navigation("Driver");
+
+                    b.Navigation("ShopOwner");
                 });
 
             modelBuilder.Entity("CM_Project.Models.OrderItem", b =>
