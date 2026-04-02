@@ -180,7 +180,7 @@
                 string initials = ((item.Names?.Length > 0 ? item.Names[0].ToString() : "")
                                  + (item.Surname?.Length > 0 ? item.Surname[0].ToString() : "")).ToUpper();
                 string filterTag = item.ApplicationStatus.ToString().ToLower();
-                string searchTag = $"{item.Names} {item.Surname} {item.Email} {item.ShopName} {item.ApplicationStatus}".ToLower();
+                string searchTag = $"{item.Names} {item.Surname} {item.Email} {item.ApplicationStatus}".ToLower();
                 bool isPending = item.ApplicationStatus == ApplicationStat.Pending;
 
                 <div class="appl-card" data-filter="@filterTag" data-search="@searchTag">
@@ -199,7 +199,6 @@
                     <div class="ac-body">
                         <div class="ac-row">
                             <span class="ak"><i class="fas fa-store"></i> Shop Name</span>
-                            <span class="av" style="font-family:'Clash Display','Plus Jakarta Sans',sans-serif;font-weight:700;color:#0c5bc0">@item.ShopName</span>
                         </div>
                         <div class="ac-row">
                             <span class="ak"><i class="fas fa-id-card"></i> ID Number</span>

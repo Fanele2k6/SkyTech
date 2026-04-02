@@ -10,12 +10,6 @@ using System.Web;
 
 namespace CM_Project.ViewModels
 {
-    public enum SelectType
-    {
-        Informal,
-        Formal
-    }
-
     public class LogInViewModel
     {
         [Required(ErrorMessage = "Please enter your username")]
@@ -77,7 +71,6 @@ namespace CM_Project.ViewModels
         [Required, StringLength(13, MinimumLength = 13)] public string IdBookNumber { get; set; }
         [Required, MaxLength(100)] public string AccountNumber { get; set; }
         [Required, MaxLength(50)] public string BankType { get; set; }
-        [Required, MaxLength(100)] public string ShopName { get; set; }
         [MaxLength(200)] public string ShopAddress { get; set; }
         //[Required] pu/blic string Shoptype { get; set; }
 
@@ -189,32 +182,25 @@ namespace CM_Project.ViewModels
 
         //[MaxLength(100)]
         [Required(ErrorMessage ="Product name is required")]
-        [DisplayName("Product Name")]
         public string ProdName { get; set; }
 
 
-        [DisplayName("Product Category")]
         [Required(ErrorMessage = "Product category is required")]
 
         public SelectCategory ProdCategory { get; set; }
 
-        [DisplayName("Product Description")]
         [Required(ErrorMessage = "Product description is required")]
         public string ProdDescription { get; set; }
 
-        [DisplayName("Product Price")]
         [Required(ErrorMessage ="Product price is required")]
         public double ProdPrice { get; set; }
 
-        [DisplayName("Product Size(e.g kg, mm, ect..)")]
         [Required(ErrorMessage ="Product size is required")]
         public string ProdSize { get; set; } 
 
-        [DisplayName("Product Quantity")]
         [Required(ErrorMessage ="Product quantity is required")]
         public int ProdQuantity { get; set; }
 
-        [DisplayName("Product Picture")]
         [Required(ErrorMessage = "Picture of the product is required")]
       public IFormFile ProductPicture { get; set; }
 

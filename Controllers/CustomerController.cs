@@ -17,22 +17,6 @@ namespace CM_Project.Controllers
 
         public CustomerController(ApplicationDbContext context) { db = context; }
 
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public IActionResult ScanProduct(string barcode)
-        {
-            // The ! tells the compiler "trust me, this won't be null"
-            int currentId = HttpContext.Session.GetInt32("UserId")!.Value;
-
-            DeleteExpiredOrders(currentId);
-
-            if (!string.IsNullOrEmpty(barcode))
-                return Redirect("https://www.google.com/search?q=" + barcode);
-
-            TempData["Error"] = "No barcode entered.";
-            return RedirectToAction("ScanProduct");
-        }
-
         [HttpGet]
         public IActionResult ShoppingPage(string search, SelectCategory? category)
         {
@@ -40,24 +24,43 @@ namespace CM_Project.Controllers
             int currentId = HttpContext.Session.GetInt32("UserId")!.Value;
             DeleteExpiredOrders(currentId);
 
+            //displays 10 products from any shop by default
             var products = db.AddProducts
                 .Include(p => p.ProductPictures)
                 .Include(p => p.Owner)
                 .AsQueryable()
                 .Take(10);
 
-            var popularPicks = db.OrderItems
+            //section 1 sorting by popuplar picks
+            //var popularPicks = db.OrderItems
+            //    .GroupBy(o => o.ProdId)
+            //    .Select(g => new { ProductId = g.Key, TotalSold = g.Sum(x => x.Quantity) })
+            //    .OrderByDescending(x => x.TotalSold)
+            //    .Take(10)
+            //    .Join(db.AddProducts, p => p.ProductId, prod => prod.ProdId, (p, prod) => prod)
+            //    .ToList();
+
+
+            // ✅ Fix — get IDs first, then query with Include()
+            var topProductIds = db.OrderItems
                 .GroupBy(o => o.ProdId)
                 .Select(g => new { ProductId = g.Key, TotalSold = g.Sum(x => x.Quantity) })
                 .OrderByDescending(x => x.TotalSold)
                 .Take(10)
-                .Join(db.AddProducts, p => p.ProductId, prod => prod.ProdId, (p, prod) => prod)
+                .Select(x => x.ProductId)
                 .ToList();
 
+            var popularPicks = db.AddProducts
+    .Include(p => p.ProductPictures)
+    .Include(p => p.Owner)          // ← now Owner loads correctly
+    .Where(p => topProductIds.Contains(p.ProdId))
+    .ToList();
+
+            //section 2 sorting by category type 1
             var category1 = db.AddProducts
                 .Include(p => p.ProductPictures)
                 .Include(p => p.Owner)
-                .Where(p => p.ProdCategory == SelectCategory.Groceries)
+                .Where(p => p.ProdCategory == SelectCategory.Appliances)
                 .Take(10)
                 .ToList();
 
@@ -67,6 +70,7 @@ namespace CM_Project.Controllers
             if (!string.IsNullOrEmpty(search))
                 products = products.Where(p => p.ProdName.Contains(search));
 
+            //update cart notification
             var cartNotification = db.Carts
                 .Where(c => c.CustomerId == currentId && !c.IsCheckedOut)
                 .SelectMany(c => c.CartItems)

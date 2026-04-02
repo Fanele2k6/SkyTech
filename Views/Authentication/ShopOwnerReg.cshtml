@@ -83,12 +83,6 @@
                     </div>
 
                     <div class="so-form-group">
-                        <label class="so-label"><i class="fas fa-store-alt"></i> Shop Name</label>
-                        @Html.TextBoxFor(m => m.ShopName, new { @class = "so-input", placeholder = "Your shop name" })
-                        @Html.ValidationMessageFor(m => m.ShopName, "", new { @class = "text-danger" })
-                    </div>
-
-                    <div class="so-form-group">
                         <label class="so-label"><i class="fas fa-store-alt"></i> Shop Address</label>
                         @Html.TextBoxFor(m => m.ShopAddress, new { @class = "so-input", placeholder = "Shop street address" })
                         @Html.ValidationMessageFor(m => m.ShopAddress, "", new { @class = "text-danger" })
