@@ -22,31 +22,14 @@ namespace CM_Project.ViewModels
     }
     public class CustomerViewModel
     {
+        [Required, MaxLength(100)] public string FirstName { get; set; }
 
-        [Required, MaxLength(100)]
-        //[DisplayName("First Name/s")]
+        [Required, MaxLength(100)] public string LastName { get; set; }
 
-        public string FirstName { get; set; }
+        [Required, EmailAddress] [StringLength(255)] public string Email { get; set; }
+        [Required, StringLength(10)] public string PhoneNumber { get; set; }
 
-        [Required, MaxLength(100)]
-        //[DisplayName("Last Name")]
-        public string LastName { get; set; }
-
-        [Required, EmailAddress]
-        //[DisplayName("Email Address")]
-        [StringLength(255)]
-        public string Email { get; set; }
-
-
-        [Required, StringLength(10)]
-        //[DisplayName("Phone Number")]
-        public string PhoneNumber { get; set; }
-
-        [MaxLength(200)]
-        //[DisplayName("Home Address")]
-        public string Address { get; set; }
-
-        // Hashed password stored
+        [MaxLength(200)] public string Address { get; set; }
 
         [Required]
         [StringLength(100, MinimumLength = 8, ErrorMessage ="Password must be atleast 8 characters long")]
@@ -72,8 +55,7 @@ namespace CM_Project.ViewModels
         [Required, MaxLength(100)] public string AccountNumber { get; set; }
         [Required, MaxLength(50)] public string BankType { get; set; }
         [MaxLength(200)] public string ShopAddress { get; set; }
-        //[Required] pu/blic string Shoptype { get; set; }
-
+       
         // File uploads
         public IFormFile OwnerIdentityBook { get; set; }
         public IFormFile BusRegCertificate { get; set; }
@@ -85,45 +67,26 @@ namespace CM_Project.ViewModels
     public class DeliveryDriverViewModel
     {
 
-        [EmailAddress]
-        [Required(ErrorMessage ="Please enter email")]
-        public string Email { get; set; }
+        [EmailAddress]  [Required(ErrorMessage ="Please enter email")] public string Email { get; set; }
 
-        [Required(ErrorMessage ="Name is required")]
+        [Required(ErrorMessage ="Name is required")] public string DriverName { get; set; }
 
-        public string DriverName { get; set; }
+        [Required(ErrorMessage ="Surname is required")]public string DriverSurname { get; set; }
 
-        [Required(ErrorMessage ="Surname is required")]
+        [Required(ErrorMessage = "Phone number is Required")] public string PhoneNumber { get; set; }
 
-        public string DriverSurname { get; set; }
+        [Required(ErrorMessage = "Residential adress is required")] public string ResidentialAddress { get; set; }
+        [Required(ErrorMessage = "Licence number is required")] public string LicenceNumber { get; set; } 
+        
+        
+        
+  [Required(ErrorMessage = "Enter your vehicle type")]  public string VehicleType { get; set; } 
+        [Required(ErrorMessage = "Vehicle number is required")] public string VehicleNumber { get; set; }
 
-        [Required(ErrorMessage = "Phone number is Required")]
-
-        public string PhoneNumber { get; set; }
-
-        [Required(ErrorMessage = "Residential adress is required")]
-
-        public string ResidentialAddress { get; set; }
-
-        [Required(ErrorMessage = "Licence number is required")]
-
-        public string LicenceNumber { get; set; }
-
-        [Required(ErrorMessage = "Enter your vehicle type")]
-        public string VehicleType { get; set; }
-
-        [Required(ErrorMessage = "Vehicle number is required")]
-
-        public string VehicleNumber { get; set; }
-
-        [Required(ErrorMessage = "Account number is required")]
-
-        public string AccountNumber { get; set; }
+        [Required(ErrorMessage = "Account number is required")] public string AccountNumber { get; set; }
 
 
-        [Required(ErrorMessage = "Enter bank type")]
-
-        public string BankType { get; set; }
+        [Required(ErrorMessage = "Enter bank type")] public string BankType { get; set; }
        
         [Required(ErrorMessage ="Passwword is required")]
         [StringLength(100, MinimumLength = 8)]
@@ -145,32 +108,21 @@ namespace CM_Project.ViewModels
     public class StaffViewModel
     {
         
-        [Required(ErrorMessage ="First name is required")]
-        [DisplayName("First Name")]
-        public string FirstName { get; set; }
+        [Required(ErrorMessage ="First name is required")] public string FirstName { get; set; }
 
-        [Required(ErrorMessage = "Last name is required")]
-        [DisplayName("Last Name")]
-        public string LastName { get; set; }
+        [Required(ErrorMessage = "Last name is required")]public string LastName { get; set; }
 
-        [Required(ErrorMessage = "Email address is required")]
-        [DisplayName("Email Address")]
-        public string Email { get; set; }
+        [Required(ErrorMessage = "Email address is required")]public string Email { get; set; }
 
-        [Required(ErrorMessage = "Phone number address is required")]
-        [DisplayName("Phone Number")]
-        public string PhoneNumber { get; set; }
+        [Required(ErrorMessage = "Phone number address is required")]public string PhoneNumber { get; set; }
 
         //DIGITAL ACCOUNT SET-UP
-        [Required(ErrorMessage = "Password is required")]
-        [DisplayName("Password")]
-        public string Password { get; set; }
+        [Required(ErrorMessage = "Password is required")] public string Password { get; set; }
 
         [Required(ErrorMessage = "Confirm Password is required")]
         [DisplayName("Confirm Password")]
         [Compare("Password", ErrorMessage = "Passwords do not match")]
         public string ConfirmPassword { get; set; }
-
         public string UserType { get; set; }
 
         public DateTime RegisteredOn { get; set; }
@@ -179,8 +131,6 @@ namespace CM_Project.ViewModels
     public class AddProductViewModel
     {
        
-
-        //[MaxLength(100)]
         [Required(ErrorMessage ="Product name is required")]
         public string ProdName { get; set; }
 
@@ -188,6 +138,7 @@ namespace CM_Project.ViewModels
         [Required(ErrorMessage = "Product category is required")]
 
         public SelectCategory ProdCategory { get; set; }
+        public SelectType ProdType { get; set; }
 
         [Required(ErrorMessage = "Product description is required")]
         public string ProdDescription { get; set; }

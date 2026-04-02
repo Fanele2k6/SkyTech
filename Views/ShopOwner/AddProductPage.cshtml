@@ -20,7 +20,7 @@
         <div class="so-brand">
             <div class="so-brand-icon"><i class="fas fa-store"></i></div>
             <div>
-                <div class="so-brand-name">LOKAL</div>
+                <div class="so-brand-name">SkyTech</div>
                 <div class="so-brand-sub">Shop Owner Portal</div>
             </div>
         </div>
@@ -93,6 +93,14 @@
                                 <option value="">-- Select Category --</option>
                             </select>
                             @Html.ValidationMessageFor(m => m.ProdCategory, "", new { @class = "text-danger" })
+                        </div>
+
+                        <div class="so-form-group">
+                            <label class="so-label"><i class="fas fa-tag"></i> Product Type</label>
+                            <select asp-for="ProdType" asp-items="Html.GetEnumSelectList<CM_Project.Models.SelectType>()" class="so-select">
+                                <option value="">-- Select Product Type --</option>
+                            </select>
+                            @Html.ValidationMessageFor(m => m.ProdType, "", new { @class = "text-danger" })
                         </div>
 
                         <div class="so-form-group">

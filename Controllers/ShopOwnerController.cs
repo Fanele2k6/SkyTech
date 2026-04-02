@@ -84,18 +84,9 @@ namespace CM_Project.Controllers
         public IActionResult AddProductPage(AddProductViewModel model)
         {
             if (!ModelState.IsValid) return View("AddProductPage");
-           // int currentId = HttpContext.Session.GetInt32("UserId").Value;
-
-           
-            // Check if session has a value at all
-            var sessionId = HttpContext.Session.GetInt32("UserId");
-            if (sessionId == null)
-            {
-                TempData["Error"] = "Session expired. Please log in again.";
-                return RedirectToAction("LogIn", "Authentication");
-            }
-
-            int currentId = sessionId.Value;
+          
+            //var sessionId = 
+            int currentId = HttpContext.Session.GetInt32("UserId").Value;
 
             // Verify this OwnerId actually exists in the shopowners table
             var ownerExists = db.shopowners.Any(o => o.OwnerId == currentId);
@@ -110,6 +101,7 @@ namespace CM_Project.Controllers
                 OwnerId = currentId,
                 ProdName = model.ProdName,
                 ProdCategory = model.ProdCategory,
+                ProdType = model.ProdType,
                 ProdQuantity = model.ProdQuantity,
                 ProdDescription = model.ProdDescription,
                 ProdPrice = model.ProdPrice,
@@ -122,9 +114,6 @@ namespace CM_Project.Controllers
 
             if (model.ProductPicture != null && model.ProductPicture.Length > 0)
             {
-                // using var ms = new MemoryStream();
-                // model.ProductPicture.CopyTo(ms);
-
                  var pictureFolder = Path.Combine(_webHostEnvironment.WebRootPath, "Uploads", "ProductPicture");
                  Directory.CreateDirectory(pictureFolder);
                 
@@ -139,7 +128,6 @@ namespace CM_Project.Controllers
                 addProduct.ProductPictures.Add(new ProductPicture
                 {
                     OwnerId = currentId,
-                   // FileData = ms.ToArray(),
                     FilePath = $"/Uploads/ProductPicture/{fileName}",
                     FileName = Path.GetFileName(model.ProductPicture.FileName),
                     FileType = model.ProductPicture.ContentType,
@@ -186,6 +174,7 @@ namespace CM_Project.Controllers
 
             product.ProdName = model.ProdName;
             product.ProdCategory = model.ProdCategory;
+            product.ProdType = model.ProdType;
             product.ProdQuantity = model.ProdQuantity;
             product.ProdDescription = model.ProdDescription;
             product.ProdPrice = model.ProdPrice;
@@ -233,31 +222,6 @@ namespace CM_Project.Controllers
                     });
                 }
 
-            // if (ProductPicture != null && ProductPicture.Length > 0)
-            // {
-            //     using var ms = new MemoryStream();
-            //     ProductPicture.CopyTo(ms);
-            //     byte[] fileBytes = ms.ToArray();
-            //     var existingPic = product.ProductPictures.FirstOrDefault();
-
-            //     if (existingPic != null)
-            //     {
-            //         existingPic.FileData = fileBytes;
-            //         existingPic.FileName = Path.GetFileName(ProductPicture.FileName);
-            //         existingPic.FileType = ProductPicture.ContentType;
-            //         existingPic.SavedOn = DateTime.Now;
-            //     }
-            //     else
-            //     {
-            //         product.ProductPictures.Add(new ProductPicture
-            //         {
-            //             OwnerId = currentId,
-            //             FileData = fileBytes,
-            //             FileName = Path.GetFileName(ProductPicture.FileName),
-            //             FileType = ProductPicture.ContentType,
-            //             SavedOn = DateTime.Now
-            //         });
-            //     }
             }
 
             db.SaveChanges();
@@ -304,7 +268,6 @@ namespace CM_Project.Controllers
             });
             db.SaveChanges();
 
-            //new Services().StaffRegConfirmation(model.Email, model.FirstName);
             _services.CustomerRegConfirmation(model.Email, model.FirstName);
             TempData["Message"] = "Registration successful";
             return RedirectToAction("ShopOwnerDash");
@@ -324,16 +287,7 @@ namespace CM_Project.Controllers
             return View(db.shopowners.Where(p => p.OwnerId == currentId).ToList());
         }
 
-        //public IActionResult ReceivedOrders()
-        //{
-        //    var orders = db.Orders
-        //        .Include(o => o.OrderItems)
-        //        .Include(o => o.Driver)
-        //        .OrderByDescending(o => o.OrderedOn)
-        //        .ToList();
-        //    return View(orders);
-        //}
-
+     
         public IActionResult ReceivedOrders()
         {
             int currentId = HttpContext.Session.GetInt32("UserId")!.Value;
@@ -348,17 +302,6 @@ namespace CM_Project.Controllers
 
             return View(orders);
         }
-
-        //public IActionResult AssignDriver(int id)
-        //{
-        //    var order = db.Orders.Include(o => o.OrderItems).FirstOrDefault(o => o.OrderId == id);
-
-        //    ViewBag.DeliveryDrivers = db.DeliveryDrivers
-        //        .Where(d => d.IsAvailable && d.ApplicationStatus == Status.Approved)
-        //        .ToList();
-
-        //    return View(order);
-        //}
 
         public IActionResult AssignDriver(int id)
         {
