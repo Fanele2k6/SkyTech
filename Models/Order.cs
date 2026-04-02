@@ -12,7 +12,7 @@ namespace CM_Project.Models
         [Key]
         public int OrderId { get; set; }
 
-        [ForeignKey("Customers")]
+        [ForeignKey("CustomerId")]
         public int? CustomerId { get; set; }
         public virtual Customer Customers { get; set; }
 

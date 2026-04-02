@@ -33,7 +33,7 @@
     {
         <!-- ══ EMPTY STATE ══ -->
         <div class="cart-topbar">
-            <div class="cart-logo">LOKAL</div>
+            <div class="cart-logo">SkyTech</div>
             <a href="@Url.Action("ShoppingPage", "Customer")" class="back-link">
                 <i class="fas fa-arrow-left"></i>
                 <span>Continue Shopping</span>
@@ -58,7 +58,7 @@
 
         <!-- ══ TOP BAR ══ -->
         <div class="cart-topbar">
-            <div class="cart-logo">LOKAL</div>
+            <div class="cart-logo">SkyTech</div>
             <a href="@Url.Action("ShoppingPage", "Customer")" class="back-link">
                 <i class="fas fa-arrow-left"></i>
                 <span>Continue Shopping</span>
@@ -110,7 +110,7 @@
                             <!-- Info — uses ProdName fallback if Products is null -->
                             <div class="c-info">
                                 <div class="c-name">@(item.AddProduct?.ProdName ?? item.ProdName)</div>
-                                <div class="c-shop">LOKAL Store</div>
+                                <div class="c-shop">SkyTech Store</div>
                                 <div class="c-price">R @item.PriceAtTimeAdded.ToString("N2")</div>
                             </div>
 
@@ -200,7 +200,7 @@
                 {
                     @Html.AntiForgeryToken()
                     @Html.Hidden("Amount", grandTotal)
-                    @Html.Hidden("ProductName", "LOKAL Order")
+                    @Html.Hidden("ProductName", "SkyTech Order")
 
                     <div class="addr-field">
                         <label>

@@ -1,5 +1,5 @@
 ﻿/* ═══════════════════════════════════════════════════════
-   LOKAL — REDESIGNED  |  Blue & White  |  Fresh Market
+   SkyTech — REDESIGNED  |  Blue & White  |  Fresh Market
    Fonts: Clash Display (headings) + Plus Jakarta Sans (body)
 ═══════════════════════════════════════════════════════ */
 
@@ -618,19 +618,6 @@ body {
     white-space: nowrap;
 }
 
-.p-stars {
-    display: flex;
-    align-items: center;
-    gap: 2px;
-    font-size: 0.72rem;
-    color: var(--yellow);
-    margin-bottom: 0.8rem;
-}
-
-    .p-stars span {
-        color: var(--text-3);
-        margin-left: 3px;
-    }
 
 /* quantity stepper + add button */
 .add-row {
@@ -1480,7 +1467,7 @@ body {
 
 
 /* ═══════════════════════════════════════════════════════════════
-   LOKAL — Cart Page Styles  (Cadetblue Edition)
+   SkyTech — Cart Page Styles  (Cadetblue Edition)
    Drop in: ~/CSS/CartStyle.css
    Requires DriverStyle.css to be loaded first (for CSS tokens)
    ═══════════════════════════════════════════════════════════════ */
@@ -2116,3 +2103,271 @@ body {
     }
     /* show only icon on tiny screens */
 }
+
+/*==============================================Product details style=============================*/
+.det-page {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 1.5rem 1rem 6rem;
+}
+
+.det-back {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    font-size: .85rem;
+    font-weight: 700;
+    color: #1a73e8;
+    margin-bottom: 1.4rem;
+    text-decoration: none;
+}
+
+    .det-back:hover {
+        opacity: .75;
+    }
+
+.det-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    align-items: start;
+}
+
+@media(max-width:680px) {
+    .det-layout {
+        grid-template-columns: 1fr
+    }
+}
+
+/* Image */
+.det-img-wrap {
+    border-radius: 20px;
+    overflow: hidden;
+    background: #f7f9ff;
+    border: 1.5px solid #dde6f5;
+    aspect-ratio: 1/1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+    .det-img-wrap img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+    }
+
+.det-img-placeholder {
+    font-size: 4rem;
+    color: #1a73e8;
+    opacity: .2;
+}
+
+/* Thumbnails */
+.det-thumbs {
+    display: flex;
+    gap: .5rem;
+    margin-top: .75rem;
+    flex-wrap: wrap;
+}
+
+.det-thumb {
+    width: 60px;
+    height: 60px;
+    border-radius: 10px;
+    border: 1.5px solid #dde6f5;
+    overflow: hidden;
+    cursor: pointer;
+    transition: border-color .2s;
+}
+
+    .det-thumb:hover, .det-thumb.active {
+        border-color: #1a73e8;
+    }
+
+    .det-thumb img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+    }
+
+/* Info panel */
+.det-shop {
+    font-size: .78rem;
+    font-weight: 700;
+    color: #1a73e8;
+    background: #e8f1fd;
+    border: 1px solid rgba(26,115,232,.2);
+    border-radius: 20px;
+    padding: .2rem .7rem;
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    margin-bottom: .6rem;
+}
+
+.det-name {
+    font-family: 'Clash Display','Plus Jakarta Sans',sans-serif;
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: #0e1b35;
+    letter-spacing: -.4px;
+    margin-bottom: .5rem;
+}
+
+.det-price {
+    font-family: 'Clash Display','Plus Jakarta Sans',sans-serif;
+    font-size: 2rem;
+    font-weight: 700;
+    color: #1a73e8;
+    margin-bottom: .8rem;
+}
+
+.det-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem;
+    margin-bottom: 1.1rem;
+}
+
+.det-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    padding: .3rem .85rem;
+    border: 1.5px solid #dde6f5;
+    border-radius: 20px;
+    font-size: .8rem;
+    font-weight: 700;
+    color: #4a5878;
+    background: #fff;
+}
+
+    .det-pill i {
+        color: #1a73e8;
+        font-size: .75rem;
+    }
+
+.det-stock-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    padding: .3rem .85rem;
+    border-radius: 20px;
+    font-size: .8rem;
+    font-weight: 700;
+}
+
+.in-stock {
+    background: rgba(22,163,74,.1);
+    color: #15803d;
+    border: 1px solid rgba(22,163,74,.25);
+}
+
+.low-stock {
+    background: rgba(217,119,6,.1);
+    color: #92400e;
+    border: 1px solid rgba(217,119,6,.25);
+}
+
+.out-stock {
+    background: rgba(220,38,38,.1);
+    color: #b91c1c;
+    border: 1px solid rgba(220,38,38,.25);
+}
+
+.det-desc-label {
+    font-size: .78rem;
+    font-weight: 700;
+    color: #8a96b0;
+    letter-spacing: .5px;
+    margin-bottom: .4rem;
+}
+
+.det-desc {
+    font-size: .9rem;
+    color: #4a5878;
+    line-height: 1.65;
+    margin-bottom: 1.4rem;
+}
+
+/* Add to cart */
+.det-add-row {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    flex-wrap: wrap;
+}
+
+.qty-stepper {
+    display: flex;
+    align-items: center;
+    background: #f7f9ff;
+    border: 1.5px solid #dde6f5;
+    border-radius: 50px;
+    overflow: hidden;
+}
+
+.qty-btn {
+    width: 36px;
+    height: 40px;
+    border: none;
+    background: transparent;
+    font-size: 1.1rem;
+    color: #1a73e8;
+    cursor: pointer;
+    transition: background .18s;
+    font-weight: 700;
+}
+
+    .qty-btn:hover {
+        background: #e8f1fd;
+    }
+
+.qty-input {
+    width: 46px;
+    border: none;
+    background: transparent;
+    text-align: center;
+    font-weight: 700;
+    font-size: .95rem;
+    color: #0e1b35;
+    outline: none;
+    -moz-appearance: textfield;
+}
+
+    .qty-input::-webkit-outer-spin-button, .qty-input::-webkit-inner-spin-button {
+        -webkit-appearance: none
+    }
+
+.add-btn-lg {
+    flex: 1;
+    padding: .85rem 1.5rem;
+    background: linear-gradient(135deg,#1a73e8,#0c5bc0);
+    color: #fff;
+    border: none;
+    border-radius: 50px;
+    font-family: 'Clash Display','Plus Jakarta Sans',sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: .5rem;
+    box-shadow: 0 4px 16px rgba(26,115,232,.28);
+    transition: all .2s;
+}
+
+    .add-btn-lg:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 22px rgba(26,115,232,.36);
+    }
+
+    .add-btn-lg.oos {
+        background: #e2e8f0;
+        color: #94a3b8;
+        box-shadow: none;
+        cursor: not-allowed;
+        transform: none;
+    }
