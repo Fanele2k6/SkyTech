@@ -132,7 +132,6 @@
                     </div>
 
                     <div class="p-body">
-                        <div class="p-shop">@item.Owner.ShopName</div>
                         <div class="p-name">@item.ProdName</div>
                         <div class="p-meta-row">
 
@@ -185,16 +184,13 @@
             }
         </div>
 
-        <!-- ══ SCAN BANNER ══ -->
+        <!-- ══  First BANNER | it was a scannner bbanner beforethat why classes are named like this ══ -->
         <div class="scan-banner">
             <div class="scan-banner-left">
-                <div class="scan-banner-icon"><i class="fas fa-barcode"></i></div>
                 <div>
-                    @* <div class="scan-banner-title">Scan &amp; Verify</div> *@
                     <div class="scan-banner-sub">Trusted Tech & Appliances — Affordable for You</div>
                 </div>
             </div>
-            <button class="scan-banner-btn" id="openScanner2">U</button>
         </div>
 
         <!--======================================================POPULAR PICKS============================================================================== ══ -->
@@ -239,9 +235,7 @@
                     </div>
 
                     <div class="p-body">
-
-                        <div class="p-shop">@item.Owner.ShopName</div>
-
+                        <!--Shop name is no longer required since the store name is the same-->
                         <div class="p-name">@item.ProdName</div>
 
                         <div class="p-meta-row">
@@ -309,16 +303,13 @@
 
         </div>
 
-        <!-- ══ SCAN BANNER ══ -->
+        <!-- ══  First BANNER | it was a scannner bbanner beforethat why classes are named like this ══ -->
         <div class="scan-banner">
             <div class="scan-banner-left">
-                <div class="scan-banner-icon"><i class="fas fa-barcode"></i></div>
                 <div>
-                    @* <div class="scan-banner-title">Scan &amp; Verify</div> *@
                     <div class="scan-banner-sub">Trusted Tech & Appliances — Affordable for You</div>
                 </div>
             </div>
-            @* <button class="scan-banner-btn" id="openScanner2">Use Scanner</button> *@
         </div>
 
 
@@ -328,7 +319,7 @@
         <div class="section-hdr">
             <div class="section-hdr-left">
                 <span class="section-icon fire"><i class="fas fa-fire"></i></span>
-                <span class="section-title">Groceries</span>
+                <span class="section-title">Appliances</span>
             </div>
         </div>
         <div class="product-grid">
@@ -366,7 +357,7 @@
 
                     <div class="p-body">
 
-                        <div class="p-shop">@item.Owner.ShopName</div>
+                     
 
                         <div class="p-name">@item.ProdName</div>
 
@@ -465,31 +456,7 @@
         </a>
     </nav>
 
-    @* <!-- ══ SCANNER MODAL ══ -->
-    <div id="scannerModal" class="modal-overlay">
-        <div class="modal-box">
-            <div class="modal-glow"></div>
-            <div class="modal-header">
-                <div class="modal-title">
-                    <div class="modal-icon"><i class="fas fa-camera"></i></div>
-                    Scan Product
-                </div>
-                <button class="modal-close" id="closeScanner"><i class="fas fa-times"></i></button>
-            </div>
-
-            @using (Html.BeginForm("ScanProduct", "Customer", FormMethod.Post))
-            {
-                @Html.AntiForgeryToken()
-                <div class="modal-body">
-                    <input type="text" name="barcode" class="scan-input" placeholder="Type barcode here…" required />
-                </div>
-                <button type="submit" class="scan-submit">
-                    <i class="fas fa-search"></i> Check Origin
-                </button>
-            }
-        </div>
-    </div> *@
-
+    
     <script>
             // qty stepper
             function stepQty(btn, dir) {
@@ -499,13 +466,7 @@
                 input.value = Math.max(1, Math.min(max, (parseInt(input.value) || 1) + dir));
             }
 
-            // modal
-            // const modal = document.getElementById('scannerModal');
-            // const triggers = ['openScanner', 'openScanner2', 'openScanner3'].map(id => document.getElementById(id));
-            // document.getElementById('closeScanner').addEventListener('click', () => modal.classList.remove('active'));
-            // triggers.forEach(b => b && b.addEventListener('click', () => modal.classList.add('active')));
-            // modal.addEventListener('click', e => { if (e.target === modal) modal.classList.remove('active'); });
-
+           
             // add-to-cart button feedback
             document.querySelectorAll('.add-form').forEach(form => {
                 form.addEventListener('submit', function () {

@@ -7,9 +7,9 @@ namespace CM_Project.Models
 {
     public enum SelectCategory
     {
-        Local_Favorites, Electronics, Baby_and_Kids,
-        Personal_Care, Fresh_Produce, Drinks,
-        Snacks, Groceries, Stationary
+        Electronics, Cellphones_and_Accessories, Computers_and_Office,
+        Appliances, Furniture, Musical_Instruments, Household_Essentials,
+        Tools_and_DIY, Sports_and_Leisure, Gaming
     }
 
     public enum ProdStatus
@@ -37,9 +37,6 @@ namespace CM_Project.Models
         public virtual ICollection<CartItem> CartItems { get; set; } = new List<CartItem>();
 
         public ProdStatus Status { get; set; }
-
-        [NotMapped]
-        public string ShopName { get; set; }
     }
 }
 
