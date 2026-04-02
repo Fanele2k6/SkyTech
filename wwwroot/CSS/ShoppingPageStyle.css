@@ -156,29 +156,6 @@ body {
     .search-bar input::placeholder {
         color: var(--text-3);
     }
-
-.scanner-trigger {
-    background: var(--blue);
-    border: none;
-    cursor: pointer;
-    color: var(--white);
-    border-radius: 50%;
-    width: 32px;
-    height: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.85rem;
-    flex-shrink: 0;
-    box-shadow: 0 4px 12px var(--blue-glow);
-    transition: transform 0.15s, box-shadow 0.2s;
-}
-
-    .scanner-trigger:hover {
-        transform: scale(1.1);
-        box-shadow: 0 6px 18px var(--blue-glow);
-    }
-
 /* CART BTN */
 .cart-btn {
     position: relative;
@@ -371,11 +348,6 @@ body {
     box-shadow: 0 4px 16px rgba(0,0,0,0.18);
     transition: transform 0.15s, box-shadow 0.2s;
 }
-
-    .hero-scan-chip:hover {
-        transform: scale(1.04);
-        box-shadow: 0 6px 22px rgba(0,0,0,0.22);
-    }
 
 /* Hero Art */
 .hero-art {
@@ -1155,41 +1127,6 @@ body {
     transition: border-color 0.2s, box-shadow 0.2s;
     margin-bottom: 1rem;
 }
-
-    .scan-input:focus {
-        border-color: var(--blue);
-        box-shadow: 0 0 0 3px rgba(26,115,232,0.1);
-    }
-
-    .scan-input::placeholder {
-        color: var(--text-3);
-    }
-
-.scan-submit {
-    width: 100%;
-    background: var(--blue);
-    color: #fff;
-    border: none;
-    border-radius: var(--r-btn);
-    padding: 0.9rem;
-    font-family: 'Clash Display', 'Plus Jakarta Sans', sans-serif;
-    font-size: 0.9rem;
-    font-weight: 700;
-    cursor: pointer;
-    letter-spacing: 0.3px;
-    box-shadow: 0 4px 18px var(--blue-glow);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.5rem;
-    transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
-}
-
-    .scan-submit:hover {
-        background: var(--blue-dark);
-        transform: scale(1.02);
-        box-shadow: 0 6px 24px var(--blue-glow);
-    }
 
 /* ════════════════════════════════════════
    CART PAGE (adapted for new design system)

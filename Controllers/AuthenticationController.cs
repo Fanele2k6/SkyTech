@@ -159,7 +159,7 @@ namespace CM_Project.Controllers
                 ResidentialAddress = model.ResidentialAddress,
                 AccountNumber = model.AccountNumber,
                 BankType = model.BankType,
-                ShopName = model.ShopName,
+                //ShopName = model.ShopName,
                 ShopAddress = model.ShopAddress,
                 //Shoptype = model.Shoptype,
                 Password = model.Password,

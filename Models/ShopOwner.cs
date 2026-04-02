@@ -25,7 +25,6 @@ namespace CM_Project.Models
         [Required, MaxLength(200)] public string ResidentialAddress { get; set; }
         [Required, MaxLength(100)] public string AccountNumber { get; set; }
         [Required] public string BankType { get; set; }
-        [Required, MaxLength(100)] public string ShopName { get; set; }
 
         [Required, MaxLength(200)] public string ShopAddress { get; set; }
         //public string Shoptyp/e { get; set; }

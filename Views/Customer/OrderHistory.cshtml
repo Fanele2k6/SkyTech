@@ -139,12 +139,6 @@
                                                 double itemSub = item.PriceAtTimeOfPurchase * item.Quantity;
                                                 <tr>
                                                     <td><div class="prod-name">@item.ProdName</div></td>
-                                                    <td>
-                                                        <span class="shop-pill">
-                                                            <i class="fas fa-store" style="font-size:.65rem"></i>
-                                                            @(item.Products?.Owner?.ShopName ?? "LOKAL Store")
-                                                        </span>
-                                                    </td>
                                                     <td><span class="qty-badge">@item.Quantity</span></td>
                                                     <td class="price-cell">R @item.PriceAtTimeOfPurchase.ToString("N2")</td>
                                                     <td class="price-cell">R @itemSub.ToString("N2")</td>

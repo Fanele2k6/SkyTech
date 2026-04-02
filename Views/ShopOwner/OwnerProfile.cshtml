@@ -42,8 +42,8 @@
         <div class="so-sidebar-foot">
             <div class="so-foot-avatar"><i class="fas fa-store"></i></div>
             <div>
-                <div class="so-foot-name">@(owner?.ShopName ?? "My Shop")</div>
-                <div class="so-foot-role">Shop Owner</div>
+            
+                <div class="so-foot-role">SkyTech</div>
             </div>
         </div>
     </aside>
@@ -110,17 +110,10 @@
                         </div>
                         <div style="padding:.6rem 1.4rem 1.2rem">
                             <div class="profile-row">
-                                <span class="pk">Shop Name</span>
-                                <span class="pv" style="font-family:var(--font-display);font-size:1rem;font-weight:700;color:var(--blue-dark)">@owner.ShopName</span>
-                            </div>
-                            <div class="profile-row">
                                 <span class="pk">Shop Address</span>
                                 <span class="pv">@(owner.ShopAddress ?? "Not provided")</span>
                             </div>
-                            @* <div class="profile-row">
-                                <span class="pk">Shop Type</span>
-                                <span class="pv">@(owner.Shoptype ?? "Not specified")</span>
-                            </div> *@
+                         
                             <div class="profile-row">
                                 <span class="pk">Application Status</span>
                                 <span class="badge @statusClass">@owner.ApplicationStatus</span>
