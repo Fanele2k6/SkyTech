@@ -28,7 +28,7 @@ var app = builder.Build();
 
 if (!app.Environment.IsDevelopment())
 {
-    app.UseExceptionHandler("/Home/Error");
+    app.UseExceptionHandler("/ShoppingPage/Error");
     app.UseHsts();
 }
 
@@ -39,9 +39,18 @@ app.UseSession();           // ✅ must be BEFORE MapControllerRoute
 app.UseAuthorization();
 
 
+
+
 //route config for core
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Authentication}/{action=Home}/{id?}"); // ✅ starts at Login
+    pattern: "{controller=Customer}/{action=ShoppingPage}/{id?}"); // starts on the shopping page
 
 app.Run();
+
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromMinutes(30);
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+});

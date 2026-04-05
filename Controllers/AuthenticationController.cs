@@ -5,7 +5,7 @@ using CM_Project.ViewModels;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-
+using SkyTech.Models;
 using System;
 using System.IO;
 using System.Linq;
@@ -58,8 +58,83 @@ namespace CM_Project.Controllers
             {
                 HttpContext.Session.SetInt32("UserId", cus.CustomerId);
                 HttpContext.Session.SetString("UserType", "Customer");
+
+                // Merge guest cart into real cart if there is one
+                var guestCart = HttpContext.Session.GetString("GuestCart");
+                if (!string.IsNullOrEmpty(guestCart))
+                {
+                    var guestItems = System.Text.Json.JsonSerializer
+                        .Deserialize<List<GuestCartItem>>(guestCart);
+
+                    if (guestItems != null && guestItems.Any())
+                    {
+                        var cart = db.Carts
+                            .Include(c => c.CartItems)
+                            .FirstOrDefault(c => c.CustomerId == cus.CustomerId && !c.IsCheckedOut);
+
+                        if (cart == null)
+                        {
+                            cart = new Cart
+                            {
+                                CustomerId = cus.CustomerId,
+                                DateCreated = DateTime.Now,
+                                IsCheckedOut = false,
+                                CartItems = new List<CartItem>()
+                            };
+                            db.Carts.Add(cart);
+                            db.SaveChanges();
+                        }
+
+                        foreach (var guestItem in guestItems)
+                        {
+                            var existing = cart.CartItems
+                                .FirstOrDefault(ci => ci.ProdId == guestItem.ProdId);
+
+                            if (existing != null)
+                                existing.ProdQuantity += guestItem.Quantity;
+                            else
+                                cart.CartItems.Add(new CartItem
+                                {
+                                    ProdId = guestItem.ProdId,
+                                    ProdName = guestItem.ProdName,
+                                    ProdQuantity = guestItem.Quantity,
+                                    PriceAtTimeAdded = guestItem.Price
+                                });
+                        }
+
+                        db.SaveChanges();
+
+                        // Clear guest cart from session after merging
+                        HttpContext.Session.Remove("GuestCart");
+                    }
+                }
+
+                // Redirect to cart if they came from there
+                if (TempData["ReturnToCart"] != null)
+                    return RedirectToAction("ViewCart", "Customer");
+
                 return RedirectToAction("ShoppingPage", "Customer");
             }
+
+            //if (cus != null)
+            //{
+            //    HttpContext.Session.SetInt32("UserId", cus.CustomerId);
+            //    HttpContext.Session.SetString("UserType", "Customer");
+
+            //    // If they came from cart send them back there
+            //    if (TempData["ReturnToCart"] != null)
+            //        return RedirectToAction("ViewCart", "Customer");
+
+            //    return RedirectToAction("ShoppingPage", "Customer");
+            //}
+            //if (cus != null)
+            //{
+            //    HttpContext.Session.SetInt32("UserId", cus.CustomerId);
+            //    HttpContext.Session.SetString("UserType", "Customer");
+            //    return RedirectToAction("ShoppingPage", "Customer");
+            //}
+
+
 
             // SystemAdmin
             var systemAdmin = db.SystemAdmins
@@ -444,6 +519,21 @@ namespace CM_Project.Controllers
 
             TempData["Message"] = "Password reset successful. Please log in.";
             return RedirectToAction("LogIn");
+        }
+
+        //Logout action method
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult Logout()
+        {
+            var userType = HttpContext.Session.GetString("UserType");
+            HttpContext.Session.Clear();
+
+            // Customers go to shopping page, everyone else goes to login
+            if (userType == "Customer")
+                return RedirectToAction("ShoppingPage", "Customer");
+
+            return RedirectToAction("LogIn", "Authentication");
         }
     }
 }

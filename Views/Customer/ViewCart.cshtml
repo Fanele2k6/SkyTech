@@ -88,13 +88,17 @@
                         <div class="cart-inner">
 
                             <!-- Image — fully null safe -->
-                              <div class="c-img">
-                                @if (item.AddProduct?.ProductPictures != null && item.AddProduct.ProductPictures.Any())
+                            <div class="c-img">
+                                @if (ViewBag.IsGuest == true)
                                 {
-                                    var pic = item.AddProduct.ProductPictures.First();
-                                    if (pic?.FilePath != null)
+                                    var pictures = ViewBag.GuestPictures as Dictionary<int, string>;
+                                    var filePath = pictures != null && pictures.ContainsKey(item.ProdId)
+                                    ? pictures[item.ProdId]
+                                    : null;
+
+                                    if (filePath != null)
                                     {
-                                        <img src="@pic.FilePath" alt="@(item.AddProduct?.ProdName ?? item.ProdName)" />
+                                        <img src="@filePath" alt="@item.ProdName" />
                                     }
                                     else
                                     {
@@ -103,7 +107,22 @@
                                 }
                                 else
                                 {
-                                    <i class="fas fa-image"></i>
+                                    if (item.AddProduct?.ProductPictures != null && item.AddProduct.ProductPictures.Any())
+                                    {
+                                        var pic = item.AddProduct.ProductPictures.First();
+                                        if (pic?.FilePath != null)
+                                        {
+                                            <img src="@pic.FilePath" alt="@(item.AddProduct?.ProdName ?? item.ProdName)" />
+                                        }
+                                        else
+                                        {
+                                            <i class="fas fa-image"></i>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <i class="fas fa-image"></i>
+                                    }
                                 }
                             </div>
 
@@ -116,28 +135,62 @@
 
                             <!-- Actions -->
                             <div class="c-actions">
-                                @using (Html.BeginForm("UpdateCart", "Customer", FormMethod.Post))
+                                @if (ViewBag.IsGuest == true)
                                 {
-                                    @Html.AntiForgeryToken()
-                                    @Html.Hidden("id", item.CartItemId)
-                                    <div class="qty-form">
-                                        <input type="number" name="quantity"
-                                               value="@item.ProdQuantity" min="1" />
-                                        <button type="submit" class="qty-update">
-                                            <i class="fas fa-sync-alt"></i>
-                                            <span class="hide-xs">Update</span>
-                                        </button>
-                                    </div>
+                                    @using (Html.BeginForm("UpdateGuestCartItem", "Customer", FormMethod.Post))
+                                    {
+                                        @Html.AntiForgeryToken()
+                                        @Html.Hidden("prodId", item.ProdId)
+                                        <div class="qty-form">
+                                            <input type="number" name="quantity"
+                                                   value="@item.ProdQuantity" min="1" />
+                                            <button type="submit" class="qty-update">
+                                                <i class="fas fa-sync-alt"></i>
+                                                <span class="hide-xs">Update</span>
+                                            </button>
+                                        </div>
+                                    }
+                                }
+                                else
+                                {
+                                    @using (Html.BeginForm("UpdateCart", "Customer", FormMethod.Post))
+                                    {
+                                        @Html.AntiForgeryToken()
+                                        @Html.Hidden("id", item.CartItemId)
+                                        <div class="qty-form">
+                                            <input type="number" name="quantity"
+                                                   value="@item.ProdQuantity" min="1" />
+                                            <button type="submit" class="qty-update">
+                                                <i class="fas fa-sync-alt"></i>
+                                                <span class="hide-xs">Update</span>
+                                            </button>
+                                        </div>
+                                    }
                                 }
 
-                                @using (Html.BeginForm("RemoveFromCart", "Customer", FormMethod.Post))
+                                @if (ViewBag.IsGuest == true)
                                 {
-                                    @Html.AntiForgeryToken()
-                                    @Html.Hidden("id", item.CartItemId)
-                                    <button type="submit" class="rm-btn">
-                                        <i class="fas fa-trash-alt"></i>
-                                        <span class="hide-xs">Remove</span>
-                                    </button>
+                                    @using (Html.BeginForm("RemoveGuestCartItem", "Customer", FormMethod.Post))
+                                    {
+                                        @Html.AntiForgeryToken()
+                                        @Html.Hidden("prodId", item.ProdId)
+                                        <button type="submit" class="rm-btn">
+                                            <i class="fas fa-trash-alt"></i>
+                                            <span class="hide-xs">Remove</span>
+                                        </button>
+                                    }
+                                }
+                                else
+                                {
+                                    @using (Html.BeginForm("RemoveFromCart", "Customer", FormMethod.Post))
+                                    {
+                                        @Html.AntiForgeryToken()
+                                        @Html.Hidden("id", item.CartItemId)
+                                        <button type="submit" class="rm-btn">
+                                            <i class="fas fa-trash-alt"></i>
+                                            <span class="hide-xs">Remove</span>
+                                        </button>
+                                    }
                                 }
                             </div>
 
@@ -196,7 +249,46 @@
                 </div>
 
                 @* ── Checkout form ── *@
-                @using (Html.BeginForm("Checkout", "Customer", FormMethod.Post))
+                @if (Context.Session.GetInt32("UserId") != null)
+                {
+                    @using (Html.BeginForm("Checkout", "Customer", FormMethod.Post))
+                    {
+                        @Html.AntiForgeryToken()
+                        @Html.Hidden("Amount", grandTotal)
+                        @Html.Hidden("ProductName", "SkyTech Order")
+                        <div class="addr-field">
+                            <label>
+                                <i class="fas fa-location-dot"></i> Delivery Address
+                            </label>
+                            <input type="text"
+                                   name="deliveryAddress"
+                                   value="@(ViewBag.Address ?? "")"
+                                   placeholder="e.g. 15 Main Road, Durban"
+                                   required />
+                        </div>
+                        <button type="submit" class="pay-btn">
+                            <i class="fas fa-lock"></i>
+                            Pay R @grandTotal.ToString("N2") Securely
+                        </button>
+                    }
+                }
+                else
+                {
+                    <div style="background:#fef9c3;border:1px solid #fde047;border-radius:8px;
+                        padding:.8rem 1rem;margin-bottom:1rem;font-size:.85rem;color:#854d0e">
+                        <i class="fas fa-circle-info"></i>
+                        You need to log in to complete your purchase.
+                    </div>
+                    <a href="@Url.Action("LogIn", "Authentication")" class="pay-btn"
+                       style="display:block;text-align:center;text-decoration:none">
+                        <i class="fas fa-right-to-bracket"></i>
+                        Log in to Checkout
+                    </a>
+                }
+
+
+
+                @* @using (Html.BeginForm("Checkout", "Customer", FormMethod.Post))
                 {
                     @Html.AntiForgeryToken()
                     @Html.Hidden("Amount", grandTotal)
@@ -217,7 +309,7 @@
                         <i class="fas fa-lock"></i>
                         Pay R @grandTotal.ToString("N2") Securely
                     </button>
-                }
+                } *@
 
                 <div class="secure-note">
                     <i class="fas fa-shield-halved" style="color:var(--blue)"></i>

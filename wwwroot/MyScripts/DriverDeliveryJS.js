@@ -26,31 +26,92 @@
     /* ── Set button states on page load based on order status ── 
        This is the KEY fix — reads status from server so buttons
        stay correct even if driver leaves and comes back          */
+
+       //Updated this part to accommodate the pin verification feature
     function initButtonStates() {
-        var startBtn = document.getElementById("startBtn");
+        var startBtn    = document.getElementById("startBtn");
         var completeBtn = document.getElementById("completeBtn");
-        var banner = document.getElementById("deliveredBanner");
+        var pinSection  = document.getElementById("pinSection");
+        var banner      = document.getElementById("deliveredBanner");
+
+        // Read scheduled delivery date from hidden field
+        var scheduledDate = new Date(document.getElementById("js-scheduled-date").value);
+        var today         = new Date();
+
+        // Strip time — compare dates only
+        scheduledDate.setHours(0, 0, 0, 0);
+        today.setHours(0, 0, 0, 0);
+
+        var isDeliveryDay = today >= scheduledDate;
 
         if (orderStatus === "OutForDelivery") {
-            // Delivery started — lock Start, unlock Complete
-            startBtn.disabled = true;
-            startBtn.innerHTML = '<i class="fas fa-play"></i> Delivery Started';
-            completeBtn.disabled = false;
+            startBtn.disabled    = true;
+            startBtn.innerHTML   = '<i class="fas fa-play"></i> Delivery Started';
+            completeBtn.disabled = true;
+            if (pinSection) pinSection.style.display = "block";
 
         } else if (orderStatus === "Delivered") {
-            // Fully done — lock both buttons, show banner
-            startBtn.disabled = true;
-            startBtn.innerHTML = '<i class="fas fa-play"></i> Delivery Started';
-            completeBtn.disabled = true;
+            startBtn.disabled     = true;
+            startBtn.innerHTML    = '<i class="fas fa-play"></i> Delivery Started';
+            completeBtn.disabled  = true;
             completeBtn.innerHTML = '<i class="fas fa-circle-check"></i> Delivered ✓';
+            if (pinSection) pinSection.style.display = "none";
             if (banner) banner.style.display = "flex";
 
         } else {
-            // Pending or Assigned — unlock Start, lock Complete
-            startBtn.disabled = false;
+            // Pending or Assigned — only enable Start if today is delivery day
+            if (isDeliveryDay) {
+                startBtn.disabled = false;
+                startBtn.title    = "";
+            } else {
+                // Not delivery day yet — disable and show message
+                startBtn.disabled   = true;
+                startBtn.innerHTML  = '<i class="fas fa-calendar-clock"></i> Delivery Scheduled for '
+                    + scheduledDate.toLocaleDateString("en-ZA", { weekday: "long", day: "numeric", month: "short" });
+            }
             completeBtn.disabled = true;
+            if (pinSection) pinSection.style.display = "none";
         }
     }
+
+    /* ── Verify pin before enabling complete button ── */
+    window.verifyPin = function () {
+        var pin = document.getElementById("pinInput").value.trim();
+        var pinError = document.getElementById("pinError");
+
+        if (pin.length !== 4) {
+            pinError.textContent = "Please enter a 4 digit pin.";
+            pinError.style.display = "block";
+            return;
+        }
+
+        fetch("/DeliveryDriver/VerifyDeliveryPin", {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: "orderId=" + encodeURIComponent(orderId)
+                + "&pin=" + encodeURIComponent(pin)
+                + "&__RequestVerificationToken=" + encodeURIComponent(token)
+        })
+            .then(function (res) { return res.json(); })
+            .then(function (data) {
+                if (data.success) {
+                    // Pin correct — hide pin section, enable complete button
+                    document.getElementById("pinSection").style.display = "none";
+                    document.getElementById("pinError").style.display = "none";
+                    document.getElementById("completeBtn").disabled = false;
+                } else {
+                    // Pin wrong — show error, keep complete button disabled
+                    pinError.textContent = "Incorrect pin. Please try again.";
+                    pinError.style.display = "block";
+                    document.getElementById("pinInput").value = "";
+                    document.getElementById("pinInput").focus();
+                }
+            })
+            .catch(function () {
+                pinError.textContent = "Could not verify pin. Please try again.";
+                pinError.style.display = "block";
+            });
+    };
 
     /* ── Geocode an address ─────────────────────────────────── */
     function geocode(address) {
@@ -206,19 +267,16 @@
                 // POST to controller
                 postAction("/DeliveryDriver/StartDelivery").then(function (data) {
                     if (data.success) {
-                        // Lock Start button permanently
                         btn.disabled = true;
                         btn.innerHTML = '<i class="fas fa-play"></i> Delivery Started';
 
-                        // Unlock Complete button
-                        var completeBtn = document.getElementById("completeBtn");
-                        completeBtn.disabled = false;
+                        // Show pin input section
+                        document.getElementById("pinSection").style.display = "block"; // ← ADD THIS
 
-                        // Update status label and badge
                         document.getElementById("order-status").textContent = "OutForDelivery";
                         document.getElementById("statusBadge").textContent = "OutForDelivery";
-
-                    } else {
+                    }
+                    else {
                         alert("Could not start delivery: " + (data.reason || "Unknown error"));
                         btn.disabled = false;
                         btn.innerHTML = '<i class="fas fa-play"></i> Start Delivery';

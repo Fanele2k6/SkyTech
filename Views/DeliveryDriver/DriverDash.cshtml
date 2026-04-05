@@ -49,6 +49,19 @@
                 <div class="d-foot-role">Delivery Driver</div>
             </div>
         </div>
+        <div style="padding:.8rem 1.2rem">
+            @using (Html.BeginForm("Logout", "Authentication", FormMethod.Post))
+            {
+                @Html.AntiForgeryToken()
+                <button type="submit" style="width:100%;background:rgba(239,68,68,.08);
+                        border:1.5px solid rgba(239,68,68,.25);border-radius:8px;
+                        padding:.6rem 1rem;cursor:pointer;color:#ef4444;
+                        font-weight:600;font-size:.85rem;display:flex;
+                        align-items:center;gap:.5rem;justify-content:center">
+                    <i class="fas fa-right-from-bracket"></i> Log Out
+                </button>
+            }
+        </div>
     </aside>
 
     <!-- ══ MAIN ══ -->

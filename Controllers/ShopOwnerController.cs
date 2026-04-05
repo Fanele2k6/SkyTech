@@ -327,17 +327,56 @@ namespace CM_Project.Controllers
         public IActionResult AssignDriver(int orderId, int driverId)
         {
             var order = db.Orders.Find(orderId);
+            if (order == null)
+                return Json(new { success = false, reason = "Order not found" });
+
             var driver = db.DeliveryDrivers.Find(driverId);
+            if (driver == null)
+                return Json(new { success = false, reason = "Driver not found" });
 
-            if (order != null && driver != null)
-            {
-                order.DriverId = driverId;
-                order.Status = OrderStatus.Assigned;
+            // Count how many orders this driver is already assigned for
+            // on the same scheduled delivery date as this order
+            int ordersOnSameDay = db.Orders.Count(o =>
+                o.DriverId == driverId &&
+                o.ScheduledDeliveryDate.Date == order.ScheduledDeliveryDate.Date &&
+                o.Status != OrderStatus.Delivered);
+
+            // Block assignment if driver already has 5 orders for that day
+            if (ordersOnSameDay >= 5)
+                return Json(new { success = false, reason = "This driver already has 5 orders assigned for that day. Please choose another driver." });
+
+            // Assign driver
+            order.DriverId = driverId;
+            order.Status = OrderStatus.Assigned;
+
+            // Check total orders assigned for that day after this assignment
+            int totalAfterAssignment = ordersOnSameDay + 1;
+
+            // Mark driver unavailable if they now have 5 orders for that day
+            if (totalAfterAssignment >= 5)
                 driver.IsAvailable = false;
-                db.SaveChanges();
-            }
 
+            db.SaveChanges();
             return RedirectToAction("ReceivedOrders");
         }
+
+
+
+        //[HttpPost]
+        //public IActionResult AssignDriver(int orderId, int driverId)
+        //{
+        //    var order = db.Orders.Find(orderId);
+        //    var driver = db.DeliveryDrivers.Find(driverId);
+
+        //    if (order != null && driver != null)
+        //    {
+        //        order.DriverId = driverId;
+        //        order.Status = OrderStatus.Assigned;
+        //        driver.IsAvailable = false;
+        //        db.SaveChanges();
+        //    }
+
+        //    return RedirectToAction("ReceivedOrders");
+        //}
     }
 }

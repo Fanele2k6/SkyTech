@@ -70,6 +70,7 @@
         <input type="hidden" id="js-order-status" value="@Model.Status.ToString()" />
         <input type="hidden" id="js-delivery-address" value="@(Model.DeliveryAddress ?? "")" />
         <input type="hidden" id="js-antiforgery" value="@Html.AntiForgeryToken()" />
+        <input type="hidden" id="js-scheduled-date" value="@Model.ScheduledDeliveryDate.ToString("yyyy-MM-dd")" />
         @Html.AntiForgeryToken()
 
         <div class="d-topbar">
@@ -160,6 +161,36 @@
                         </table>
                     </div>
                 </div>
+
+                <!-- Pin input — only shows when delivery is OutForDelivery -->
+                <div id="pinSection" style="display:none;margin-top:1rem">
+                    <div class="d-card" style="padding:1rem">
+                        <div class="d-card-title" style="margin-bottom:.8rem">
+                            <i class="fas fa-shield-halved" style="color:var(--blue)"></i>
+                            Enter Customer Pin
+                        </div>
+                        <p style="color:#6b7280;font-size:.85rem;margin-bottom:.8rem">
+                            Ask the customer for their 4-digit delivery pin to complete this delivery.
+                        </p>
+                        <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap">
+                            <input type="text" id="pinInput" maxlength="4"
+                                   placeholder="_ _ _ _ _"
+                                   style="width:120px;font-size:1.5rem;font-weight:700;
+                          letter-spacing:.4rem;text-align:center;
+                          padding:.5rem;border:2px solid #e5e7eb;
+                          border-radius:8px;font-family:monospace" />
+                            <button type="button" class="btn btn-primary" onclick="verifyPin()">
+                                <i class="fas fa-check"></i> Verify Pin
+                            </button>
+                        </div>
+                        <div id="pinError" style="display:none;color:#ef4444;
+                          margin-top:.5rem;font-size:.85rem">
+                            <i class="fas fa-circle-xmark"></i> Incorrect pin. Please try again.
+                        </div>
+                    </div>
+                </div>
+
+
 
                 <!-- Action buttons — now plain buttons, JS handles the POST -->
                 <div class="delivery-btn-row">

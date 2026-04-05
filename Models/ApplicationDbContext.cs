@@ -34,23 +34,23 @@ namespace CM_Project.Models
 
 
 
-        //protected override void OnModelCreating(ModelBuilder modelBuilder)
-        //{
-        //    base.OnModelCreating(modelBuilder);
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
 
-        //    // Keep cascade on OrderItems (deleting Order also deletes its items) ✅
-        //    modelBuilder.Entity<OrderItem>()
-        //        .HasOne(oi => oi.Order)
-        //        .WithMany(o => o.OrderItems)
-        //        .HasForeignKey(oi => oi.OrderId)
-        //        .OnDelete(DeleteBehavior.Cascade);  // ← delete order = delete its items
+            // Keep cascade on OrderItems (deleting Order also deletes its items) ✅
+            modelBuilder.Entity<OrderItem>()
+                .HasOne(oi => oi.Order)
+                .WithMany(o => o.OrderItems)
+                .HasForeignKey(oi => oi.OrderId)
+                .OnDelete(DeleteBehavior.Cascade);  // ← delete order = delete its items
 
-        //    // Break the cycle HERE instead — on the Customer → Order path
-        //    modelBuilder.Entity<Order>()
-        //        .HasOne(o => o.Customers)
-        //        .WithMany()
-        //        .HasForeignKey(o => o.CustomerId)
-        //        .OnDelete(DeleteBehavior.NoAction);  // ← stops the cycle
-        //}
+            // Break the cycle HERE instead — on the Customer → Order path
+            modelBuilder.Entity<Order>()
+                .HasOne(o => o.Customers)
+                .WithMany()
+                .HasForeignKey(o => o.CustomerId)
+                .OnDelete(DeleteBehavior.NoAction);  // ← stops the cycle
+        }
     }
 }

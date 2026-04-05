@@ -38,5 +38,14 @@ namespace CM_Project.Models
         public int OwnerId { get; set; }
         [ForeignKey("OwnerId")]
         public virtual ShopOwner ShopOwner { get; set; }
+
+        //Delivery pin needed to complete order
+        public string DeliveryPin { get; set; }
+
+        //The date the order will be scheduled for
+        public DateTime ScheduledDeliveryDate { get; set; }
+
+        //The date the driver will be assigned for an order
+        //public DateTime DailyOrderDate { get; set; }
     }
 }

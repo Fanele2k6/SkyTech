@@ -439,6 +439,10 @@ namespace SkyTech.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("DeliveryPin")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int?>("DriverId")
                         .HasColumnType("int");
 
@@ -460,6 +464,9 @@ namespace SkyTech.Migrations
                     b.Property<string>("PaymentReference")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("ScheduledDeliveryDate")
+                        .HasColumnType("datetime2");
 
                     b.Property<int>("Status")
                         .HasColumnType("int");
