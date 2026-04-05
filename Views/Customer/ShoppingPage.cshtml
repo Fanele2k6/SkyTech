@@ -432,10 +432,20 @@
             <span>Cart</span>
         </a>
 
-        <a href="@Url.Action("CustomerProfile", "Customer")" class="bn-item">
-            <div class="bn-icon"><i class="far fa-user-circle"></i></div>
-            <span>Account</span>
-        </a>
+        @if (Context.Session.GetInt32("UserId") != null)
+        {
+            <a href="@Url.Action("CustomerProfile", "Customer")" class="bn-item">
+                <div class="bn-icon"><i class="far fa-user-circle"></i></div>
+                <span>Account</span>
+            </a>
+        }
+        else
+        {
+            <a href="@Url.Action("LogIn", "Authentication")" class="bn-item">
+                <div class="bn-icon"><i class="far fa-user-circle"></i></div>
+                <span>Account</span>
+            </a>
+        }
     </nav>
 
     

@@ -110,9 +110,29 @@
                 <div class="ot-summary">
                     <div>
                         <div class="ot-order-id">#ORD-@Model.OrderId</div>
+                                                @* ── ADD THIS ── *@
+                        @* @if (Model.ShopOwner != null)
+                        { *@
+                            <div class="ot-order-meta" style="margin-top:.3rem">
+                                <i class="fas fa-store" style="color:#1a73e8;margin-right:.3rem"></i>
+                                <strong>Store Address:</strong> @Model.ShopOwner.ShopAddress
+                            </div>
+                        @* } *@
+
                         <div class="ot-order-meta">
                             @(Model.OrderItems != null ? Model.OrderItems.Count : 0) item(s) &middot;
                             Placed @Model.OrderedOn.ToString("dd MMM yyyy, hh:mm tt")
+                        </div>
+                        <div class="ot-order-meta">
+                            @(Model.OrderItems != null ? Model.OrderItems.Count : 0) item(s) &middot;
+                            Placed @Model.OrderedOn.ToString("dd MMM yyyy, hh:mm tt")
+                        </div>
+                        <div class="ot-order-meta" style="margin-top:.5rem;
+                             background:#f0fdf4;border-radius:8px;padding:.4rem .7rem;
+                             display:inline-block">
+                            <i class="fas fa-calendar-check" style="color:#16a34a"></i>
+                            <strong>Estimated Delivery:</strong>
+                            @Model.ScheduledDeliveryDate.ToString("dddd, dd MMM yyyy")
                         </div>
                         <div class="ot-order-meta">
                             <strong>Deliver to:</strong> @Model.DeliveryAddress
@@ -198,7 +218,8 @@
                                                 @(Model.Driver.DriverName ?? "") @(Model.Driver.DriverSurname ?? "")
                                             </div>
                                             <div class="ot-driver-vehicle">
-                                                @(Model.Driver.VehicleNumber ?? "N/A")
+                                                <i class="fas fa-car" style="color:#6b7280;margin-right:.3rem"></i>
+                                                @(Model.Driver.VehicleType ?? "N/A") &middot; @(Model.Driver.VehicleNumber ?? "N/A")
                                             </div>
                                         </div>
                                         <div class="ot-driver-rating">
@@ -274,6 +295,31 @@
                     </div>
                 }
             </div>
+
+            @* ── Delivery Pin ────────────────────────────────────── *@
+            @if (Model.Status != OrderStatus.Delivered)
+            {
+                <div class="ot-card">
+                    <div class="ot-section-label">Delivery Pin</div>
+                    <div style="text-align:center;padding:1rem 0">
+                        <div style="font-size:.85rem;color:#6b7280;margin-bottom:.8rem">
+                            <i class="fas fa-shield-halved" style="color:#1a73e8"></i>
+                            Show this pin to your driver to confirm delivery
+                        </div>
+                        <div style="font-size:2.5rem;font-weight:800;letter-spacing:.6rem;
+                                    color:#1a73e8;font-family:monospace;
+                                    background:#f0f9ff;border:2px dashed #1a73e8;
+                                    border-radius:12px;padding:.8rem 1.5rem;
+                                    display:inline-block">
+                            @Model.DeliveryPin
+                        </div>
+                        <div style="font-size:.75rem;color:#9ca3af;margin-top:.6rem">
+                            Do not share this pin with anyone other than your driver
+                        </div>
+                    </div>
+                </div>
+            }
+
 
             @* ── Action buttons ──────────────────────────────────── *@
             <div class="ot-card ot-help-card">

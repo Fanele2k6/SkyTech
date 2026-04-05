@@ -29,12 +29,12 @@ namespace CM_Project.Controllers
             db = context;
             _payStack = payStack; // ← injected, no more new PayStackService()
         }
-        public IActionResult PaymentPage(int orderId, decimal amount,
+        public IActionResult PaymentPage(string orderIds, decimal amount,
             string customerEmail, string customerName)
         {
             var model = new PaymentRequest
             {
-                OrderId = orderId,
+                OrderIds = orderIds,
                 Amount = amount,
                 CustomerEmail = customerEmail,
                 CustomerName = customerName
@@ -73,45 +73,149 @@ namespace CM_Project.Controllers
             return RedirectToAction("Checkout");
         }
 
-        public async Task<IActionResult> Verify(string reference)
-        {
-            var result = await _payStack.VerifyTransaction(reference);
 
-            if (result != null && result.status && result.data.status == "success")
-            {
-                //var db = new ApplicationDbContext(); // ideally inject via DI
-
-                var parts = reference.Split('-');
-                int orderId = Convert.ToInt32(parts[1]);
-
-                var order = db.Orders.FirstOrDefault(o => o.OrderId == orderId);
-                if (order != null)
-                {
-                    order.IsPaid = true;
-                    order.PaymentReference = reference;
-                    order.Status = OrderStatus.Pending;
-                }
-
-                var cart = db.Carts
-                    .Include(c => c.CartItems)
-                    .FirstOrDefault(c => c.CustomerId == order.CustomerId && !c.IsCheckedOut);
-
-                if (cart != null)
-                {
-                    db.CartItems.RemoveRange(cart.CartItems);
-                    cart.IsCheckedOut = true;
-                }
-
-                ViewBag.Reference = reference;
-                ViewBag.Amount = result.data.amount / 100m;
-                ViewBag.Email = result.data.customer.email;
-
-                db.SaveChanges();
-                return View("Success");
-            }
-
+        public async Task<IActionResult> Verify(string reference, string orderIds)
+{
+    var result = await _payStack.VerifyTransaction(reference);
+    if (result != null && result.status && result.data.status == "success")
+    {
+        if (string.IsNullOrWhiteSpace(orderIds))
             return View("Failed");
+
+        // Parse all order IDs
+        var ids = orderIds.Split(',')
+            .Select(id => int.TryParse(id.Trim(), out int x) ? x : 0)
+            .Where(id => id > 0)
+            .ToList();
+
+        if (!ids.Any())
+            return View("Failed");
+
+        // Mark all orders as paid
+        var orders = db.Orders.Where(o => ids.Contains(o.OrderId)).ToList();
+        if (!orders.Any())
+            return View("Failed");
+
+        foreach (var order in orders)
+        {
+            order.IsPaid           = true;
+            order.PaymentReference = reference;
+            order.Status           = OrderStatus.Pending;
         }
+
+                // Clear the cart using CustomerId from first order
+                int customerId = orders.First().CustomerId ?? 0;
+                var cart = db.Carts
+            .Include(c => c.CartItems)
+            .FirstOrDefault(c => c.CustomerId == customerId && !c.IsCheckedOut);
+
+        if (cart != null)
+        {
+            db.CartItems.RemoveRange(cart.CartItems);
+            cart.IsCheckedOut = true;
+        }
+
+        db.SaveChanges();
+
+        ViewBag.Reference = reference;
+        ViewBag.Amount    = result.data.amount / 100m;
+        ViewBag.Email     = result.data.customer.email;
+
+        return View("Success");
+    }
+
+    return View("Failed");
+}
+
+
+
+        //public async Task<IActionResult> Verify(string reference)
+        //{
+        //    var result = await _payStack.VerifyTransaction(reference);
+        //    if (result != null && result.status && result.data.status == "success")
+        //    {
+        //        // reference format is ORDER-{orderId}-{timestamp}
+        //        var parts = reference.Split('-');
+        //        if (parts.Length < 2)
+        //            return View("Failed");
+
+        //        if (!int.TryParse(parts[1], out int orderId))
+        //            return View("Failed");
+
+        //        var order = db.Orders.FirstOrDefault(o => o.OrderId == orderId);
+
+        //        // Guard — if order not found don't crash
+        //        if (order == null)
+        //            return View("Failed");
+
+        //        order.IsPaid = true;
+        //        order.PaymentReference = reference;
+        //        order.Status = OrderStatus.Pending;
+
+        //        // Now safe to use order.CustomerId
+        //        var cart = db.Carts
+        //            .Include(c => c.CartItems)
+        //            .FirstOrDefault(c => c.CustomerId == order.CustomerId && !c.IsCheckedOut);
+
+        //        if (cart != null)
+        //        {
+        //            db.CartItems.RemoveRange(cart.CartItems);
+        //            cart.IsCheckedOut = true;
+        //        }
+
+        //        db.SaveChanges();
+
+        //        ViewBag.Reference = reference;
+        //        ViewBag.Amount = result.data.amount / 100m;
+        //        ViewBag.Email = result.data.customer.email;
+
+        //        return View("Success");
+        //    }
+
+        //    return View("Failed");
+        //}
+
+
+
+        //public async Task<IActionResult> Verify(string reference)
+        //{
+        //    var result = await _payStack.VerifyTransaction(reference);
+
+        //    if (result != null && result.status && result.data.status == "success")
+        //    {
+        //        //var db = new ApplicationDbContext(); // ideally inject via DI
+
+        //        var parts = reference.Split('-');
+        //        int orderId = Convert.ToInt32(parts[1]);
+
+        //        var order = db.Orders.FirstOrDefault(o => o.OrderId == orderId);
+        //        if (order != null)
+        //        {
+        //            order.IsPaid = true;
+        //            order.PaymentReference = reference;
+        //            order.Status = OrderStatus.Pending;
+        //        }
+
+        //        var cart = db.Carts
+        //            .Include(c => c.CartItems)
+        //            .FirstOrDefault(c => c.CustomerId == order.CustomerId && !c.IsCheckedOut);
+
+        //        if (cart != null)
+        //        {
+        //            db.CartItems.RemoveRange(cart.CartItems);
+        //            cart.IsCheckedOut = true;
+        //        }
+
+        //        ViewBag.Reference = reference;
+        //        ViewBag.Amount = result.data.amount / 100m;
+        //        ViewBag.Email = result.data.customer.email;
+
+        //        db.SaveChanges();
+        //        return View("Success");
+        //    }
+
+        //    return View("Failed");
+        //}
 
         public IActionResult Failed() => View();
     }

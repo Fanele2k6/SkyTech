@@ -79,6 +79,15 @@
                         <div class="ib-label"><i class="fas fa-clock" style="color:var(--blue)"></i> ORDERED ON</div>
                         <div class="ib-value">@Model.OrderedOn.ToString("dd MMM yyyy · HH:mm")</div>
                     </div>
+                    <div class="meta-block">
+                        <div class="mk">
+                            <i class="fas fa-calendar-check" style="color:var(--blue)"></i>
+                            SCHEDULED DELIVERY
+                        </div>
+                        <div class="mv">
+                            @Model.ScheduledDeliveryDate.ToString("dddd, dd MMM yyyy")
+                        </div>
+                    </div>
                     <div class="info-block">
                         <div class="ib-label"><i class="fas fa-money-bill" style="color:var(--blue)"></i> TOTAL AMOUNT</div>
                         <div class="ib-value" style="font-family:var(--font-display);font-size:1.1rem;color:var(--blue-dark)">R @Model.TotalAmount.ToString("N2")</div>

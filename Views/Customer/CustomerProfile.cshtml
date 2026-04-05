@@ -99,6 +99,18 @@
                             </a>
                         </div>
 
+                        <!--Logout button-->
+                        <div class="profile-row" style="margin-top:.8rem">
+                            @using (Html.BeginForm("Logout", "Authentication", FormMethod.Post))
+                            {
+                                @Html.AntiForgeryToken()
+                                <button type="submit" style="background:none;border:none;padding:0;cursor:pointer;width:100%">
+                                    <span class="pv" style="color:#ef4444">
+                                        <i class="fas fa-right-from-bracket"></i> Log Out
+                                    </span>
+                                </button>
+                            }
+                        </div>
                        
 
                     </div>

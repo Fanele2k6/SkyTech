@@ -6,7 +6,9 @@
         public string CustomerName { get; set; }
         public decimal Amount { get; set; }
         public string ProductName { get; set; }
-        public int OrderId { get; set; }
+        public string OrderIds { get; set; } // e.g. "12,13,14" — all orders from checkout
+        public int OrderId => int.TryParse(OrderIds?.Split(',')[0], out int id) ? id : 0; // first orderId for the payment reference
+
     }
 
     public class PayStackInitResponse

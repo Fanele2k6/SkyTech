@@ -75,8 +75,14 @@ namespace CM_Project.Controllers
             if (order == null)
                 return Json(new { success = false, reason = "Order not found" });
 
-            if (order.Status != OrderStatus.Assigned)
-                return Json(new { success = false, reason = "Order is not in Assigned state" });
+            // Block if today is before the scheduled delivery date
+            if (DateTime.Today < order.ScheduledDeliveryDate.Date)
+                return Json(new
+                {
+                    success = false,
+                    reason = "This delivery is not scheduled for today. Scheduled for "
+                    + order.ScheduledDeliveryDate.ToString("dddd, dd MMM yyyy")
+                });
 
             order.Status = OrderStatus.OutForDelivery;
             db.SaveChanges();
@@ -85,23 +91,67 @@ namespace CM_Project.Controllers
         }
 
         [HttpPost]
-        public IActionResult CompleteDelivery(int id)
+        [ValidateAntiForgeryToken]
+        public IActionResult CompleteDelivery(int id, int driverId)
         {
             var order = db.Orders.Find(id);
-
             if (order == null)
                 return Json(new { success = false, reason = "Order not found" });
 
-            if (order.Status != OrderStatus.OutForDelivery)
-                return Json(new { success = false, reason = "Order is not out for delivery" });
-
+            // Mark this order as delivered
             order.Status = OrderStatus.Delivered;
-            order.DeliveredOn = DateTime.Now;
+            db.SaveChanges();
 
             var driver = db.DeliveryDrivers.Find(order.DriverId);
-            if (driver != null) driver.IsAvailable = true;
+            if (driver != null)
+            {
+                // Count remaining undelivered orders for this driver
+                // on the same scheduled delivery date
+                int remainingOrdersToday = db.Orders.Count(o =>
+                    o.DriverId == driver.DriverId &&
+                    o.ScheduledDeliveryDate.Date == order.ScheduledDeliveryDate.Date &&
+                    o.Status != OrderStatus.Delivered);
 
-            db.SaveChanges();
+                // Only make driver available again when ALL orders for that day are done
+                if (remainingOrdersToday == 0)
+                    driver.IsAvailable = true;
+
+                db.SaveChanges();
+            }
+
+            return Json(new { success = true });
+        }
+        //public IActionResult CompleteDelivery(int id)
+        //{
+        //    var order = db.Orders.Find(id);
+
+        //    if (order == null)
+        //        return Json(new { success = false, reason = "Order not found" });
+
+        //    if (order.Status != OrderStatus.OutForDelivery)
+        //        return Json(new { success = false, reason = "Order is not out for delivery" });
+
+        //    order.Status = OrderStatus.Delivered;
+        //    order.DeliveredOn = DateTime.Now;
+
+        //    var driver = db.DeliveryDrivers.Find(order.DriverId);
+        //    if (driver != null) driver.IsAvailable = true;
+
+        //    db.SaveChanges();
+
+        //    return Json(new { success = true });
+        //}
+
+        //Delivery pin action method
+        [HttpPost]
+        public IActionResult VerifyDeliveryPin(int orderId, string pin)
+        {
+            var order = db.Orders.Find(orderId);
+            if (order == null)
+                return Json(new { success = false, reason = "Order not found" });
+
+            if (order.DeliveryPin != pin.Trim())
+                return Json(new { success = false, reason = "Incorrect pin" });
 
             return Json(new { success = true });
         }

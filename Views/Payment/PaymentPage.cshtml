@@ -74,8 +74,46 @@
 </div>
 
 <script>
+        function payWithPaystack(btn) {
+        if (btn.disabled) return;
+
+        btn.disabled = true;
+        document.getElementById('btnText').textContent = 'Opening payment…';
+        document.getElementById('btnSpinner').style.display = 'block';
+
+        setTimeout(function () {
+            var handler = PaystackPop.setup({
+                key:      'pk_test_00e0ace8896dc183d605bed4ae78c29197fa3029',
+                email:    '@Model.CustomerEmail',
+                amount:   @(Math.Round(Model.Amount * 100)),
+                // Use first orderId in reference so Verify can find it
+                ref:      'ORDER-@Model.OrderId-' + Date.now(),
+                currency: 'ZAR',
+                metadata: {
+                    order_ids: '@Model.OrderIds'  // pass all order IDs as metadata
+                },
+                callback: function (response) {
+                    document.getElementById('btnText').textContent = 'Verifying…';
+                    // Pass all orderIds to Verify
+                    window.location.href = '@Url.Action("Verify", "Payment")?reference='
+                        + response.reference
+                        + '&orderIds=@Model.OrderIds';
+                },
+                onClose: function () {
+                    btn.disabled = false;
+                    document.getElementById('btnText').textContent = 'Complete Payment';
+                    document.getElementById('btnSpinner').style.display = 'none';
+                }
+            });
+            handler.openIframe();
+        }, 100);
+    }
+</script>
+
+
+@* <script>
 function payWithPaystack(btn) {
-    // Show spinner
+    Show spinner
     document.getElementById('btnText').textContent = 'Opening payment…';
     document.getElementById('btnSpinner').style.display = 'block';
     btn.disabled = true;
@@ -83,7 +121,7 @@ function payWithPaystack(btn) {
     var handler = PaystackPop.setup({
     key:      'pk_test_00e0ace8896dc183d605bed4ae78c29197fa3029',
         email:    '@Model.CustomerEmail',
-        amount:   @(Math.Round(Model.Amount * 100)), //Added Math.Round
+        amount:   @(Math.Round(Model.Amount * 100)), Added Math.Round
         ref:      'ORDER-@Model.OrderId-' + Math.floor(Math.random() * 1e9),
         currency: 'ZAR',
 
@@ -92,7 +130,7 @@ function payWithPaystack(btn) {
         },
 
         onClose: function() {
-            // Reset button
+            Reset button
             document.getElementById('btnText').textContent = 'Pay R @Model.Amount.ToString("N2") Securely';
             document.getElementById('btnSpinner').style.display = 'none';
             btn.disabled = false;
@@ -101,4 +139,4 @@ function payWithPaystack(btn) {
 
     handler.openIframe();
 }
-</script>
+</script> *@

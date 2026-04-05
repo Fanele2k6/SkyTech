@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Identity.Client;
+using SkyTech.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,7 +12,7 @@ using static CM_Project.Models.Order;
 
 namespace CM_Project.Controllers
 {
-    [AuthorizeUser]
+   // [AuthorizeUser]
     public class CustomerController : Controller
     {
         private readonly ApplicationDbContext db;
@@ -31,32 +32,22 @@ namespace CM_Project.Controllers
             return View(product);  // single product, not a list
         }
 
-
         [HttpGet]
         public IActionResult ShoppingPage(string search, SelectCategory? category)
         {
-            // The ! tells the compiler "trust me, this won't be null"
-            int currentId = HttpContext.Session.GetInt32("UserId")!.Value;
-            DeleteExpiredOrders(currentId);
+            // Make currentId nullable — guest users have no session
+            int? currentId = HttpContext.Session.GetInt32("UserId");
 
-            //displays 10 products from any shop by default
+            // Only delete expired orders if logged in
+            if (currentId.HasValue)
+                DeleteExpiredOrders(currentId.Value);
+
             var products = db.AddProducts
                 .Include(p => p.ProductPictures)
                 .Include(p => p.Owner)
                 .AsQueryable()
                 .Take(10);
 
-            //section 1 sorting by popuplar picks
-            //var popularPicks = db.OrderItems
-            //    .GroupBy(o => o.ProdId)
-            //    .Select(g => new { ProductId = g.Key, TotalSold = g.Sum(x => x.Quantity) })
-            //    .OrderByDescending(x => x.TotalSold)
-            //    .Take(10)
-            //    .Join(db.AddProducts, p => p.ProductId, prod => prod.ProdId, (p, prod) => prod)
-            //    .ToList();
-
-
-            // ✅ Fix — get IDs first, then query with Include()
             var topProductIds = db.OrderItems
                 .GroupBy(o => o.ProdId)
                 .Select(g => new { ProductId = g.Key, TotalSold = g.Sum(x => x.Quantity) })
@@ -66,12 +57,11 @@ namespace CM_Project.Controllers
                 .ToList();
 
             var popularPicks = db.AddProducts
-    .Include(p => p.ProductPictures)
-    .Include(p => p.Owner)          // ← now Owner loads correctly
-    .Where(p => topProductIds.Contains(p.ProdId))
-    .ToList();
+                .Include(p => p.ProductPictures)
+                .Include(p => p.Owner)
+                .Where(p => topProductIds.Contains(p.ProdId))
+                .ToList();
 
-            //section 2 sorting by category type 1
             var category1 = db.AddProducts
                 .Include(p => p.ProductPictures)
                 .Include(p => p.Owner)
@@ -85,11 +75,13 @@ namespace CM_Project.Controllers
             if (!string.IsNullOrEmpty(search))
                 products = products.Where(p => p.ProdName.Contains(search));
 
-            //update cart notification
-            var cartNotification = db.Carts
-                .Where(c => c.CustomerId == currentId && !c.IsCheckedOut)
-                .SelectMany(c => c.CartItems)
-                .Count();
+            // Only load cart count if logged in, otherwise show 0
+            var cartNotification = currentId.HasValue
+                ? db.Carts
+                    .Where(c => c.CustomerId == currentId.Value && !c.IsCheckedOut)
+                    .SelectMany(c => c.CartItems)
+                    .Count()
+                : 0;
 
             ViewBag.PopularPicks = popularPicks;
             ViewBag.Groceries = category1;
@@ -100,14 +92,113 @@ namespace CM_Project.Controllers
             return View(products.ToList());
         }
 
+
+        //    [HttpGet]
+        //    public IActionResult ShoppingPage(string search, SelectCategory? category)
+        //    {
+        //        // The ! tells the compiler "trust me, this won't be null"
+        //        int currentId = HttpContext.Session.GetInt32("UserId")!.Value;
+        //        DeleteExpiredOrders(currentId);
+
+        //        //displays 10 products from any shop by default
+        //        var products = db.AddProducts
+        //            .Include(p => p.ProductPictures)
+        //            .Include(p => p.Owner)
+        //            .AsQueryable()
+        //            .Take(10);
+
+        //        //section 1 sorting by popuplar picks
+        //        //var popularPicks = db.OrderItems
+        //        //    .GroupBy(o => o.ProdId)
+        //        //    .Select(g => new { ProductId = g.Key, TotalSold = g.Sum(x => x.Quantity) })
+        //        //    .OrderByDescending(x => x.TotalSold)
+        //        //    .Take(10)
+        //        //    .Join(db.AddProducts, p => p.ProductId, prod => prod.ProdId, (p, prod) => prod)
+        //        //    .ToList();
+
+
+        //        // ✅ Fix — get IDs first, then query with Include()
+        //        var topProductIds = db.OrderItems
+        //            .GroupBy(o => o.ProdId)
+        //            .Select(g => new { ProductId = g.Key, TotalSold = g.Sum(x => x.Quantity) })
+        //            .OrderByDescending(x => x.TotalSold)
+        //            .Take(10)
+        //            .Select(x => x.ProductId)
+        //            .ToList();
+
+        //        var popularPicks = db.AddProducts
+        //.Include(p => p.ProductPictures)
+        //.Include(p => p.Owner)          // ← now Owner loads correctly
+        //.Where(p => topProductIds.Contains(p.ProdId))
+        //.ToList();
+
+        //        //section 2 sorting by category type 1
+        //        var category1 = db.AddProducts
+        //            .Include(p => p.ProductPictures)
+        //            .Include(p => p.Owner)
+        //            .Where(p => p.ProdCategory == SelectCategory.Appliances)
+        //            .Take(10)
+        //            .ToList();
+
+        //        if (category.HasValue)
+        //            products = products.Where(p => p.ProdCategory == category.Value);
+
+        //        if (!string.IsNullOrEmpty(search))
+        //            products = products.Where(p => p.ProdName.Contains(search));
+
+        //        //update cart notification
+        //        var cartNotification = db.Carts
+        //            .Where(c => c.CustomerId == currentId && !c.IsCheckedOut)
+        //            .SelectMany(c => c.CartItems)
+        //            .Count();
+
+        //        ViewBag.PopularPicks = popularPicks;
+        //        ViewBag.Groceries = category1;
+        //        ViewBag.NumberOfCartItems = cartNotification;
+        //        ViewBag.SelectedCategory = category;
+        //        ViewBag.Search = search;
+
+        //        return View(products.ToList());
+        //    }
+
+      //  [AuthorizeUser]
         public IActionResult AddToCart(int id, int quantity)
         {
-            int currentId = HttpContext.Session.GetInt32("UserId").Value;
+         //   int currentId= HttpContext.Session.GetInt32("UserId").Value;
             var product = db.AddProducts.Find(id);
-
             if (product == null || product.Status == ProdStatus.Out_Of_Stock)
                 return Content("No products / Out of stock");
 
+            int? sessionId = HttpContext.Session.GetInt32("UserId");
+
+            //Allow guest users to add to cart
+            if (sessionId == null)
+            {
+                // Guest — store cart in session as JSON
+                var guestCart = HttpContext.Session.GetString("GuestCart");
+                var cartItems = string.IsNullOrEmpty(guestCart)
+                    ? new List<GuestCartItem>()
+                    : System.Text.Json.JsonSerializer.Deserialize<List<GuestCartItem>>(guestCart);
+
+                var existing = cartItems.FirstOrDefault(c => c.ProdId == id);
+                if (existing != null)
+                    existing.Quantity += quantity;
+                else
+                    cartItems.Add(new GuestCartItem
+                    {
+                        ProdId = id,
+                        ProdName = product.ProdName,
+                        Quantity = quantity,
+                        Price = product.ProdPrice
+                    });
+
+                HttpContext.Session.SetString("GuestCart",
+                    System.Text.Json.JsonSerializer.Serialize(cartItems));
+
+                return RedirectToAction("ShoppingPage", "Customer");
+            }
+
+            int currentId = sessionId.Value;
             var cart = db.Carts
                 .Include(c => c.CartItems)
                 .FirstOrDefault(c => c.CustomerId == currentId && !c.IsCheckedOut);
@@ -141,9 +232,43 @@ namespace CM_Project.Controllers
             return RedirectToAction("ShoppingPage", "Customer");
         }
 
+        //  [AuthorizeUser]
+
         public IActionResult ViewCart()
         {
-            int currentId = HttpContext.Session.GetInt32("UserId").Value;
+            int? sessionId = HttpContext.Session.GetInt32("UserId");
+
+            if (sessionId == null)
+            {
+                var guestCart = HttpContext.Session.GetString("GuestCart");
+                var guestItems = string.IsNullOrEmpty(guestCart)
+                    ? new List<GuestCartItem>()
+                    : System.Text.Json.JsonSerializer.Deserialize<List<GuestCartItem>>(guestCart);
+
+                var cartItems = guestItems.Select(g => new CartItem
+                {
+                    ProdId = g.ProdId,
+                    ProdName = g.ProdName,
+                    ProdQuantity = g.Quantity,
+                    PriceAtTimeAdded = g.Price
+                }).ToList();
+
+                // Load product pictures for guest cart items
+                var prodIds = guestItems.Select(g => g.ProdId).ToList();
+                var guestPictures = db.AddProducts
+                    .Include(p => p.ProductPictures)
+                    .Where(p => prodIds.Contains(p.ProdId))
+                    .ToDictionary(p => p.ProdId, p => p.ProductPictures?.FirstOrDefault()?.FilePath);
+
+                ViewBag.GuestPictures = guestPictures; // Dictionary<int, string>
+                ViewBag.IsGuest = true;
+                ViewBag.Address = "";
+                ViewBag.ItemsInCart = cartItems.Count;
+
+                return View(cartItems);
+            }
+
+            int currentId = sessionId.Value;
             DeleteExpiredOrders(currentId);
 
             var address = db.Customers
@@ -156,13 +281,13 @@ namespace CM_Project.Controllers
                 .SelectMany(c => c.CartItems)
                 .Count();
 
-            // ✅ ThenInclude loads Products AND ProductPictures
             var cart = db.Carts
                 .Include(c => c.CartItems)
                     .ThenInclude(ci => ci.AddProduct)
                         .ThenInclude(p => p.ProductPictures)
                 .FirstOrDefault(c => c.CustomerId == currentId && !c.IsCheckedOut);
 
+            ViewBag.IsGuest = false;
             ViewBag.Address = address;
             ViewBag.ItemsInCart = itemsInCart;
 
@@ -170,6 +295,58 @@ namespace CM_Project.Controllers
                 return View(new List<CartItem>());
 
             return View(cart.CartItems.ToList());
+        }
+
+        //public IActionResult ViewCart()
+        //{
+        //    int currentId = HttpContext.Session.GetInt32("UserId").Value;
+        //    DeleteExpiredOrders(currentId);
+
+        //    var address = db.Customers
+        //        .Where(c => c.CustomerId == currentId)
+        //        .Select(c => c.Address)
+        //        .FirstOrDefault();
+
+        //    var itemsInCart = db.Carts
+        //        .Where(c => c.CustomerId == currentId && !c.IsCheckedOut)
+        //        .SelectMany(c => c.CartItems)
+        //        .Count();
+
+        //    // ✅ ThenInclude loads Products AND ProductPictures
+        //    var cart = db.Carts
+        //        .Include(c => c.CartItems)
+        //            .ThenInclude(ci => ci.AddProduct)
+        //                .ThenInclude(p => p.ProductPictures)
+        //        .FirstOrDefault(c => c.CustomerId == currentId && !c.IsCheckedOut);
+
+        //    ViewBag.Address = address;
+        //    ViewBag.ItemsInCart = itemsInCart;
+
+        //    if (cart == null)
+        //        return View(new List<CartItem>());
+
+        //    return View(cart.CartItems.ToList());
+        //}
+
+        
+
+      //  [AuthorizeUser]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult RemoveGuestCartItem(int prodId)
+        {
+            var guestCart = HttpContext.Session.GetString("GuestCart");
+            if (!string.IsNullOrEmpty(guestCart))
+            {
+                var guestItems = System.Text.Json.JsonSerializer
+                    .Deserialize<List<GuestCartItem>>(guestCart);
+
+                guestItems = guestItems.Where(g => g.ProdId != prodId).ToList();
+
+                HttpContext.Session.SetString("GuestCart",
+                    System.Text.Json.JsonSerializer.Serialize(guestItems));
+            }
+            return RedirectToAction("ViewCart");
         }
 
         public IActionResult RemoveFromCart() => View();
@@ -183,6 +360,7 @@ namespace CM_Project.Controllers
             return RedirectToAction("ViewCart", "Customer");
         }
 
+        //   [AuthorizeUser]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult UpdateCart(int id, int quantity)
@@ -197,11 +375,47 @@ namespace CM_Project.Controllers
             return RedirectToAction("ViewCart");
         }
 
+        //for the guest users
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult UpdateGuestCartItem(int prodId, int quantity)
+        {
+            var guestCart = HttpContext.Session.GetString("GuestCart");
+            if (!string.IsNullOrEmpty(guestCart))
+            {
+                var guestItems = System.Text.Json.JsonSerializer
+                    .Deserialize<List<GuestCartItem>>(guestCart);
+
+                var item = guestItems.FirstOrDefault(g => g.ProdId == prodId);
+                if (item != null)
+                {
+                    if (quantity <= 0)
+                        guestItems.Remove(item);
+                    else
+                        item.Quantity = quantity;
+                }
+
+                HttpContext.Session.SetString("GuestCart",
+                    System.Text.Json.JsonSerializer.Serialize(guestItems));
+            }
+            return RedirectToAction("ViewCart");
+        }
+
+        [AuthorizeUser]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult Checkout(string deliveryAddress)
         {
+
+            // Redirect to login if not logged in
+            if (HttpContext.Session.GetInt32("UserId") == null)
+            {
+                TempData["Error"] = "Please log in to complete your order.";
+                return RedirectToAction("LogIn", "Authentication");
+            }
+
             int currentId = HttpContext.Session.GetInt32("UserId")!.Value;
+
 
             var cart = db.Carts
                 .Include(c => c.CartItems)
@@ -266,6 +480,10 @@ namespace CM_Project.Controllers
 
                 double storeTotalAmount = storeSubtotal + deliveryFee;
 
+                //generating a random pin
+                var rng = new Random();
+                string deliveryPin = rng.Next(1000, 9999).ToString();
+
                 var order = new Order
                 {
                     CustomerId = currentId,
@@ -276,6 +494,8 @@ namespace CM_Project.Controllers
                     TotalAmount = storeTotalAmount,
                     PaymentReference = "",
                     DeliveryAddress = address,
+                    DeliveryPin = deliveryPin, //also added this
+                    ScheduledDeliveryDate = DateTime.Now.AddDays(2), //i order li dilivwa after 2 days
                     OrderItems = storeGroup.Select(ci => new OrderItem
                     {
                         ProdId = ci.ProdId,
@@ -449,6 +669,7 @@ namespace CM_Project.Controllers
             db.SaveChanges();
         }
 
+        [AuthorizeUser]
         public IActionResult OrderHistory()
         {
             // The ! tells the compiler "trust me, this won't be null"
@@ -466,6 +687,7 @@ namespace CM_Project.Controllers
             return View(orders);
         }
 
+        [AuthorizeUser]
         public IActionResult CustomerProfile()
         {
             // The ! tells the compiler "trust me, this won't be null"
@@ -474,6 +696,7 @@ namespace CM_Project.Controllers
             return View(db.Customers.Where(c => c.CustomerId == currentId).ToList());
         }
 
+        [AuthorizeUser]
         [HttpGet]
         public IActionResult TrackOrder(int? id)
         {
@@ -492,6 +715,7 @@ namespace CM_Project.Controllers
                 order = db.Orders
                     .Include(o => o.Driver)
                     .Include(o => o.OrderItems)
+                    .Include(o => o.ShopOwner) //Needed to show store name on the order
                     .Where(o => o.CustomerId == customerId && !o.IsArchived)
                     .OrderByDescending(o => o.OrderedOn)
                     .FirstOrDefault();
@@ -507,6 +731,7 @@ namespace CM_Project.Controllers
                 order = db.Orders
                     .Include(o => o.Driver)
                     .Include(o => o.OrderItems)
+                    .Include(o => o.ShopOwner)
                     .FirstOrDefault(o => o.OrderId == id.Value
                                      && o.CustomerId == customerId
                                      && !o.IsArchived);
@@ -543,6 +768,7 @@ namespace CM_Project.Controllers
             return Json(new { currentStep = step });
         }
 
+        [AuthorizeUser]
         [HttpPost]
         public IActionResult ArchiveOrder(int orderId)
         {
@@ -566,6 +792,8 @@ namespace CM_Project.Controllers
             return Json(new { success = true });
         }
 
+
+        [AuthorizeUser]
         [HttpGet]
         public IActionResult MyOrders()
         {
@@ -583,5 +811,12 @@ namespace CM_Project.Controllers
 
             return View(orders);
         }
+
+        public IActionResult SetReturnToCart()
+        {
+            TempData["ReturnToCart"] = true;
+            return Ok();
+        }
+
     }
 }
