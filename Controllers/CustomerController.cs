@@ -405,7 +405,9 @@ namespace CM_Project.Controllers
                         RefundOrExchange = GetRefund.No_Requests,
                         QuantityReturned = 0,
                         RetunReason = "",
-                        ReturnPStatus = ReturnProduct.No_Request
+                        ReturnPStatus = ReturnProduct.No_Request,
+                        CollectionDate = null,
+                        NewDeliveryDate = null
                     }).ToList()
                 };
 
@@ -622,27 +624,8 @@ namespace CM_Project.Controllers
         //==========================================RETURN ITEM===========================
         public IActionResult ReturnPolicy() => View();  //view for return policy rules
 
-        //public IActionResult PastOrders()
-        //{
-        //    int? customerId = HttpContext.Session.GetInt32("UserId");
-        //    if (customerId == null) return RedirectToAction("LogIn", "Authentication");
-
-        //    DeleteExpiredOrders(customerId.Value);
-
-        //    var cutoff = DateTime.Now.AddDays(-7); // 7 days ago
-
-        //    var orders = db.Orders
-        //        .Include(o => o.Driver)
-        //        .Include(o => o.OrderItems)
-        //        .Where(o => o.CustomerId == customerId
-        //                 && o.DeliveredOn.HasValue          // must have a delivery date
-        //                 && o.DeliveredOn.Value >= cutoff)  // delivery was within last 7 days
-        //        .OrderByDescending(o => o.OrderedOn)
-        //        .ToList();
-
-        //    return View(orders);
-        //}
-
+        
+        //displays all past orders and gives you permit to retun the item
         public IActionResult PastOrders()
         {
             int? customerId = HttpContext.Session.GetInt32("UserId");
@@ -669,6 +652,7 @@ namespace CM_Project.Controllers
             return View(items);
         }
 
+        //Submit the selected item for retun request
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult SubmitItemReturn(int orderItemId, string returnReason,
@@ -695,5 +679,53 @@ namespace CM_Project.Controllers
             TempData["Message"] = $"Return for '{item.ProdName}' submitted — {choiceLabel} requested.";
             return RedirectToAction("PastOrders");
         }
+
+
+        //view all retuned products just like orders
+        [AuthorizeUser]
+        [HttpGet]
+        public IActionResult MyReturns()
+        {
+            int? customerId = HttpContext.Session.GetInt32("UserId");
+            if (customerId == null) return RedirectToAction("LogIn", "Authentication");
+
+            var returnedItems = db.OrderItems
+                .Include(oi => oi.Order)
+                .Include(oi => oi.DeliveryDriver)
+                .Where(oi => oi.Order.CustomerId == customerId
+                          && oi.ReturnPStatus != ReturnProduct.No_Request)
+                .OrderByDescending(oi => oi.Order.OrderedOn)
+                .ToList();
+
+            return View(returnedItems);
+        }
+
+
+        //action to track the returned items
+        [AuthorizeUser]
+        [HttpGet]
+        public IActionResult TrackReturn(int id)
+        {
+            int? customerId = HttpContext.Session.GetInt32("UserId");
+            if (customerId == null) return RedirectToAction("LogIn", "Authentication");
+
+            var item = db.OrderItems
+                .Include(oi => oi.Order)
+                .Include(oi => oi.DeliveryDriver)
+                .Include(oi => oi.Products)
+                .FirstOrDefault(oi => oi.OrderItemId == id
+                                   && oi.Order.CustomerId == customerId
+                                   && oi.ReturnPStatus != ReturnProduct.No_Request);
+
+            if (item == null)
+            {
+                ViewBag.Message = "Return not found or does not belong to you.";
+                return View((CM_Project.Models.OrderItem)null);
+            }
+
+            return View(item);
+        }
+
+
     }
 }

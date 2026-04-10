@@ -2,6 +2,7 @@
 // DeliveryDriverController.cs — fully fixed
 // ============================================================
 using CM_Project.Models;
+using CM_Project.ViewModels;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -122,26 +123,7 @@ namespace CM_Project.Controllers
 
             return Json(new { success = true });
         }
-        //public IActionResult CompleteDelivery(int id)
-        //{
-        //    var order = db.Orders.Find(id);
-
-        //    if (order == null)
-        //        return Json(new { success = false, reason = "Order not found" });
-
-        //    if (order.Status != OrderStatus.OutForDelivery)
-        //        return Json(new { success = false, reason = "Order is not out for delivery" });
-
-        //    order.Status = OrderStatus.Delivered;
-        //    order.DeliveredOn = DateTime.Now;
-
-        //    var driver = db.DeliveryDrivers.Find(order.DriverId);
-        //    if (driver != null) driver.IsAvailable = true;
-
-        //    db.SaveChanges();
-
-        //    return Json(new { success = true });
-        //}
+        
 
         //Delivery pin action method
         [HttpPost]
@@ -172,6 +154,134 @@ namespace CM_Project.Controllers
                 .ToList();
 
             return View(AsssignedReturns);
+        }
+        // GET: Show all tasks (deliveries + collections + re-deliveries)
+        public IActionResult MyTasks()
+        {
+            int driverId = HttpContext.Session.GetInt32("UserId").Value;
+
+            // 1. Regular deliveries
+            var deliveries = db.Orders
+                .Include(o => o.Customers)
+                .Include(o => o.OrderItems)
+                    .ThenInclude(i => i.Products)
+                .Where(o => o.DriverId == driverId && o.Status != OrderStatus.Delivered)
+                .OrderBy(o => o.ScheduledDeliveryDate)
+                .ToList();
+
+            // 2. Collections (return pickups)
+            var collections = db.OrderItems
+                .Include(i => i.Order)
+                    .ThenInclude(o => o.Customers)
+                .Include(i => i.Products)
+                .Where(i => i.DriverId == driverId
+                         && i.ReturnPStatus == ReturnProduct.Collection_Assigned)
+                .OrderBy(i => i.CollectionDate)
+                .ToList();
+
+            // 3. Re-deliveries (exchange items)
+            var redeliveries = db.OrderItems
+                .Include(i => i.Order)
+                    .ThenInclude(o => o.Customers)
+                .Include(i => i.Products)
+                .Where(i => i.DriverId == driverId
+                         && i.ReturnPStatus == ReturnProduct.Exchange_Dispatched)
+                .OrderBy(i => i.NewDeliveryDate)
+                .ToList();
+
+            var model = new DriverTasksViewModel
+            {
+                Deliveries = deliveries,
+                Collections = collections,
+                Redeliveries = redeliveries
+            };
+
+            ViewBag.DriverId = driverId;
+            return View(model);
+        }
+
+        // GET: Detail page for a return task (collection or re-delivery)
+        public IActionResult ReturnTaskDetail(int orderItemId)
+        {
+            int driverId = HttpContext.Session.GetInt32("UserId").Value;
+
+            var item = db.OrderItems
+                .Include(i => i.Order)
+                    .ThenInclude(o => o.Customers)
+                .Include(i => i.Products)
+                .Include(i => i.DeliveryDriver)
+                .FirstOrDefault(i => i.OrderItemId == orderItemId && i.DriverId == driverId);
+
+            if (item == null) return NotFound();
+
+            // Determine task type
+            ViewBag.TaskType = item.ReturnPStatus == ReturnProduct.Collection_Assigned ? "Collection" : "Re-delivery";
+            ViewBag.TaskIcon = item.ReturnPStatus == ReturnProduct.Collection_Assigned ? "fa-box-open" : "fa-truck";
+            ViewBag.TaskColor = item.ReturnPStatus == ReturnProduct.Collection_Assigned ? "#d97706" : "#0891b2";
+
+            return View(item);
+        }
+
+        // POST: Driver marks item as collected
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult MarkCollected(int orderItemId)
+        {
+            int driverId = HttpContext.Session.GetInt32("UserId").Value;
+
+            var item = db.OrderItems
+                .Include(i => i.Order)
+                .Include(i => i.DeliveryDriver)
+                .FirstOrDefault(i => i.OrderItemId == orderItemId
+                                  && i.DriverId == driverId
+                                  && i.ReturnPStatus == ReturnProduct.Collection_Assigned);
+
+            if (item == null) return Json(new { success = false, reason = "Task not found" });
+
+            // Free up the driver
+            if (item.DeliveryDriver != null)
+                item.DeliveryDriver.IsAvailable = true;
+
+            item.ReturnPStatus = ReturnProduct.Item_Collected;
+            item.DriverId = null; // driver is done with this item until reassigned for re-delivery
+            item.CollectionDate = DateTime.Now;
+
+            db.SaveChanges();
+
+            return Json(new { success = true, message = "Item marked as collected." });
+        }
+
+        // POST: Driver marks exchange item as delivered (with optional pin verification)
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult MarkReDelivered(int orderItemId, string pin)
+        {
+            int driverId = HttpContext.Session.GetInt32("UserId").Value;
+
+            var item = db.OrderItems
+                .Include(i => i.Order)
+                .Include(i => i.DeliveryDriver)
+                .FirstOrDefault(i => i.OrderItemId == orderItemId
+                                  && i.DriverId == driverId
+                                  && i.ReturnPStatus == ReturnProduct.Exchange_Dispatched);
+
+            if (item == null) return Json(new { success = false, reason = "Task not found" });
+
+            // Verify pin if required (optional – you can add a Pin property to OrderItem if needed)
+            // if (!string.IsNullOrEmpty(item.Order.DeliveryPin) && item.Order.DeliveryPin != pin)
+            //     return Json(new { success = false, reason = "Invalid delivery pin" });
+
+            // Mark as completed
+            item.ReturnPStatus = ReturnProduct.Completed;
+            item.NewDeliveryDate = DateTime.Now;
+
+            // Free up driver
+            if (item.DeliveryDriver != null)
+                item.DeliveryDriver.IsAvailable = true;
+
+            db.SaveChanges();
+
+            return Json(new { success = true, message = "Re-delivery completed." });
         }
     }
 }

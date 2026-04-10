@@ -50,10 +50,10 @@ namespace CM_Project.Models
         [ForeignKey("DriverId")]
         public virtual DeliveryDriver DeliveryDriver { get; set; }  // driver for collection
 
-        //// Re-delivery driver (delivers exchange back to customer)
-        //public int? ExchangeDriverId { get; set; }
-        //[ForeignKey("ExchangeDriverId")]
-        //public virtual DeliveryDriver ExchangeDriver { get; set; }
+        public DateTime? CollectionDate { get; set; }
+        public DateTime? NewDeliveryDate { get; set; }
+
+   
 
     }
 }
