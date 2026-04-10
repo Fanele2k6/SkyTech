@@ -94,7 +94,7 @@ namespace CM_Project.Controllers
         }
 
 
-        
+       
         public IActionResult AddToCart(int id, int quantity)
         {
          //   int currentId= HttpContext.Session.GetInt32("UserId").Value;
@@ -528,6 +528,22 @@ namespace CM_Project.Controllers
                     ScheduledDeliveryDate = DateTime.Now.AddDays(2),
                     OrderType = DeliveryType.InStorePickup,
                     OrderItems = new List<OrderItem>()
+                    DeliveryPin = deliveryPin, //also added this
+                    ScheduledDeliveryDate = DateTime.Now.AddMinutes(2), //i order li dilivwa after 2 days
+                    OrderItems = storeGroup.Select(ci => new OrderItem
+                    {
+                        ProdId = ci.ProdId,
+                        ProdName = ci.ProdName,
+                        Quantity = ci.ProdQuantity,
+                        PriceAtTimeOfPurchase = ci.PriceAtTimeAdded,
+                        //---FOr refund columns
+                        RefundOrExchange = GetRefund.No_Requests,
+                        QuantityReturned = 0,
+                        RetunReason = "",
+                        ReturnPStatus = ReturnProduct.No_Request,
+                        CollectionDate = null,
+                        NewDeliveryDate = null
+                    }).ToList()
                 };
 
                 // Add ALL items to this single order
@@ -799,109 +815,6 @@ namespace CM_Project.Controllers
         //}
 
 
-        //public IActionResult Checkout(string deliveryAddress)
-        //{
-        //    // The ! tells the compiler "trust me, this won't be null"
-        //    int currentId = HttpContext.Session.GetInt32("UserId")!.Value;
-
-        //    // ✅ Load cart with Products included
-        //    var cart = db.Carts
-        //        .Include(c => c.CartItems)
-        //            .ThenInclude(ci => ci.AddProduct)
-        //        .FirstOrDefault(c => c.CustomerId == currentId && !c.IsCheckedOut);
-
-        //    if (cart == null || !cart.CartItems.Any())
-        //    {
-        //        TempData["Error"] = "Your cart is empty.";
-        //        return RedirectToAction("ViewCart");
-        //    }
-
-        //    // ✅ Null-safe: fall back to stored price if Products is null
-        //    double totalAmount = cart.CartItems.Sum(ci =>
-        //        (ci.AddProduct != null ? ci.AddProduct.ProdPrice : ci.PriceAtTimeAdded) * ci.ProdQuantity);
-
-        //    if (!string.IsNullOrWhiteSpace(deliveryAddress))
-        //    {
-        //        db.Database.ExecuteSqlRaw(
-        //            "UPDATE Customers SET Address = {0} WHERE CustomerId = {1}",
-        //            deliveryAddress.Trim(), currentId);
-        //    }
-
-        //    // ✅ Include Products so stock check doesn't crash
-        //    var cartItems = db.CartItems
-        //        .Include(c => c.AddProduct)
-        //        .Where(c => c.Carts.CustomerId == currentId)
-        //        .ToList();
-
-        //    var address = db.Customers
-        //        .Where(a => a.CustomerId == currentId)
-        //        .Select(a => a.Address)
-        //        .FirstOrDefault();
-
-        //    var customer = db.Customers.FirstOrDefault(c => c.CustomerId == currentId);
-
-        //    if (customer == null)
-        //    {
-        //        TempData["Error"] = "Customer not found.";
-        //        return RedirectToAction("ViewCart");
-        //    }
-
-        //    foreach (var item in cartItems)
-        //    {
-        //        var product = db.AddProducts.Find(item.ProdId);
-        //        if (product == null) continue;
-
-        //        if (product.ProdQuantity < item.ProdQuantity)
-        //        {
-        //            TempData["Error"] = product.ProdName + " does not have enough stock available.";
-        //            return RedirectToAction("ViewCart");
-        //        }
-
-        //        product.ProdQuantity -= item.ProdQuantity;
-        //        product.Status = product.ProdQuantity == 0 ? ProdStatus.Out_Of_Stock
-        //                       : product.ProdQuantity <= 5 ? ProdStatus.Low_stock
-        //                                                    : ProdStatus.In_Stock;
-        //    }
-
-        //    double deliveryFee = 50;
-        //    double subtotal = cartItems.Sum(i => i.SubTotal);
-        //    double total = subtotal + deliveryFee;
-
-        //    var order = new Order
-        //    {
-        //        CustomerId = currentId,
-        //        OrderedOn = DateTime.Now,
-        //        Status = OrderStatus.Pending,
-        //        PaymentExpiry = DateTime.Now.AddMinutes(2),
-        //        TotalAmount = totalAmount,
-        //        PaymentReference = "",
-        //        DeliveryAddress = string.IsNullOrWhiteSpace(deliveryAddress)
-        //                            ? address
-        //                            : deliveryAddress.Trim(),
-
-        //        OrderItems = cart.CartItems.Select(ci => new OrderItem
-        //        {
-        //            ProdId = ci.ProdId,
-        //            ProdName = ci.ProdName,
-        //            Quantity = ci.ProdQuantity,
-        //            PriceAtTimeOfPurchase = ci.PriceAtTimeAdded
-        //        }).ToList()
-        //    };
-
-        //    db.Orders.Add(order);
-        //    db.SaveChanges();
-
-        //    return RedirectToAction("PaymentPage", "Payment", new
-        //    {
-        //        orderId = order.OrderId,
-        //        amount = total,
-        //        customerEmail = customer.Email,
-        //        customerName = customer.FirstName,
-        //        itemCount = cart.CartItems.Sum(i => i.ProdQuantity),
-        //        deliveryAddress
-        //    });
-        //}
-
         private void DeleteExpiredOrders(int customerId)
         {
             var expiredOrders = db.Orders
@@ -1070,6 +983,112 @@ namespace CM_Project.Controllers
             TempData["ReturnToCart"] = true;
             return Ok();
         }
+
+        //==========================================RETURN ITEM===========================
+        public IActionResult ReturnPolicy() => View();  //view for return policy rules
+
+        
+        //displays all past orders and gives you permit to retun the item
+        public IActionResult PastOrders()
+        {
+            int? customerId = HttpContext.Session.GetInt32("UserId");
+            if (customerId == null) return RedirectToAction("LogIn", "Authentication");
+
+            DeleteExpiredOrders(customerId.Value);
+
+            var cutoff = DateTime.Now.AddDays(-7);
+
+            // Flat list of OrderItems from eligible orders
+            var items = db.OrderItems
+                .Include(i => i.Order)
+                .Include(i => i.Products)
+                    .ThenInclude(p => p.ProductPictures)
+                .Where(i => i.Order.CustomerId == customerId
+                         && i.Order.DeliveredOn.HasValue
+                         && i.RefundOrExchange == GetRefund.No_Requests  //if item money is refunded it must not appear. You can exchange as many times as you like
+                         && i.ReturnPStatus == ReturnProduct.No_Request  //if item money is refunded it must not appear. You can exchange as many times as you like
+                         && i.Order.DeliveredOn.Value >= cutoff)
+                         //&& i.ReturnP != ReturnProduct.Item_Accepted) // hide already returned
+                .OrderByDescending(i => i.Order.DeliveredOn)
+                .ToList();
+
+            return View(items);
+        }
+
+        //Submit the selected item for retun request
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult SubmitItemReturn(int orderItemId, string returnReason,
+                                       int quantityReturned, GetRefund refundOrExchange)
+        {
+            int? customerId = HttpContext.Session.GetInt32("UserId");
+            if (customerId == null) return RedirectToAction("LogIn", "Authentication");
+
+            var item = db.OrderItems
+                .Include(i => i.Order)
+                .FirstOrDefault(i => i.OrderItemId == orderItemId
+                                  && i.Order.CustomerId == customerId);
+
+            if (item == null) return NotFound();
+
+            item.RetunReason = returnReason;
+            item.QuantityReturned = quantityReturned;
+            item.ReturnPStatus = ReturnProduct.Return_Pending;
+            item.RefundOrExchange = refundOrExchange;   // ← from form
+
+            db.SaveChanges();
+
+            string choiceLabel = refundOrExchange == GetRefund.Refund ? "refund" : "exchange";
+            TempData["Message"] = $"Return for '{item.ProdName}' submitted — {choiceLabel} requested.";
+            return RedirectToAction("PastOrders");
+        }
+
+
+        //view all retuned products just like orders
+        [AuthorizeUser]
+        [HttpGet]
+        public IActionResult MyReturns()
+        {
+            int? customerId = HttpContext.Session.GetInt32("UserId");
+            if (customerId == null) return RedirectToAction("LogIn", "Authentication");
+
+            var returnedItems = db.OrderItems
+                .Include(oi => oi.Order)
+                .Include(oi => oi.DeliveryDriver)
+                .Where(oi => oi.Order.CustomerId == customerId
+                          && oi.ReturnPStatus != ReturnProduct.No_Request)
+                .OrderByDescending(oi => oi.Order.OrderedOn)
+                .ToList();
+
+            return View(returnedItems);
+        }
+
+
+        //action to track the returned items
+        [AuthorizeUser]
+        [HttpGet]
+        public IActionResult TrackReturn(int id)
+        {
+            int? customerId = HttpContext.Session.GetInt32("UserId");
+            if (customerId == null) return RedirectToAction("LogIn", "Authentication");
+
+            var item = db.OrderItems
+                .Include(oi => oi.Order)
+                .Include(oi => oi.DeliveryDriver)
+                .Include(oi => oi.Products)
+                .FirstOrDefault(oi => oi.OrderItemId == id
+                                   && oi.Order.CustomerId == customerId
+                                   && oi.ReturnPStatus != ReturnProduct.No_Request);
+
+            if (item == null)
+            {
+                ViewBag.Message = "Return not found or does not belong to you.";
+                return View((CM_Project.Models.OrderItem)null);
+            }
+
+            return View(item);
+        }
+
 
     }
 }

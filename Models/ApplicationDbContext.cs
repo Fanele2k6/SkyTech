@@ -32,6 +32,8 @@ namespace CM_Project.Models
         // ── Cart tables ──────────────────────────────────────
         public DbSet<Cart> Carts { get; set; }
         public DbSet<CartItem> CartItems { get; set; }
+        //public DbSet<Return> Return { get; set; }
+        //public DbSet<ReturnItem> ReturnItem { get; set; }
 
 
         //New tables for pickup
@@ -39,18 +41,58 @@ namespace CM_Project.Models
         public DbSet<InterBranchTransfer> InterBranchTransfers { get; set; }
 
 
+        //protected override void OnModelCreating(ModelBuilder modelBuilder)
+        //{
+        //    base.OnModelCreating(modelBuilder);
+
+        //    // ── Fix cascade cycle ─────────────────────────────────────────
+
+        //    // Keep cascade: deleting Order also deletes its OrderItems ✅
+        //    modelBuilder.Entity<OrderItem>()
+        //        .HasOne(oi => oi.Order)
+        //        .WithMany(o => o.OrderItems)
+        //        .HasForeignKey(oi => oi.OrderId)
+        //        .OnDelete(DeleteBehavior.Cascade);
+
+        //    // Break the cycle here: Customer → Order (no auto delete)
+        //    modelBuilder.Entity<Order>()
+        //        .HasOne(o => o.Customers)
+        //        .WithMany()
+        //        .HasForeignKey(o => o.CustomerId)
+        //        .OnDelete(DeleteBehavior.NoAction);
+
+        //    // Also break: ShopOwner → Order (you added OwnerId FK)
+        //    modelBuilder.Entity<Order>()
+        //        .HasOne(o => o.ShopOwner)
+        //        .WithMany()
+        //        .HasForeignKey(o => o.OwnerId)
+        //        .OnDelete(DeleteBehavior.NoAction);
+
+        //    // ── Seed admin to database
+        //    modelBuilder.Entity<SystemAdmin>().HasData(new SystemAdmin
+        //    {
+        //        AdminId = 1,
+        //        FirstName = "Nhlakanipho",
+        //        LastName = "Dladla",
+        //        Email = "admin@skytech.com",
+        //        Password = "Fanele.23",
+        //        UserType = "SystemAdmin",
+        //        RegisteredOn = new DateTime(2024, 1, 1)
+        //    });
+        //}
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
-            // Keep cascade on OrderItems (deleting Order also deletes its items) ✅
+            // Order → OrderItems (cascade is fine)
             modelBuilder.Entity<OrderItem>()
                 .HasOne(oi => oi.Order)
                 .WithMany(o => o.OrderItems)
                 .HasForeignKey(oi => oi.OrderId)
-                .OnDelete(DeleteBehavior.Cascade);  // ← delete order = delete its items
+                .OnDelete(DeleteBehavior.Cascade);
 
-            // Break the cycle HERE instead — on the Customer → Order path
+            // Customer → Orders (no cascade)
             modelBuilder.Entity<Order>()
                 .HasOne(o => o.Customers)
                 .WithMany()
@@ -88,6 +130,27 @@ namespace CM_Project.Models
                 .WithMany()
                 .HasForeignKey(t => t.DriverId)
                 .OnDelete(DeleteBehavior.NoAction);  // ← FIXED: NoAction
+                .OnDelete(DeleteBehavior.NoAction);
+
+            // ShopOwner → Orders (no cascade)
+            modelBuilder.Entity<Order>()
+                .HasOne(o => o.ShopOwner)
+                .WithMany()
+                .HasForeignKey(o => o.OwnerId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<OrderItem>()
+            .HasOne(i => i.DeliveryDriver)
+            .WithMany()
+            .HasForeignKey(i => i.DriverId)
+            .OnDelete(DeleteBehavior.NoAction);
+
+            //modelBuilder.Entity<OrderItem>()
+            //    .HasOne(i => i.ExchangeDriver)
+            //    .WithMany()
+            //    .HasForeignKey(i => i.ExchangeDriverId)
+            //    .OnDelete(DeleteBehavior.NoAction);
         }
+
     }
 }

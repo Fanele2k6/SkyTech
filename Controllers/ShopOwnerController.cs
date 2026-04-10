@@ -629,6 +629,189 @@ namespace CM_Project.Controllers
             return RedirectToAction("PickupBranchOrders");
         }
 
+        //===================================Return Actions======================================
+        //public IActionResult ReturnedItems()
+        //{
+        //    int currentId = HttpContext.Session.GetInt32("UserId")!.Value;
+
+        //    var pendingReturns = db.OrderItems
+        //        .Include(i => i.Order)
+        //            .ThenInclude(o => o.Customers)
+        //        .Include(i => i.Products)
+        //            .ThenInclude(p => p.ProductPictures)
+        //        .Where(i => i.ReturnPStatus == ReturnProduct.Return_Pending
+        //                 && i.Order.OwnerId == currentId)   // ← only this shop's orders
+        //        .OrderByDescending(i => i.Order.DeliveredOn)
+        //        .ToList();
+
+        //    return View(pendingReturns);
+        //}
+
+        //// Approve the return
+        //[HttpPost]
+        //[ValidateAntiForgeryToken]
+        //public IActionResult ApproveReturn(int orderItemId)
+        //{
+        //    int currentId = HttpContext.Session.GetInt32("UserId")!.Value;
+
+        //    var item = db.OrderItems
+        //        .Include(i => i.Order)
+        //        .FirstOrDefault(i => i.OrderItemId == orderItemId
+        //                          && i.Order.OwnerId == currentId);
+
+        //    if (item == null) return NotFound();
+
+        //    // Find an available, approved driver
+        //    var availableDriver = db.DeliveryDrivers
+        //        .FirstOrDefault(d => d.IsAvailable == true
+        //                          && d.ApplicationStatus == Status.Approved);
+
+        //    if (availableDriver == null)
+        //    {
+        //        TempData["Error"] = "No drivers are currently available. Please try again later.";
+        //        return RedirectToAction("ReturnedItems");
+        //    }
+
+        //    // Assign the driver to the order item
+        //    item.ReturnPStatus = ReturnProduct.Collection_Assigned;
+        //    item.DriverId = availableDriver.DriverId;
+        //    item.IsAssingedForCollection = true;
+        //    item.CollectionDate = DateTime.Now.AddDays(1);
+        //    item.NewDeliveryDate = DateTime.Now.AddDays(4);
+
+        //    // Mark the driver as unavailable
+        //    availableDriver.IsAvailable = false;
+
+        //    db.SaveChanges();
+
+        //    TempData["Message"] = $"Return for '{item.ProdName}' approved and assigned to driver {availableDriver.DriverName} {availableDriver.DriverSurname}.";
+        //    return RedirectToAction("ReturnedItems");
+        //}
+
+        // Shows ALL active returns (not just pending)
+        public IActionResult ReturnedItems()
+        {
+            int currentId = HttpContext.Session.GetInt32("UserId")!.Value;
+
+            var activeReturns = db.OrderItems
+                .Include(i => i.Order)
+                    .ThenInclude(o => o.Customers)
+                .Include(i => i.Products)
+                    .ThenInclude(p => p.ProductPictures)
+                .Include(i => i.DeliveryDriver)
+                .Where(i => i.Order.OwnerId == currentId
+                         && i.ReturnPStatus != ReturnProduct.No_Request
+                         && i.ReturnPStatus != ReturnProduct.Completed)
+                .OrderByDescending(i => i.Order.DeliveredOn)
+                .ToList();
+
+            return View(activeReturns);
+        }
+
+        // Step 1 — shop owner approves & assigns collection driver
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult ApproveReturn(int orderItemId)
+        {
+            int currentId = HttpContext.Session.GetInt32("UserId")!.Value;
+
+            var item = db.OrderItems
+                .Include(i => i.Order)
+                .FirstOrDefault(i => i.OrderItemId == orderItemId
+                                  && i.Order.OwnerId == currentId);
+
+            if (item == null) return NotFound();
+
+            var availableDriver = db.DeliveryDrivers
+                .FirstOrDefault(d => d.IsAvailable == true
+                                  && d.ApplicationStatus == Status.Approved);
+
+            if (availableDriver == null)
+            {
+                TempData["Error"] = "No drivers are currently available. Please try again later.";
+                return RedirectToAction("ReturnedItems");
+            }
+
+            item.ReturnPStatus = ReturnProduct.Collection_Assigned;
+            item.DriverId = availableDriver.DriverId;
+            item.IsAssingedForCollection = true;
+            item.CollectionDate = DateTime.Now.AddDays(1);
+            item.NewDeliveryDate = DateTime.Now.AddDays(4);
+
+            availableDriver.IsAvailable = false;
+            db.SaveChanges();
+
+            TempData["Message"] = $"Return for '{item.ProdName}' approved. Driver {availableDriver.DriverName} {availableDriver.DriverSurname} assigned for collection.";
+            return RedirectToAction("ReturnedItems");
+        }
+
+        // Step 2 — mark item as collected (driver picked it up, now being inspected)
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult MarkItemCollected(int orderItemId)
+        {
+            int currentId = HttpContext.Session.GetInt32("UserId")!.Value;
+
+            var item = db.OrderItems
+                .Include(i => i.Order)
+                .Include(i => i.DeliveryDriver)
+                .FirstOrDefault(i => i.OrderItemId == orderItemId
+                                  && i.Order.OwnerId == currentId
+                                  && i.ReturnPStatus == ReturnProduct.Collection_Assigned);
+
+            if (item == null) return NotFound();
+
+            // Free up the collection driver
+            if (item.DeliveryDriver != null)
+                item.DeliveryDriver.IsAvailable = true;
+
+            item.ReturnPStatus = ReturnProduct.Item_Collected;
+            item.DriverId = null;   // clear driver — new one assigned in next step
+
+            db.SaveChanges();
+
+            TempData["Message"] = $"'{item.ProdName}' marked as collected and is now being inspected/replaced.";
+            return RedirectToAction("ReturnedItems");
+        }
+
+        // Step 3 — assign a driver to deliver the replacement/exchange item
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult AssignExchangeDriver(int orderItemId)
+        {
+            int currentId = HttpContext.Session.GetInt32("UserId")!.Value;
+
+            var item = db.OrderItems
+                .Include(i => i.Order)
+                .FirstOrDefault(i => i.OrderItemId == orderItemId
+                                  && i.Order.OwnerId == currentId
+                                  && i.ReturnPStatus == ReturnProduct.Item_Collected);
+
+            if (item == null) return NotFound();
+
+            var availableDriver = db.DeliveryDrivers
+                .FirstOrDefault(d => d.IsAvailable == true
+                                  && d.ApplicationStatus == Status.Approved);
+
+            if (availableDriver == null)
+            {
+                TempData["Error"] = "No drivers available for re-delivery. Please try again later.";
+                return RedirectToAction("ReturnedItems");
+            }
+
+            item.ReturnPStatus = ReturnProduct.Exchange_Dispatched;
+            item.DriverId = availableDriver.DriverId;
+            item.IsAssingedForSecDelivery = true;
+            item.NewDeliveryDate = DateTime.Now.AddDays(1);
+
+            availableDriver.IsAvailable = false;
+            db.SaveChanges();
+
+            TempData["Message"] = $"Replacement for '{item.ProdName}' dispatched. Driver {availableDriver.DriverName} {availableDriver.DriverSurname} assigned for delivery.";
+            return RedirectToAction("ReturnedItems");
+        }
+
+        public IActionResult AssignCollection() => View();
 
 
     }
