@@ -34,9 +34,14 @@
             <a href="@Url.Action("DriverDash", "DeliveryDriver")" class="d-link active")>
                 <i class="fas fa-grid-2"></i><span>Dashboard</span>
             </a>
+
             <a href="@Url.Action("MyDeliveries","DeliveryDriver")" class="d-link">
                 <i class="fas fa-bag-shopping"></i><span>My Deliveries</span>
             </a>
+            <a href="@Url.Action("ReturnedOrderItems", "DeliveryDriver")" class="d-link">
+                <i class="fas fa-bag-shopping"></i><span>Returned Order Items</span>
+            </a>
+
             <div class="d-nav-label" style="margin-top:1rem">ACCOUNT</div>
             <a href="@Url.Action("DriverProfile","DeliveryDriver")" class="d-link">
                 <i class="fas fa-circle-user"></i><span>Profile</span>

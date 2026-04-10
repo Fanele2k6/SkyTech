@@ -99,6 +99,12 @@
                             </a>
                         </div>
 
+                        <div class="profile-row">
+                            <a href="@Url.Action("ReturnPolicy","Customer")" class="pv">
+                                <i class="fas fa-clock-rotate-left"></i>Return item
+                            </a>
+                        </div>
+
                         <!--Logout button-->
                         <div class="profile-row" style="margin-top:.8rem">
                             @using (Html.BeginForm("Logout", "Authentication", FormMethod.Post))

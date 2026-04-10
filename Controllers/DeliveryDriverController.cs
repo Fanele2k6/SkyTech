@@ -100,6 +100,7 @@ namespace CM_Project.Controllers
 
             // Mark this order as delivered
             order.Status = OrderStatus.Delivered;
+            order.DeliveredOn = DateTime.Now;
             db.SaveChanges();
 
             var driver = db.DeliveryDrivers.Find(order.DriverId);
@@ -154,6 +155,23 @@ namespace CM_Project.Controllers
                 return Json(new { success = false, reason = "Incorrect pin" });
 
             return Json(new { success = true });
+        }
+
+        public IActionResult ReturnedOrderItems()
+        {
+            int currentId = HttpContext.Session.GetInt32("UserId")!.Value;
+
+            var AsssignedReturns = db.OrderItems
+                .Include(i => i.Order)
+                    .ThenInclude(o => o.Customers)
+                .Include(i => i.Products)
+                    .ThenInclude(p => p.ProductPictures)
+                .Where(i => i.ReturnPStatus == ReturnProduct.Return_Approved
+                         && i.Order.OwnerId == currentId)   // ← only this shop's orders
+                .OrderByDescending(i => i.Order.DeliveredOn)
+                .ToList();
+
+            return View(AsssignedReturns);
         }
     }
 }

@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace SkyTech.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260402134523_UpdatingDbClass")]
-    partial class UpdatingDbClass
+    [Migration("20260410102659_Coolections")]
+    partial class Coolections
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -56,6 +56,9 @@ namespace SkyTech.Migrations
                     b.Property<string>("ProdSize")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("ProdType")
+                        .HasColumnType("int");
 
                     b.Property<int>("Status")
                         .HasColumnType("int");
@@ -439,6 +442,10 @@ namespace SkyTech.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("DeliveryPin")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int?>("DriverId")
                         .HasColumnType("int");
 
@@ -460,6 +467,9 @@ namespace SkyTech.Migrations
                     b.Property<string>("PaymentReference")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("ScheduledDeliveryDate")
+                        .HasColumnType("datetime2");
 
                     b.Property<int>("Status")
                         .HasColumnType("int");
@@ -486,6 +496,15 @@ namespace SkyTech.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("OrderItemId"));
 
+                    b.Property<int?>("DriverId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsAssingedForCollection")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsAssingedForSecDelivery")
+                        .HasColumnType("bit");
+
                     b.Property<int>("OrderId")
                         .HasColumnType("int");
 
@@ -502,7 +521,22 @@ namespace SkyTech.Migrations
                     b.Property<int>("Quantity")
                         .HasColumnType("int");
 
+                    b.Property<int>("QuantityReturned")
+                        .HasColumnType("int");
+
+                    b.Property<int>("RefundOrExchange")
+                        .HasColumnType("int");
+
+                    b.Property<string>("RetunReason")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("ReturnPStatus")
+                        .HasColumnType("int");
+
                     b.HasKey("OrderItemId");
+
+                    b.HasIndex("DriverId");
 
                     b.HasIndex("OrderId");
 
@@ -778,7 +812,7 @@ namespace SkyTech.Migrations
                     b.HasOne("CM_Project.Models.ShopOwner", "ShopOwner")
                         .WithMany()
                         .HasForeignKey("OwnerId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.Navigation("Customers");
@@ -790,6 +824,11 @@ namespace SkyTech.Migrations
 
             modelBuilder.Entity("CM_Project.Models.OrderItem", b =>
                 {
+                    b.HasOne("CM_Project.Models.DeliveryDriver", "DeliveryDriver")
+                        .WithMany()
+                        .HasForeignKey("DriverId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
                     b.HasOne("CM_Project.Models.Order", "Order")
                         .WithMany("OrderItems")
                         .HasForeignKey("OrderId")
@@ -801,6 +840,8 @@ namespace SkyTech.Migrations
                         .HasForeignKey("ProdId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("DeliveryDriver");
 
                     b.Navigation("Order");
 

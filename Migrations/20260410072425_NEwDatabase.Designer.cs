@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace SkyTech.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260403220321_AddDeliveryPin")]
-    partial class AddDeliveryPin
+    [Migration("20260410072425_NEwDatabase")]
+    partial class NEwDatabase
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -468,6 +468,9 @@ namespace SkyTech.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<DateTime>("ScheduledDeliveryDate")
+                        .HasColumnType("datetime2");
+
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
@@ -507,6 +510,19 @@ namespace SkyTech.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("Quantity")
+                        .HasColumnType("int");
+
+                    b.Property<int>("QuantityReturned")
+                        .HasColumnType("int");
+
+                    b.Property<int>("RefundOrExchange")
+                        .HasColumnType("int");
+
+                    b.Property<string>("RetunReason")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("ReturnPStatus")
                         .HasColumnType("int");
 
                     b.HasKey("OrderItemId");
@@ -785,7 +801,7 @@ namespace SkyTech.Migrations
                     b.HasOne("CM_Project.Models.ShopOwner", "ShopOwner")
                         .WithMany()
                         .HasForeignKey("OwnerId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.Navigation("Customers");

@@ -493,6 +493,15 @@ namespace SkyTech.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("OrderItemId"));
 
+                    b.Property<int?>("DriverId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsAssingedForCollection")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsAssingedForSecDelivery")
+                        .HasColumnType("bit");
+
                     b.Property<int>("OrderId")
                         .HasColumnType("int");
 
@@ -509,7 +518,22 @@ namespace SkyTech.Migrations
                     b.Property<int>("Quantity")
                         .HasColumnType("int");
 
+                    b.Property<int>("QuantityReturned")
+                        .HasColumnType("int");
+
+                    b.Property<int>("RefundOrExchange")
+                        .HasColumnType("int");
+
+                    b.Property<string>("RetunReason")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("ReturnPStatus")
+                        .HasColumnType("int");
+
                     b.HasKey("OrderItemId");
+
+                    b.HasIndex("DriverId");
 
                     b.HasIndex("OrderId");
 
@@ -785,7 +809,7 @@ namespace SkyTech.Migrations
                     b.HasOne("CM_Project.Models.ShopOwner", "ShopOwner")
                         .WithMany()
                         .HasForeignKey("OwnerId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.Navigation("Customers");
@@ -797,6 +821,11 @@ namespace SkyTech.Migrations
 
             modelBuilder.Entity("CM_Project.Models.OrderItem", b =>
                 {
+                    b.HasOne("CM_Project.Models.DeliveryDriver", "DeliveryDriver")
+                        .WithMany()
+                        .HasForeignKey("DriverId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
                     b.HasOne("CM_Project.Models.Order", "Order")
                         .WithMany("OrderItems")
                         .HasForeignKey("OrderId")
@@ -808,6 +837,8 @@ namespace SkyTech.Migrations
                         .HasForeignKey("ProdId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("DeliveryDriver");
 
                     b.Navigation("Order");
 
