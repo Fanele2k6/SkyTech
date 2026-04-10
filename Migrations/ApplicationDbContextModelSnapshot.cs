@@ -452,6 +452,9 @@ namespace SkyTech.Migrations
                     b.Property<bool>("IsPaid")
                         .HasColumnType("bit");
 
+                    b.Property<int>("OrderType")
+                        .HasColumnType("int");
+
                     b.Property<DateTime>("OrderedOn")
                         .HasColumnType("datetime2");
 
@@ -464,6 +467,9 @@ namespace SkyTech.Migrations
                     b.Property<string>("PaymentReference")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("PickupOrderId")
+                        .HasColumnType("int");
 
                     b.Property<DateTime>("ScheduledDeliveryDate")
                         .HasColumnType("datetime2");
@@ -671,6 +677,95 @@ namespace SkyTech.Migrations
                     b.ToTable("SystemAdmins");
                 });
 
+            modelBuilder.Entity("SkyTech.Models.InterBranchTransfer", b =>
+                {
+                    b.Property<int>("TransferId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("TransferId"));
+
+                    b.Property<DateTime?>("DeliveredToTargetOn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("DriverId")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsDelivered")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("OrderItemId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("ScheduledTransferDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("SourceBranchId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TargetBranchId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("TransferCode")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("TransferStatus")
+                        .HasColumnType("int");
+
+                    b.HasKey("TransferId");
+
+                    b.HasIndex("DriverId");
+
+                    b.HasIndex("OrderItemId");
+
+                    b.HasIndex("SourceBranchId");
+
+                    b.HasIndex("TargetBranchId");
+
+                    b.ToTable("InterBranchTransfers");
+                });
+
+            modelBuilder.Entity("SkyTech.Models.PickupOrder", b =>
+                {
+                    b.Property<int>("PickupOrderId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("PickupOrderId"));
+
+                    b.Property<DateTime?>("CollectedOn")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("OrderId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PickupBranchId")
+                        .HasColumnType("int");
+
+                    b.Property<double>("PickupFee")
+                        .HasColumnType("float");
+
+                    b.Property<string>("PickupReference")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("ScheduledPickupDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.HasKey("PickupOrderId");
+
+                    b.HasIndex("OrderId")
+                        .IsUnique();
+
+                    b.HasIndex("PickupBranchId");
+
+                    b.ToTable("PickupOrders");
+                });
+
             modelBuilder.Entity("CM_Project.Models.AddProduct", b =>
                 {
                     b.HasOne("CM_Project.Models.ShopOwner", "Owner")
@@ -823,6 +918,59 @@ namespace SkyTech.Migrations
                         .IsRequired();
 
                     b.Navigation("Owner");
+                });
+
+            modelBuilder.Entity("SkyTech.Models.InterBranchTransfer", b =>
+                {
+                    b.HasOne("CM_Project.Models.DeliveryDriver", "Driver")
+                        .WithMany()
+                        .HasForeignKey("DriverId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.HasOne("CM_Project.Models.OrderItem", "OrderItem")
+                        .WithMany()
+                        .HasForeignKey("OrderItemId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("CM_Project.Models.ShopOwner", "SourceBranch")
+                        .WithMany()
+                        .HasForeignKey("SourceBranchId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("CM_Project.Models.ShopOwner", "TargetBranch")
+                        .WithMany()
+                        .HasForeignKey("TargetBranchId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Driver");
+
+                    b.Navigation("OrderItem");
+
+                    b.Navigation("SourceBranch");
+
+                    b.Navigation("TargetBranch");
+                });
+
+            modelBuilder.Entity("SkyTech.Models.PickupOrder", b =>
+                {
+                    b.HasOne("CM_Project.Models.Order", "Order")
+                        .WithOne()
+                        .HasForeignKey("SkyTech.Models.PickupOrder", "OrderId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("CM_Project.Models.ShopOwner", "PickupBranch")
+                        .WithMany()
+                        .HasForeignKey("PickupBranchId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Order");
+
+                    b.Navigation("PickupBranch");
                 });
 
             modelBuilder.Entity("CM_Project.Models.AddProduct", b =>

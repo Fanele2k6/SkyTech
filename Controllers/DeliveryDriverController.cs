@@ -5,6 +5,7 @@ using CM_Project.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using SkyTech.Models;
 using System;
 using System.Linq;
 
@@ -20,19 +21,19 @@ namespace CM_Project.Controllers
         [HttpGet]
         public IActionResult DriverDash()
         {
-            int currentId = HttpContext.Session.GetInt32("UserId").Value;
+            int driverId = HttpContext.Session.GetInt32("UserId")!.Value;
 
-            var inProgress = db.Orders
-                .Where(o => o.DriverId == currentId && o.Status == OrderStatus.OutForDelivery)
-                .Count();
+            // Get driver info
+            var driver = db.DeliveryDrivers.Find(driverId);
+            ViewBag.DriverName = driver?.DriverName + " " + driver?.DriverSurname;
+            ViewBag.ApplicationStatus = driver?.ApplicationStatus;
+            ViewBag.ActivePage = "Dashboard";
 
-            var completed = db.Orders
-                .Where(o => o.DriverId == currentId && o.Status == OrderStatus.Delivered)
-                .Count();
+            // Get stats
+            ViewBag.CompletedDeliveries = db.Orders.Count(o => o.DriverId == driverId && o.Status == OrderStatus.Delivered);
+            ViewBag.InProgressDeliveries = db.Orders.Count(o => o.DriverId == driverId && (o.Status == OrderStatus.Assigned || o.Status == OrderStatus.OutForDelivery));
 
-            ViewBag.InProgressDeliveries = inProgress;
-            ViewBag.CompletedDeliveries = completed;
-            return View();
+            return View(driver);
         }
 
         // ✅ ThenInclude Products so view doesn't crash
@@ -121,28 +122,7 @@ namespace CM_Project.Controllers
 
             return Json(new { success = true });
         }
-        //public IActionResult CompleteDelivery(int id)
-        //{
-        //    var order = db.Orders.Find(id);
-
-        //    if (order == null)
-        //        return Json(new { success = false, reason = "Order not found" });
-
-        //    if (order.Status != OrderStatus.OutForDelivery)
-        //        return Json(new { success = false, reason = "Order is not out for delivery" });
-
-        //    order.Status = OrderStatus.Delivered;
-        //    order.DeliveredOn = DateTime.Now;
-
-        //    var driver = db.DeliveryDrivers.Find(order.DriverId);
-        //    if (driver != null) driver.IsAvailable = true;
-
-        //    db.SaveChanges();
-
-        //    return Json(new { success = true });
-        //}
-
-        //Delivery pin action method
+        
         [HttpPost]
         public IActionResult VerifyDeliveryPin(int orderId, string pin)
         {
@@ -155,5 +135,121 @@ namespace CM_Project.Controllers
 
             return Json(new { success = true });
         }
+
+
+        //Driver transfers
+        public IActionResult MyTransfers()
+        {
+            int driverId = HttpContext.Session.GetInt32("UserId")!.Value;
+
+            var transfers = db.InterBranchTransfers
+                .Include(t => t.OrderItem)
+                    .ThenInclude(oi => oi.Products)
+                .Include(t => t.OrderItem)
+                    .ThenInclude(oi => oi.Order)
+                        .ThenInclude(o => o.Customers)
+                .Include(t => t.SourceBranch)
+                .Include(t => t.TargetBranch)
+                .Where(t => t.DriverId == driverId)
+                .OrderBy(t => t.ScheduledTransferDate)
+                .ToList();
+
+            ViewBag.DriverName = HttpContext.Session.GetString("DriverName");
+            return View(transfers);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult MarkTransferInTransit(int transferId)
+        {
+            int driverId = HttpContext.Session.GetInt32("UserId")!.Value;
+
+            var transfer = db.InterBranchTransfers
+                .FirstOrDefault(t => t.TransferId == transferId && t.DriverId == driverId);
+
+            if (transfer == null)
+            {
+                TempData["Error"] = "Transfer not found or not assigned to you.";
+                return RedirectToAction("MyTransfers");
+            }
+
+            transfer.TransferStatus = ItemTransferStatus.InTransit;
+            db.SaveChanges();
+
+            TempData["Success"] = "Transfer marked as in transit. Please deliver to the destination branch.";
+
+            return RedirectToAction("MyTransfers");
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult MarkTransferDelivered(int transferId)
+        {
+            int driverId = HttpContext.Session.GetInt32("UserId")!.Value;
+
+            var transfer = db.InterBranchTransfers
+                .Include(t => t.OrderItem)
+                .FirstOrDefault(t => t.TransferId == transferId && t.DriverId == driverId);
+
+            if (transfer == null)
+            {
+                TempData["Error"] = "Transfer not found or not assigned to you.";
+                return RedirectToAction("MyTransfers");
+            }
+
+            transfer.TransferStatus = ItemTransferStatus.DeliveredToPickupBranch;
+            transfer.DeliveredToTargetOn = DateTime.Now;
+            transfer.IsDelivered = true;
+            db.SaveChanges();
+
+            TempData["Success"] = $"Item {transfer.OrderItem?.ProdName} has been delivered to the pickup branch.";
+
+            return RedirectToAction("MyTransfers");
+        }
+
+
+        //MY DELIVERIES
+        public IActionResult HomeDeliveries()
+        {
+            int driverId = HttpContext.Session.GetInt32("UserId")!.Value;
+
+            var deliveries = db.Orders
+                .Include(o => o.Customers)
+                .Include(o => o.OrderItems)
+                    .ThenInclude(i => i.Products)
+                .Where(o => o.DriverId == driverId && o.OrderType == DeliveryType.HomeDelivery)
+                .OrderByDescending(o => o.OrderedOn)
+                .ToList();
+
+            ViewBag.DriverId = driverId;
+            ViewBag.DriverName = HttpContext.Session.GetString("DriverName");
+            ViewBag.ActivePage = "HomeDeliveries";
+
+            return View(deliveries);
+        }
+
+
+        public IActionResult BranchTransfers()
+        {
+            int driverId = HttpContext.Session.GetInt32("UserId")!.Value;
+
+            var transfers = db.InterBranchTransfers
+                    .Include(t => t.OrderItem)
+                    .ThenInclude(oi => oi.Products)
+                    .Include(t => t.OrderItem)
+                    .ThenInclude(oi => oi.Order)
+                        .ThenInclude(o => o.Customers)
+                .Include(t => t.SourceBranch)
+                .Include(t => t.TargetBranch)
+                .Where(t => t.DriverId == driverId)
+                .OrderBy(t => t.ScheduledTransferDate)
+                .ToList();
+
+            ViewBag.DriverName = HttpContext.Session.GetString("DriverName");
+            ViewBag.ActivePage = "BranchTransfers";
+
+            return View(transfers);
+        }
+
     }
 }

@@ -6,6 +6,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace CM_Project.Models
 {
     public enum OrderStatus { Pending, Assigned, OutForDelivery, Delivered }
+    public enum DeliveryType { HomeDelivery, InStorePickup }
 
     public class Order
     {
@@ -43,9 +44,12 @@ namespace CM_Project.Models
         public string DeliveryPin { get; set; }
 
         //The date the order will be scheduled for
-        public DateTime ScheduledDeliveryDate { get; set; }
-
         //The date the driver will be assigned for an order
-        //public DateTime DailyOrderDate { get; set; }
+        public DateTime ScheduledDeliveryDate { get; set; }
+     
+
+        public DeliveryType OrderType { get; set; } // HomeDelivery or InStorePickup
+        public int? PickupOrderId { get; set; } // Link to PickupOrder if applicable
+
     }
 }

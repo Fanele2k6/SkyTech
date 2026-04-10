@@ -1,4 +1,4 @@
-﻿@using CM_Project.Models
+﻿@* @using CM_Project.Models
 @model IEnumerable<CM_Project.Models.Order>
 @{
     ViewBag.Title = "My Deliveries";
@@ -189,4 +189,4 @@
         var rows = document.querySelectorAll('#delivTable tbody tr');
         var t = q.toLowerCase();
         rows.forEach(function (r) { r.style.display = (r.dataset.search || '').includes(t) ? '' : 'none' });
-    }</script>
+    }</script> *@

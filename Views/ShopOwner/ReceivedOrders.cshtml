@@ -1,10 +1,12 @@
-﻿@using CM_Project.Models
+﻿@* @using CM_Project.Models
+@using SkyTech.Models
 @model IEnumerable<CM_Project.Models.Order>
 @{
     ViewBag.Title = "Received Orders";
     Layout = "~/Views/Shared/_MinimalLayout.cshtml";
     ViewBag.ActivePage = "Orders";
-
+    var transfersOut = ViewBag.TransfersOut as IEnumerable<InterBranchTransfer> ?? new List<InterBranchTransfer>();
+    var drivers = ViewBag.AvailableDrivers as IEnumerable<CM_Project.Models.DeliveryDriver> ?? new List<CM_Project.Models.DeliveryDriver>();
     int total = Model.Count();
     int pending = Model.Count(o => o.Status == OrderStatus.Pending);
     int delivered = Model.Count(o => o.Status == OrderStatus.Delivered);
@@ -22,7 +24,7 @@
             display: flex;
             flex-wrap: wrap;
             gap: .75rem;
-            margin-bottom: 1.6rem;
+            margin-bottom: 1.6rem
         }
 
         .chip {
@@ -36,7 +38,7 @@
             box-shadow: var(--shadow-sm);
             display: flex;
             align-items: center;
-            gap: .5rem;
+            gap: .5rem
         }
 
             .chip .num {
@@ -44,46 +46,54 @@
                 font-size: 1.3rem;
                 font-weight: 700;
                 color: var(--text);
-                margin-right: .3rem;
+                margin-right: .3rem
             }
 
             .chip.blue {
-                border-color: rgba(26,115,232,.28);
+                border-color: rgba(26,115,232,.28)
             }
 
                 .chip.blue .num {
-                    color: var(--blue);
+                    color: var(--blue)
                 }
 
             .chip.yellow {
-                border-color: rgba(217,119,6,.28);
+                border-color: rgba(217,119,6,.28)
             }
 
                 .chip.yellow .num {
-                    color: var(--yellow);
+                    color: var(--yellow)
                 }
 
             .chip.green {
-                border-color: rgba(22,163,74,.28);
+                border-color: rgba(22,163,74,.28)
             }
 
                 .chip.green .num {
-                    color: var(--green);
+                    color: var(--green)
                 }
 
             .chip.orange {
-                border-color: rgba(234,88,12,.28);
+                border-color: rgba(234,88,12,.28)
             }
 
                 .chip.orange .num {
-                    color: var(--orange);
+                    color: var(--orange)
+                }
+
+            .chip.purple {
+                border-color: rgba(147,51,234,.28)
+            }
+
+                .chip.purple .num {
+                    color: #9333ea
                 }
 
         .items-list {
             list-style: none;
             display: flex;
             flex-direction: column;
-            gap: .2rem;
+            gap: .2rem
         }
 
             .items-list li {
@@ -91,20 +101,126 @@
                 color: var(--text-3);
                 display: flex;
                 align-items: center;
-                gap: .35rem;
+                gap: .35rem
             }
 
                 .items-list li::before {
                     content: '•';
                     color: var(--blue);
-                    font-size: .85rem;
+                    font-size: .85rem
                 }
+
+        .tab-row {
+            display: flex;
+            gap: .5rem;
+            margin-bottom: 1.4rem;
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 0
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            padding: .65rem 1.2rem;
+            font-size: .88rem;
+            font-weight: 700;
+            color: var(--text-3);
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            margin-bottom: -2px;
+            transition: .15s
+        }
+
+            .tab-btn.active {
+                color: var(--blue);
+                border-bottom-color: var(--blue)
+            }
+
+        .tab-panel {
+            display: none
+        }
+
+            .tab-panel.active {
+                display: block
+            }
+
+        .transfer-card {
+            background: var(--white);
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius);
+            padding: 1.2rem 1.4rem;
+            margin-bottom: 1rem;
+            box-shadow: var(--shadow-sm)
+        }
+
+        .transfer-card-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: .8rem
+        }
+
+        .transfer-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: .35rem;
+            font-size: .75rem;
+            font-weight: 700;
+            padding: .3rem .75rem;
+            border-radius: 999px
+        }
+
+        .badge-pending-transfer {
+            background: #fef3c7;
+            color: #92400e
+        }
+
+        .badge-assigned-transfer {
+            background: #dbeafe;
+            color: #1e40af
+        }
+
+        .badge-transit {
+            background: #f3e8ff;
+            color: #7e22ce
+        }
+
+        .transfer-meta {
+            display: grid;
+            grid-template-columns: repeat(auto-fit,minmax(180px,1fr));
+            gap: .6rem;
+            margin-bottom: .9rem
+        }
+
+        .transfer-meta-item {
+            font-size: .8rem;
+            color: var(--text-3)
+        }
+
+            .transfer-meta-item strong {
+                display: block;
+                font-size: .72rem;
+                color: var(--text-muted);
+                text-transform: uppercase;
+                letter-spacing: .04em;
+                margin-bottom: .15rem
+            }
+
+        .transfer-code-box {
+            font-family: monospace;
+            font-size: 1rem;
+            font-weight: 800;
+            color: #7e22ce;
+            background: #f3e8ff;
+            border: 1.5px dashed #c084fc;
+            border-radius: var(--radius-sm);
+            padding: .35rem .8rem;
+            letter-spacing: .1em
+        }
     </style>
 }
 
 <div class="so-wrap">
-
-    <!-- SIDEBAR -->
     <aside class="so-sidebar">
         <div class="so-brand">
             <div class="so-brand-icon"><i class="fas fa-store"></i></div>
@@ -115,132 +231,237 @@
         </div>
         <nav class="so-nav">
             <div class="so-nav-label">OVERVIEW</div>
-            <a href="@Url.Action("ShopOwnerDash","ShopOwner")" class="so-link"><i class="fas fa-grid-2"></i><span>Dashboard</span></a>
+            <a href="@Url.Action("ShopOwnerDash", "ShopOwner")" class="so-link"><i class="fas fa-grid-2"></i><span>Dashboard</span></a>
             <div class="so-nav-label" style="margin-top:1rem">INVENTORY</div>
-            <a href="@Url.Action("AddProductPage","ShopOwner")" class="so-link"><i class="fas fa-circle-plus"></i><span>Add Product</span></a>
-            <a href="@Url.Action("TrackStockLevelPage","ShopOwner")" class="so-link"><i class="fas fa-boxes-stacked"></i><span>Track Stock</span></a>
+            <a href="@Url.Action("AddProductPage", "ShopOwner")" class="so-link"><i class="fas fa-circle-plus"></i><span>Add Product</span></a>
+            <a href="@Url.Action("TrackStockLevelPage", "ShopOwner")" class="so-link"><i class="fas fa-boxes-stacked"></i><span>Track Stock</span></a>
             <div class="so-nav-label" style="margin-top:1rem">ORDERS & STAFF</div>
-            <a href="@Url.Action("ReceivedOrders","ShopOwner")" class="so-link active"><i class="fas fa-bag-shopping"></i><span>Received Orders</span></a>
-            <a href="@Url.Action("StaffReg","ShopOwner")" class="so-link"><i class="fas fa-user-plus"></i><span>Register Staff</span></a>
-            <a href="@Url.Action("StaffMembers","ShopOwner")" class="so-link"><i class="fas fa-users"></i><span>Staff Members</span></a>
+            <a href="@Url.Action("ReceivedOrders", "ShopOwner")" class="so-link active"><i class="fas fa-bag-shopping"></i><span>Received Orders</span></a>
+            <a href="@Url.Action("PickupBranchOrders", "ShopOwner")" class="so-link"><i class="fas fa-store-alt"></i><span>Pickup Orders</span></a>
+            <a href="@Url.Action("StaffReg", "ShopOwner")" class="so-link"><i class="fas fa-user-plus"></i><span>Register Staff</span></a>
+            <a href="@Url.Action("StaffMembers", "ShopOwner")" class="so-link"><i class="fas fa-users"></i><span>Staff Members</span></a>
             <div class="so-nav-label" style="margin-top:1rem">ACCOUNT</div>
-            <a href="@Url.Action("OwnerProfile","ShopOwner")" class="so-link"><i class="fas fa-circle-user"></i><span>Profile</span></a>
+            <a href="@Url.Action("OwnerProfile", "ShopOwner")" class="so-link"><i class="fas fa-circle-user"></i><span>Profile</span></a>
         </nav>
-        <div class="so-sidebar-foot">
-            <div class="so-foot-avatar"><i class="fas fa-store"></i></div>
-            <div>
-                <div class="so-foot-role">SkyTech</div>
-            </div>
-        </div>
     </aside>
 
-    <!-- MAIN -->
     <main class="so-main">
-
         <div class="so-topbar">
             <div>
                 <div class="so-page-title">Received Orders</div>
-                <div class="so-page-sub">Manage and assign orders to drivers.</div>
+                <div class="so-page-sub">Manage orders and outgoing transfers.</div>
             </div>
-            <button class="btn btn-outline" onclick="window.print()">
-                <i class="fas fa-print"></i> Print
-            </button>
+            <button class="btn btn-outline" onclick="window.print()"><i class="fas fa-print"></i> Print</button>
         </div>
 
-        <!-- Summary chips -->
+        @if (TempData["Success"] != null)
+        {
+            <div style="background:#dcfce7;border:1px solid #86efac;color:#166534;padding:.8rem 1.2rem;border-radius:var(--radius-sm);margin-bottom:1rem;font-size:.88rem;font-weight:600">
+                <i class="fas fa-circle-check"></i> @TempData["Success"]
+            </div>
+        }
+        @if (TempData["Error"] != null)
+        {
+            <div style="background:#fee2e2;border:1px solid #fca5a5;color:#991b1b;padding:.8rem 1.2rem;border-radius:var(--radius-sm);margin-bottom:1rem;font-size:.88rem;font-weight:600">
+                <i class="fas fa-circle-exclamation"></i> @TempData["Error"]
+            </div>
+        }
+
         <div class="chip-row">
             <div class="chip blue"><span class="num">@total</span> Total Orders</div>
             <div class="chip yellow"><span class="num">@pending</span> Pending</div>
             <div class="chip green"><span class="num">@delivered</span> Delivered</div>
             <div class="chip orange"><span class="num">R @revenue.ToString("N2")</span> Revenue</div>
+            <div class="chip purple"><span class="num">@transfersOut.Count()</span> Transfers Out</div>
         </div>
 
-        <!-- Search + table -->
-        <div class="so-card">
-            <div class="so-card-head">
-                <div class="so-card-title"><i class="fas fa-bag-shopping" style="color:var(--blue);margin-right:.4rem"></i>All Orders</div>
-                <div class="so-search">
-                    <i class="fas fa-magnifying-glass"></i>
-                    <input type="text" id="orderSearch" placeholder="Search orders…" oninput="filterRows(this.value)">
+        <!-- Tabs -->
+        <div class="tab-row">
+            <button class="tab-btn active" onclick="switchTab('orders',this)"><i class="fas fa-bag-shopping"></i> All Orders</button>
+            <button class="tab-btn" onclick="switchTab('transfers',this)">
+                <i class="fas fa-arrow-right-arrow-left"></i> Transfers Out
+                @if (transfersOut.Any())
+                {
+                    <span style="background:#9333ea;color:#fff;border-radius:999px;padding:.1rem .5rem;font-size:.7rem;margin-left:.3rem">@transfersOut.Count()</span>
+                }
+            </button>
+        </div>
+
+        <!-- TAB: Orders -->
+        <div id="tab-orders" class="tab-panel active">
+            <div class="so-card">
+                <div class="so-card-head">
+                    <div class="so-card-title"><i class="fas fa-bag-shopping" style="color:var(--blue);margin-right:.4rem"></i>All Orders</div>
+                    <div class="so-search">
+                        <i class="fas fa-magnifying-glass"></i>
+                        <input type="text" id="orderSearch" placeholder="Search orders…" oninput="filterRows(this.value)">
+                    </div>
+                </div>
+                <div class="so-table-wrap">
+                    <table class="so-table" id="ordersTable">
+                        <thead>
+                            <tr>
+                                <th>Order ID</th>
+                                <th>Type</th>
+                                <th>Items</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                                <th>Address / Pickup</th>
+                                <th>Driver</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var order in Model)
+                            {
+                                string statusClass = order.Status == OrderStatus.Pending ? "badge-pending"
+                                : order.Status == OrderStatus.Assigned ? "badge-assigned"
+                                : order.Status == OrderStatus.OutForDelivery ? "badge-out"
+                                : "badge-delivered";
+                                bool isPickup = order.OrderType == DeliveryType.InStorePickup;
+                                <tr data-search="@($"{order.OrderId} {order.DeliveryAddress} {order.Status}".ToLower())">
+                                    <td>
+                                        <span style="font-family:var(--font-display);font-weight:700;color:var(--blue)">#@order.OrderId</span>
+                                        <div style="font-size:.72rem;color:var(--text-muted);margin-top:.1rem">@order.OrderedOn.ToString("dd MMM yyyy")</div>
+                                    </td>
+                                    <td>
+                                        @if (isPickup)
+                                        {
+                                            <span class="badge" style="background:#f3e8ff;color:#7e22ce"><i class="fas fa-store"></i> Pickup</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge" style="background:#dbeafe;color:#1e40af"><i class="fas fa-truck"></i> Delivery</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <ul class="items-list">
+                                            @foreach (var item in order.OrderItems)
+                                            {
+                                                <li>@item.ProdName <span style="color:var(--blue);font-weight:700">×@item.Quantity</span></li>
+                                            }
+                                        </ul>
+                                    </td>
+                                    <td><span style="font-family:var(--font-display);font-weight:700">R @order.TotalAmount.ToString("N2")</span></td>
+                                    <td><span class="badge @statusClass">@order.Status</span></td>
+                                    <td style="font-size:.8rem;color:var(--text-3)">@order.OrderedOn.ToString("HH:mm")</td>
+                                    <td style="font-size:.8rem;max-width:150px">@order.DeliveryAddress</td>
+                                    <td>
+                                        @if (order.Driver != null)
+                                        {
+                                            <span class="driver-chip"><i class="fas fa-user-tie" style="font-size:.7rem"></i> @order.Driver.DriverName</span>
+                                        }
+                                        else
+                                        {
+                                            <span style="font-size:.78rem;color:var(--text-muted);font-style:italic">Unassigned</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (order.Status == OrderStatus.Pending && !isPickup)
+                                        {
+                                            <a href="@Url.Action("AssignDriver", "ShopOwner", new { id = order.OrderId })" class="btn btn-primary btn-sm">
+                                                <i class="fas fa-truck"></i> Assign
+                                            </a>
+                                        }
+                                        else if (isPickup)
+                                        {
+                                            <span style="font-size:.75rem;color:var(--text-muted)">Pickup order</span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
                 </div>
             </div>
-            <div class="so-table-wrap">
-                <table class="so-table" id="ordersTable">
-                    <thead>
-                        <tr>
-                            <th>Order ID</th>
-                            <th>Items</th>
-                            <th>Amount</th>
-                            <th>Status</th>
-                            <th>Date</th>
-                            <th>Address</th>
-                            <th>Driver</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var order in Model)
-                        {
-                            string statusClass = order.Status == OrderStatus.Pending ? "badge-pending"
-                                               : order.Status == OrderStatus.Assigned ? "badge-assigned"
-                                               : order.Status == OrderStatus.OutForDelivery ? "badge-out"
-                                                                                            : "badge-delivered";
-                            string searchStr = $"{order.OrderId} {order.DeliveryAddress} {order.Status}".ToLower();
-                            <tr data-search="@searchStr">
-                                <td>
-                                    <span style="font-family:var(--font-display);font-weight:700;color:var(--blue)">#@order.OrderId</span>
-                                    <div style="font-size:.72rem;color:var(--text-muted);margin-top:.1rem">@order.OrderedOn.ToString("dd MMM yyyy")</div>
-                                </td>
-                                <td>
-                                    <ul class="items-list">
-                                        @foreach (var item in order.OrderItems)
-                                        {
-                                            <li>@item.ProdName <span style="color:var(--blue);font-weight:700">×@item.Quantity</span></li>
-                                        }
-                                    </ul>
-                                </td>
-                                <td>
-                                    <span style="font-family:var(--font-display);font-weight:700">R @order.TotalAmount.ToString("N2")</span>
-                                </td>
-                                <td><span class="badge @statusClass">@order.Status</span></td>
-                                <td style="font-size:.8rem;color:var(--text-3)">@order.OrderedOn.ToString("HH:mm")</td>
-                                <td style="font-size:.8rem;max-width:150px">@order.DeliveryAddress</td>
-                                <td>
-                                    @if (order.Driver != null)
-                                    {
-                                        <span class="driver-chip">
-                                            <i class="fas fa-user-tie" style="font-size:.7rem"></i>
-                                            @order.Driver.DriverName
-                                        </span>
-                                    }
-                                    else
-                                    {
-                                        <span style="font-size:.78rem;color:var(--text-muted);font-style:italic">Unassigned</span>
-                                    }
-                                </td>
-                                <td>
-                                    @if (order.Status == OrderStatus.Pending)
-                                    {
-                                        <a href="@Url.Action("AssignDriver","ShopOwner",new{id=order.OrderId})"
-                                           class="btn btn-primary btn-sm">
-                                            <i class="fas fa-truck"></i> Assign
-                                        </a>
-                                    }
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
         </div>
 
+        <!-- TAB: Transfers Out -->
+        <div id="tab-transfers" class="tab-panel">
+            @if (!transfersOut.Any())
+            {
+                <div style="text-align:center;padding:4rem 2rem;color:var(--text-muted)">
+                    <i class="fas fa-arrow-right-arrow-left" style="font-size:3rem;opacity:.18;display:block;margin-bottom:.9rem"></i>
+                    <p style="font-weight:600">No outgoing transfers at this time.</p>
+                </div>
+            }
+            else
+            {
+                <div style="font-size:.83rem;color:var(--text-3);margin-bottom:1rem">
+                    <i class="fas fa-circle-info" style="color:var(--blue)"></i>
+                    These are items from your branch that need to be transported to another branch for customer pickup. Assign a driver to each transfer.
+                </div>
+                @foreach (var t in transfersOut)
+                {
+                    string tbadge = t.TransferStatus == ItemTransferStatus.PendingAtSource ? "badge-pending-transfer"
+                    : t.TransferStatus == ItemTransferStatus.AssignedToDriver ? "badge-assigned-transfer"
+                    : "badge-transit";
+                    string tLabel = t.TransferStatus == ItemTransferStatus.PendingAtSource ? "Pending"
+                    : t.TransferStatus == ItemTransferStatus.AssignedToDriver ? "Driver Assigned"
+                    : "In Transit";
+                    <div class="transfer-card">
+                        <div class="transfer-card-head">
+                            <div style="display:flex;align-items:center;gap:.8rem">
+                                <span style="font-family:var(--font-display);font-weight:800;color:var(--blue);font-size:1rem">Transfer #@t.TransferId</span>
+                                <span class="transfer-badge @tbadge">@tLabel</span>
+                            </div>
+                            <div class="transfer-code-box">@t.TransferCode</div>
+                        </div>
+                        <div class="transfer-meta">
+                            <div class="transfer-meta-item">
+                                <strong>Item</strong>
+                                @t.OrderItem?.ProdName × @t.OrderItem?.Quantity
+                            </div>
+                            <div class="transfer-meta-item">
+                                <strong>Order</strong>
+                                #@t.OrderItem?.OrderId — @t.OrderItem?.Order?.Customers?.FirstName @t.OrderItem?.Order?.Customers?.LastName
+                            </div>
+                            <div class="transfer-meta-item">
+                                <strong>Going To</strong>
+                                @t.TargetBranch?.ShopAddress
+                            </div>
+                            <div class="transfer-meta-item">
+                                <strong>Transfer Date</strong>
+                                @t.ScheduledTransferDate.ToString("dd MMM yyyy")
+                            </div>
+                            <div class="transfer-meta-item">
+                                <strong>Assigned Driver</strong>
+                                @(t.Driver != null ? $"{t.Driver.DriverName} {t.Driver.DriverSurname}" : "Not yet assigned")
+                            </div>
+                        </div>
+                        @if (t.TransferStatus == ItemTransferStatus.PendingAtSource)
+                        {
+                            <form method="post" action="@Url.Action("AssignTransferDriver","ShopOwner")" style="display:flex;gap:.6rem;align-items:center;flex-wrap:wrap">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="transferId" value="@t.TransferId" />
+                                <select name="driverId" class="so-input" style="min-width:180px;padding:.4rem .7rem;font-size:.84rem" required>
+                                    <option value="">— Select Driver —</option>
+                                    @foreach (var d in drivers)
+                                    {
+                                        <option value="@d.DriverId">@d.DriverName @d.DriverSurname</option>
+                                    }
+                                </select>
+                                <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-user-check"></i> Assign Driver</button>
+                            </form>
+                        }
+                    </div>
+                }
+            }
+        </div>
     </main>
 </div>
 
-<script>function filterRows(q) {
-    var rows = document.querySelectorAll('#ordersTable tbody tr');
-    var term = q.toLowerCase();
-    rows.forEach(function(r) {
-        r.style.display = r.dataset.search.includes(term) ? '' : 'none';
-    });
-}</script>
+<script>
+    function switchTab(name, btn) {
+        document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('tab-' + name).classList.add('active');
+        btn.classList.add('active');
+    }
+    function filterRows(q) {
+        var rows = document.querySelectorAll('#ordersTable tbody tr');
+        var term = q.toLowerCase();
+        rows.forEach(function(r) { r.style.display = r.dataset.search.includes(term) ? '' : 'none'; });
+    }
+</script> *@
