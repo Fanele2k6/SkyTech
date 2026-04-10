@@ -1,5 +1,6 @@
 ﻿@model IEnumerable<CM_Project.Models.Order>
 @using CM_Project.Models
+@using SkyTech.Models
 @{
     ViewBag.Title = "My Orders";
     Layout = "~/Views/Shared/_MinimalLayout.cshtml";
@@ -76,7 +77,7 @@
 
                 <div class="mo-card">
 
-                    @* ── Card header ─────────────────────────── *@
+                    @* ── Card header ── *@
                     <div class="mo-card-header">
                         <div>
                             <div class="mo-order-id">#ORD-@order.OrderId</div>
@@ -84,25 +85,65 @@
                                 @order.OrderedOn.ToString("dd MMM yyyy, hh:mm tt")
                             </div>
                         </div>
-                        <span class="mo-status-badge @statusClass">@statusLabel</span>
+                        <div style="display:flex; flex-direction:column; align-items:flex-end; gap:.3rem;">
+                            <span class="mo-status-badge @statusClass">@statusLabel</span>
+                            @if (order.OrderType == DeliveryType.InStorePickup)
+                            {
+                                var pickupOrder = ViewBag.PickupOrders != null ? ((List<PickupOrder>)ViewBag.PickupOrders).FirstOrDefault(p => p.OrderId == order.OrderId) : null;
+                                if (pickupOrder != null)
+                                {
+                                    <span style="background:#f3e8ff; color:#7e22ce; font-size:.7rem; padding:.2rem .6rem; border-radius:20px;">
+                                        <i class="fas fa-qrcode"></i> Ref: @pickupOrder.PickupReference
+                                    </span>
+                                }
+                            }
+                        </div>
                     </div>
 
                     <div class="mo-divider"></div>
 
-                    @* ── Delivery address ─────────────────────── *@
-                    <div class="mo-row">
-                        <div class="mo-row-icon">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z" />
-                                <circle cx="12" cy="10" r="3" />
-                            </svg>
+                    @* ── Delivery address OR Pickup info ── *@
+                    @if (order.OrderType == DeliveryType.InStorePickup)
+                    {
+                        var pickupOrder = ViewBag.PickupOrders != null ? ((List<PickupOrder>)ViewBag.PickupOrders).FirstOrDefault(p => p.OrderId == order.OrderId) : null;
+                        if (pickupOrder != null)
+                        {
+                            <div class="mo-row">
+                                <div class="mo-row-icon">
+                                    <i class="fas fa-store"></i>
+                                </div>
+                                <div>
+                                    <div class="mo-row-label">Collection Branch</div>
+                                    <div class="mo-row-value">@pickupOrder.PickupBranch?.ShopAddress</div>
+                                </div>
+                            </div>
+                            <div class="mo-row">
+                                <div class="mo-row-icon">
+                                    <i class="fas fa-calendar"></i>
+                                </div>
+                                <div>
+                                    <div class="mo-row-label">Ready for Collection</div>
+                                    <div class="mo-row-value">@pickupOrder.ScheduledPickupDate.ToString("dd MMM yyyy")</div>
+                                </div>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="mo-row">
+                            <div class="mo-row-icon">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0 1 18 0z" />
+                                    <circle cx="12" cy="10" r="3" />
+                                </svg>
+                            </div>
+                            <div>
+                                <div class="mo-row-label">Delivered to</div>
+                                <div class="mo-row-value">@order.DeliveryAddress</div>
+                            </div>
                         </div>
-                        <div>
-                            <div class="mo-row-label">Delivered to</div>
-                            <div class="mo-row-value">@order.DeliveryAddress</div>
-                        </div>
-                    </div>
+                    }
 
                     @* ── Items ordered ───────────────────────── *@
                     @if (order.OrderItems != null && order.OrderItems.Any())
@@ -149,7 +190,7 @@
                     }
 
                     @* ── Driver details ──────────────────────── *@
-                    @if (order.Driver != null)
+                    @if (order.OrderType != DeliveryType.InStorePickup && order.Driver != null)
                     {
                         string initials = "";
                         if (!string.IsNullOrEmpty(order.Driver.DriverName)) { initials += order.Driver.DriverName[0]; }
