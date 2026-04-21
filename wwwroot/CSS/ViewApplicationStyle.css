@@ -58,11 +58,11 @@
     }
 
     .chip.blue {
-        border-color: rgba(26,115,232,.3);
+        border-color: rgba(95,158,160,.3);
     }
 
         .chip.blue .ch-num {
-            color: #1a73e8;
+            color: #5f9ea0;
         }
 
     .chip.yellow {
@@ -127,7 +127,7 @@
     }
 
         .so-search input:focus {
-            border-color: #1a73e8;
+            border-color: #5f9ea0;
         }
 
 .filter-btns {
@@ -150,12 +150,11 @@
 }
 
     .flt:hover, .flt.active {
-        background: #1a73e8;
-        border-color: #1a73e8;
+        background: #5f9ea0;
+        border-color: #5f9ea0;
         color: #fff;
     }
 
-/* ── DRIVER CARD ── */
 .appl-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill,minmax(420px,1fr));
@@ -175,12 +174,12 @@
     box-shadow: 0 4px 18px rgba(15,35,90,.07);
     overflow: hidden;
     animation: fadeInUp .35s ease both;
-    transition: box-shadow .2s,border-color .2s;
+    transition: box-shadow .2s, border-color .2s;
 }
 
     .appl-card:hover {
-        border-color: rgba(26,115,232,.28);
-        box-shadow: 0 6px 28px rgba(26,115,232,.1);
+        border-color: rgba(95,158,160,.28);
+        box-shadow: 0 6px 28px rgba(95,158,160,.1);
     }
 
 @keyframes fadeInUp {
@@ -195,9 +194,8 @@
     }
 }
 
-/* Header — teal-to-blue for drivers (differentiates from shop owners) */
 .ac-head {
-    background: linear-gradient(135deg,#0a3d8f 0%,#1a73e8 100%);
+    background: linear-gradient(135deg, #1f4f50 0%, #5f9ea0 100%);
     padding: 1.1rem 1.3rem;
     display: flex;
     align-items: center;
@@ -247,7 +245,6 @@
     margin-top: .1rem;
 }
 
-/* availability pill */
 .avail-pill {
     display: inline-flex;
     align-items: center;
@@ -291,7 +288,6 @@
     gap: .35rem;
 }
 
-/* body rows */
 .ac-body {
     padding: 1rem 1.3rem;
 }
@@ -321,7 +317,7 @@
     }
 
         .ac-row .ak i {
-            color: #1a73e8;
+            color: #5f9ea0;
             font-size: .72rem;
         }
 
@@ -337,21 +333,19 @@
             font-size: .8rem;
         }
 
-/* vehicle highlight */
 .vehicle-pill {
     display: inline-flex;
     align-items: center;
     gap: .4rem;
-    background: #e8f1fd;
-    border: 1.5px solid rgba(26,115,232,.2);
+    background: #e8f4f4;
+    border: 1.5px solid rgba(95,158,160,.2);
     border-radius: 8px;
     padding: .25rem .7rem;
     font-size: .78rem;
     font-weight: 700;
-    color: #0c5bc0;
+    color: #2d6b6d;
 }
 
-/* docs */
 .ac-docs {
     padding: .8rem 1.3rem;
     background: #f7f9ff;
@@ -376,18 +370,18 @@
     align-items: center;
     gap: .35rem;
     padding: .3rem .8rem;
-    background: #e8f1fd;
-    border: 1.5px solid rgba(26,115,232,.25);
+    background: #e8f4f4;
+    border: 1.5px solid rgba(95,158,160,.25);
     border-radius: 20px;
     font-size: .75rem;
     font-weight: 700;
-    color: #1a73e8;
+    color: #5f9ea0;
     text-decoration: none;
     transition: all .18s;
 }
 
     .doc-link:hover {
-        background: #1a73e8;
+        background: #5f9ea0;
         color: #fff;
     }
 
@@ -397,7 +391,6 @@
     font-style: italic;
 }
 
-/* actions */
 .ac-actions {
     display: flex;
     gap: .65rem;
@@ -454,7 +447,6 @@
         border-color: #dc2626;
     }
 
-/* badges */
 .badge {
     display: inline-flex;
     align-items: center;
@@ -512,7 +504,7 @@
 
     .admin-empty i {
         font-size: 3.5rem;
-        color: #1a73e8;
+        color: #5f9ea0;
         opacity: .18;
         display: block;
         margin-bottom: 1rem;

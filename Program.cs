@@ -44,7 +44,7 @@ app.UseAuthorization();
 //route config for core
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Customer}/{action=ShoppingPage}/{id?}"); // starts on the shopping page
+    pattern: "{controller=Authentication}/{action=Home}/{id?}"); // starts on the shopping page
 
 app.Run();
 

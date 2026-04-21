@@ -4,8 +4,8 @@
     ViewBag.Title = "Driver Dashboard";
     Layout = "~/Views/Shared/_MinimalLayout.cshtml";
 
-     bool restricted = ViewBag.ApplicationStatus == ApplicationStat.Pending
-                   || ViewBag.ApplicationStatus == ApplicationStat.Rejected;
+    bool restricted = ViewBag.ApplicationStatus == Status.Pending
+              || ViewBag.ApplicationStatus == Status.Rejected;
 }
 
 @section Styles {
@@ -21,7 +21,7 @@
 <div class="d-wrap">
 
     <!-- ══ SIDEBAR ══ -->
-    <aside class="d-sidebar">
+    <<aside class="d-sidebar">
         <div class="d-brand">
             <div class="d-brand-icon"><i class="fas fa-truck-fast"></i></div>
             <div>
@@ -31,21 +31,40 @@
         </div>
         <nav class="d-nav">
             <div class="d-nav-label">NAVIGATION</div>
-            <a href="@Url.Action("DriverDash", "DeliveryDriver")" class="d-link active")>
+            <a href="@Url.Action("DriverDash", "DeliveryDriver")" class="d-link @(ViewBag.ActivePage == "Dashboard" ? "active" : "")">
                 <i class="fas fa-grid-2"></i><span>Dashboard</span>
             </a>
-            <a href="@Url.Action("MyDeliveries","DeliveryDriver")" class="d-link">
-                <i class="fas fa-bag-shopping"></i><span>My Deliveries</span>
+
+            <!-- My Deliveries with dropdown -->
+            <div class="nav-item-dropdown">
+                <a href="#" class="d-link d-dropdown-toggle @(ViewBag.ActivePage == "HomeDeliveries" || ViewBag.ActivePage == "BranchTransfers" ? "open" : "")" id="deliveriesDropdown">
+                    <i class="fas fa-bag-shopping"></i>
+                    <span>My Deliveries</span>
+                    <i class="fas fa-chevron-down dropdown-icon"></i>
+                </a>
+                <div class="d-dropdown-menu" id="deliveriesSubmenu" style="display: @(ViewBag.ActivePage == "HomeDeliveries" || ViewBag.ActivePage == "BranchTransfers" ? "block" : "none")">
+                    <a href="@Url.Action("HomeDeliveries", "DeliveryDriver")" class="d-link d-sub-link @(ViewBag.ActivePage == "HomeDeliveries" ? "active" : "")">
+                        <i class="fas fa-truck"></i> Home Deliveries
+                    </a>
+                    <a href="@Url.Action("BranchTransfers", "DeliveryDriver")" class="d-link d-sub-link @(ViewBag.ActivePage == "BranchTransfers" ? "active" : "")">
+                        <i class="fas fa-arrow-right-arrow-left"></i> Branch Transfers
+                    </a>
+                </div>
+            </div>
+          
+            <a href="@Url.Action("MyTasks", "DeliveryDriver")" class="d-link">
+                <i class="fas fa-bag-shopping"></i><span>Returned Order Items</span>
             </a>
+
             <div class="d-nav-label" style="margin-top:1rem">ACCOUNT</div>
-            <a href="@Url.Action("DriverProfile","DeliveryDriver")" class="d-link">
+            <a href="@Url.Action("DriverProfile", "DeliveryDriver")" class="d-link @(ViewBag.ActivePage == "Profile" ? "active" : "")">
                 <i class="fas fa-circle-user"></i><span>Profile</span>
             </a>
         </nav>
         <div class="d-sidebar-foot">
             <div class="d-foot-avatar"><i class="fas fa-user-tie"></i></div>
             <div>
-                <div class="d-foot-name">Delivery Driver Name</div>
+                <div class="d-foot-name">@(ViewBag.DriverName ?? "Delivery Driver")</div>
                 <div class="d-foot-role">Delivery Driver</div>
             </div>
         </div>
@@ -114,4 +133,25 @@
         </div>
 
     </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const dropdownToggle = document.getElementById('deliveriesDropdown');
+            const dropdownMenu = document.getElementById('deliveriesSubmenu');
+
+            if (dropdownToggle && dropdownMenu) {
+                dropdownToggle.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    this.classList.toggle('open');
+                    if (dropdownMenu.style.display === 'none' || dropdownMenu.style.display === '') {
+                        dropdownMenu.style.display = 'block';
+                    } else {
+                        dropdownMenu.style.display = 'none';
+                    }
+                });
+            }
+        });
+    </script>
+
 </div>
