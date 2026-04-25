@@ -41,38 +41,38 @@ namespace CM_Project.Models
         // ── Customer ─────────────────────────────────────────
         public void CustomerRegConfirmation(string toEmail, string firstName) =>
             Send(toEmail,
-                "Welcome to Spaza Connect - Registration Successful",
+                "Welcome to SkyTech - Registration Successful",
                 $"Dear {firstName},\n\n" +
-                "Thank you for signing up with Spaza Connect. " +
+                "Thank you for signing up with SkyTech. " +
                 "Your account is now active and you can order your everyday essentials from the comfort of your home.\n" +
                 "We're here to make shopping easier, faster and closer to your home.\n\n" +
-                "Looking forward to serving you,\nSpaza Connect Team");
+                "Looking forward to serving you,\nSkyTech Team");
 
         // ── Driver ───────────────────────────────────────────
         public void DriverRegConfirmation(string toEmail, string firstName) =>
             Send(toEmail,
-                "Welcome to Spaza Connect - Registration Successful",
+                "Welcome to SkyTech - Registration Successful",
                 $"Dear {firstName},\n\n" +
-                "Thank you for signing up with Spaza Connect to be part of our delivery driving community. " +
+                "Thank you for signing up withSkyTech to be part of our delivery driving community. " +
                 "We will be reviewing your application and you will get feedback within 7 days.\n" +
-                "Warm Regards,\nSpaza Connect Team");
+                "Warm Regards,\nSkyTech Team");
 
         public void DriveAppliApproved(string toEmail, string firstName) =>
             Send(toEmail,
-                "Welcome to Spaza Connect - Application Successful",
+                "Welcome toSkyTech - Application Successful",
                 $"Dear {firstName},\n\n" +
-                "Thank you for applying to Spaza Connect. " +
+                "Thank you for applying to SkyTech. " +
                 "You have been accepted as one of our delivery drivers.\n" +
                 "Please log in to our system for more info on your delivery duties.\n" +
-                "Warm Regards,\nSpaza Connect Team");
+                "Warm Regards,\nSkyTech Team");
 
         public void DriveAppliReject(string toEmail, string firstName) =>
             Send(toEmail,
-                "Spaza Connect - Application Outcome",
+                "SkyTech - Application Outcome",
                 $"Dear {firstName},\n\n" +
-                "Thank you for applying to Spaza Connect. " +
+                "Thank you for applying to SkyTech. " +
                 "Unfortunately your application was not successful.\n" +
-                "Kind Regards,\nSpaza Connect Team");
+                "Kind Regards,\nSkyTech Team");
 
         // ── Staff ────────────────────────────────────────────
         public void StaffRegConfirmation(string toEmail, string firstName) =>
@@ -80,7 +80,7 @@ namespace CM_Project.Models
                 "Registration Succeeded",
                 $"Dear {firstName},\n\n" +
                 "You have been successfully registered as a staff member. " +
-                "Welcome to the team!\n\nWarm Regards,\nSpaza Shop Manager");
+                "Welcome to the team!\n\nWarm Regards");
 
         // ── OTP / Password reset ─────────────────────────────
         public void SendOtpEmail(string toEmail, string otp) =>
@@ -91,27 +91,27 @@ namespace CM_Project.Models
         // ── Shop Owner ───────────────────────────────────────
         public void SOwnerAppConfirmation(string toEmail, string firstName) =>
             Send(toEmail,
-                "Welcome to Spaza Connect - Application Received",
+                "Welcome to SkyTech - Application Received",
                 $"Dear {firstName},\n\n" +
-                "Thank you for applying to Spaza Connect. " +
+                "Thank you for applying toSkyTech. " +
                 "Your account is now active. Please check your application status in our application.\n" +
                 "You will also receive an email on whether your application is approved or not.\n\n" +
-                "Spaza Connect Team");
+                "SkyTech Team");
 
         public void SOwnerApplApproved(string toEmail, string firstName) =>
             Send(toEmail,
-                "Spaza Connect - Application Approved",
+                "SkyTech - Application Approved",
                 $"Dear {firstName},\n\n" +
-                "Your application to sell on Spaza Connect has been approved.\n" +
-                "Spaza Connect Team");
+                "Your application to sell on SkyTech has been approved.\n" +
+                "SkyTech Team");
 
         public void SOwnerApplRejected(string toEmail, string firstName) =>
             Send(toEmail,
-                "Spaza Connect - Application Outcome",
+                "SkyTech - Application Outcome",
                 $"Dear {firstName},\n\n" +
-                "Thank you for applying to Spaza Connect. " +
+                "Thank you for applying to SkyTech. " +
                 "Unfortunately your application has been rejected.\n" +
                 "Please check your documents and ensure they are valid before trying again.\n\n" +
-                "Spaza Connect Team");
+                "SkyTech Team");
     }
 }

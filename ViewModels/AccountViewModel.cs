@@ -10,6 +10,13 @@ using System.Web;
 
 namespace CM_Project.ViewModels
 {
+    public class DriverTasksViewModel
+    {
+        public List<Order> Deliveries { get; set; }
+        public List<OrderItem> Collections { get; set; }
+        public List<OrderItem> Redeliveries { get; set; }
+    }
+
     public class LogInViewModel
     {
         [Required(ErrorMessage = "Please enter your username")]
