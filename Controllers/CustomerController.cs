@@ -13,6 +13,7 @@ using static CM_Project.Models.Order;
 
 namespace CM_Project.Controllers
 {
+    //Nqika
     // [AuthorizeUser]
     public class CustomerController : Controller
     {
