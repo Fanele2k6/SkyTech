@@ -4,6 +4,7 @@ using CM_Project.ViewModels;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using SkyTech.Models;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -179,6 +180,9 @@ namespace CM_Project.Controllers
             product.ProdDescription = model.ProdDescription;
             product.ProdPrice = model.ProdPrice;
             product.ProdSize = model.ProdSize;
+            product.Status = model.ProdQuantity == 0 ? ProdStatus.Out_Of_Stock     // the product status was not updating so i added this.
+                                 : model.ProdQuantity <= 10 ? ProdStatus.Low_stock
+                                                            : ProdStatus.In_Stock;
 
 
             if (ProductPicture != null && ProductPicture.Length > 0)
@@ -287,41 +291,141 @@ namespace CM_Project.Controllers
             return View(db.shopowners.Where(p => p.OwnerId == currentId).ToList());
         }
 
-     
-        public IActionResult ReceivedOrders()
+
+        //public IActionResult ReceivedOrders()
+        //{
+        //    int currentId = HttpContext.Session.GetInt32("UserId")!.Value;
+
+        //    // Normal orders belonging to this branch
+        //    var orders = db.Orders
+        //        .Include(o => o.OrderItems)
+        //            .ThenInclude(i => i.Products)
+        //        .Include(o => o.Driver)
+        //        .Where(o => o.OwnerId == currentId)
+        //        .OrderByDescending(o => o.OrderedOn)
+        //        .ToList();
+
+        //    // Transfers OUT — items from this branch going to another pickup branch
+        //    var transfersOut = db.InterBranchTransfers
+        //        .Include(t => t.OrderItem)
+        //            .ThenInclude(oi => oi.Order)
+        //                .ThenInclude(o => o.Customers)
+        //        .Include(t => t.OrderItem)
+        //            .ThenInclude(oi => oi.Products)
+        //        .Include(t => t.TargetBranch)
+        //        .Include(t => t.Driver)
+        //        .Where(t => t.SourceBranchId == currentId
+        //                 && t.TransferStatus != ItemTransferStatus.DeliveredToPickupBranch)
+        //        .OrderBy(t => t.ScheduledTransferDate)
+        //        .ToList();
+
+        //    // Available drivers for transfer assignment
+        //    ViewBag.AvailableDrivers = db.DeliveryDrivers
+        //        .Where(d => d.IsAvailable && d.ApplicationStatus == Status.Approved)
+        //        .ToList();
+
+        //    ViewBag.TransfersOut = transfersOut;
+
+        //    return View(orders);
+        //}
+
+        //Separating orders
+        // DELIVERY ORDERS - Shows orders delivered to this branch AND items that need to be transported OUT
+        public IActionResult DeliveryOrders()
         {
             int currentId = HttpContext.Session.GetInt32("UserId")!.Value;
 
-            var orders = db.Orders
+            // 1. Home Delivery orders belonging to this branch
+            var deliveryOrders = db.Orders
                 .Include(o => o.OrderItems)
                     .ThenInclude(i => i.Products)
                 .Include(o => o.Driver)
-                .Where(o => o.OwnerId == currentId)
+                .Include(o => o.Customers)
+                .Where(o => o.OwnerId == currentId
+                            && o.OrderType == DeliveryType.HomeDelivery)
                 .OrderByDescending(o => o.OrderedOn)
                 .ToList();
 
-            return View(orders);
+            // 2. Items from this branch that need to be transported to another branch (for pickup orders)
+            var transfersOut = db.InterBranchTransfers
+                .Include(t => t.OrderItem)
+                    .ThenInclude(oi => oi.Order)
+                        .ThenInclude(o => o.Customers)
+                .Include(t => t.OrderItem)
+                    .ThenInclude(oi => oi.Products)
+                .Include(t => t.TargetBranch)
+                .Include(t => t.Driver)
+                .Where(t => t.SourceBranchId == currentId
+                            && t.TransferStatus != ItemTransferStatus.DeliveredToPickupBranch)
+                .OrderBy(t => t.ScheduledTransferDate)
+                .ToList();
+
+            ViewBag.TransfersOut = transfersOut;
+            ViewBag.AvailableDrivers = db.DeliveryDrivers
+                .Where(d => d.IsAvailable && d.ApplicationStatus == Status.Approved)
+                .ToList();
+
+            return View(deliveryOrders);
         }
 
-        public IActionResult AssignDriver(int id)
+        // PICKUP ORDERS - Shows orders where customer will collect from this branch
+        public IActionResult PickupOrders()
         {
             int currentId = HttpContext.Session.GetInt32("UserId")!.Value;
 
-            // Make sure this order actually belongs to this shop owner
-            var order = db.Orders
-                .Include(o => o.OrderItems)
-                    .ThenInclude(i => i.Products)
-                .FirstOrDefault(o => o.OrderId == id
-                    && o.OrderItems.Any(i => i.Products.OwnerId == currentId));
-
-            if (order == null) return Forbid(); // stops other owners accessing it via URL
-
-            ViewBag.DeliveryDrivers = db.DeliveryDrivers
-                .Where(d => d.IsAvailable)
+            // Get all pickup orders where this branch is the collection point
+            var pickupOrders = db.PickupOrders
+                .Include(p => p.Order)
+                    .ThenInclude(o => o.OrderItems)
+                        .ThenInclude(oi => oi.Products)
+                .Include(p => p.Order)
+                    .ThenInclude(o => o.Customers)
+                .Where(p => p.PickupBranchId == currentId)
+                .OrderByDescending(p => p.PickupOrderId)
                 .ToList();
 
-            return View(order);
+            // Also get items that have been delivered to this branch from other branches
+            var incomingTransfers = db.InterBranchTransfers
+                .Include(t => t.OrderItem)
+                    .ThenInclude(oi => oi.Order)
+                        .ThenInclude(o => o.Customers)
+                .Include(t => t.OrderItem)
+                    .ThenInclude(oi => oi.Products)
+                .Include(t => t.SourceBranch)
+                .Where(t => t.TargetBranchId == currentId)
+                .OrderBy(t => t.DeliveredToTargetOn)
+                .ToList();
+
+            ViewBag.IncomingTransfers = incomingTransfers;
+
+            return View(pickupOrders);
         }
+
+        // Optional: Keep old ReceivedOrders if needed for backward compatibility, or remove it
+
+        public IActionResult AssignDriver(int id)
+        {
+            var order = db.Orders
+                .Include(o => o.OrderItems)
+                .FirstOrDefault(o => o.OrderId == id);
+
+            if (order == null)
+            {
+                TempData["Error"] = "Order not found.";
+                return RedirectToAction("DeliveryOrders");
+            }
+
+            var availableDrivers = db.DeliveryDrivers
+                .Where(d => d.IsAvailable && d.ApplicationStatus == Status.Approved)
+                .ToList();
+
+            ViewBag.DeliveryDrivers = availableDrivers;
+            ViewBag.IsTransfer = false;
+
+            return View("AssignDriver", order);
+        }
+
+
 
         [HttpPost]
         public IActionResult AssignDriver(int orderId, int driverId)
@@ -357,26 +461,361 @@ namespace CM_Project.Controllers
                 driver.IsAvailable = false;
 
             db.SaveChanges();
-            return RedirectToAction("ReceivedOrders");
+            return RedirectToAction("DeliveryOrders");
         }
 
+        public IActionResult AssignTransferDriver(int transferId)
+        {
+            var transfer = db.InterBranchTransfers
+                .Include(t => t.OrderItem)
+                    .ThenInclude(oi => oi.Order)
+                        .ThenInclude(o => o.Customers)
+                .Include(t => t.SourceBranch)
+                .Include(t => t.TargetBranch)
+                .FirstOrDefault(t => t.TransferId == transferId);
 
+            if (transfer == null)
+            {
+                TempData["Error"] = "Transfer not found.";
+                return RedirectToAction("DeliveryOrders");
+            }
 
-        //[HttpPost]
-        //public IActionResult AssignDriver(int orderId, int driverId)
+            var availableDrivers = db.DeliveryDrivers
+                .Where(d => d.IsAvailable && d.ApplicationStatus == Status.Approved)
+                .ToList();
+
+            ViewBag.DeliveryDrivers = availableDrivers;
+            ViewBag.IsTransfer = true;
+            ViewBag.TransferId = transferId;
+            ViewBag.TransferData = transfer;
+
+            // Create empty order for the view
+            var emptyOrder = new Order();
+
+            return View("AssignDriver", emptyOrder);
+        }
+
+        //Assigning the driver for order transfer 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult AssignTransferDriver(int transferId, int driverId)
+        {
+            var transfer = db.InterBranchTransfers.Find(transferId);
+            var driver = db.DeliveryDrivers.Find(driverId);
+
+            if (transfer == null || driver == null)
+            {
+                TempData["Error"] = "Transfer or driver not found.";
+                return RedirectToAction("DeliveryOrders");
+            }
+
+            transfer.DriverId = driverId;
+            transfer.TransferStatus = ItemTransferStatus.AssignedToDriver;
+
+            db.SaveChanges();
+
+            TempData["Success"] = $"Driver {driver.DriverName} assigned to transfer item {transfer.OrderItem?.ProdName}.";
+
+            return RedirectToAction("DeliveryOrders");
+        }
+
+        //Pickup branch orders
+        public IActionResult PickupBranchOrders()
+        {
+            int currentId = HttpContext.Session.GetInt32("UserId")!.Value;
+
+            // All pickup orders where THIS branch is the collection point
+            var pickupOrders = db.PickupOrders
+                .Include(p => p.Order)
+                    .ThenInclude(o => o.Customers)
+                .Include(p => p.Order)
+                    .ThenInclude(o => o.OrderItems)
+                        .ThenInclude(oi => oi.Products)
+                .Include(p => p.Order)
+                    .ThenInclude(o => o.ShopOwner)
+                .Where(p => p.PickupBranchId == currentId)
+                .OrderByDescending(p => p.Order.OrderedOn)
+                .ToList();
+
+            // All inbound transfers coming TO this branch
+            var inboundTransfers = db.InterBranchTransfers
+                .Include(t => t.OrderItem)
+                    .ThenInclude(oi => oi.Order)
+                .Include(t => t.OrderItem)
+                    .ThenInclude(oi => oi.Products)
+                .Include(t => t.SourceBranch)
+                .Include(t => t.Driver)
+                .Where(t => t.TargetBranchId == currentId)
+                .ToList();
+
+            ViewBag.InboundTransfers = inboundTransfers;
+
+            return View(pickupOrders);
+        }
+
+        [HttpPost]
+        public IActionResult ConfirmTransferArrival(int transferId, string transferCode)
+        {
+            int currentId = HttpContext.Session.GetInt32("UserId")!.Value;
+
+            var transfer = db.InterBranchTransfers
+                .Include(t => t.OrderItem)
+                .FirstOrDefault(t => t.TransferId == transferId
+                                  && t.TargetBranchId == currentId);
+
+            if (transfer == null)
+            {
+                TempData["Error"] = "Transfer not found.";
+                return RedirectToAction("PickupBranchOrders");
+            }
+
+            if (transfer.TransferCode != transferCode.Trim().ToUpper())
+            {
+                TempData["Error"] = "Incorrect transfer code. Please try again.";
+                return RedirectToAction("PickupBranchOrders");
+            }
+
+            transfer.IsDelivered = true;
+            transfer.TransferStatus = ItemTransferStatus.DeliveredToPickupBranch;
+            transfer.DeliveredToTargetOn = DateTime.Now;
+
+            // Check if ALL transfers for this pickup order are now delivered
+            // so we can mark the pickup order as ReadyForPickup
+            var orderItemOrderId = transfer.OrderItem.OrderId;
+            var allTransfersForOrder = db.InterBranchTransfers
+                .Include(t => t.OrderItem)
+                .Where(t => t.OrderItem.OrderId == orderItemOrderId
+                         && t.TargetBranchId == currentId)
+                .ToList();
+
+            bool allDelivered = allTransfersForOrder.All(t => t.IsDelivered);
+            if (allDelivered)
+            {
+                var pickupOrder = db.PickupOrders
+                    .FirstOrDefault(p => p.OrderId == orderItemOrderId
+                                      && p.PickupBranchId == currentId);
+                if (pickupOrder != null)
+                {
+                    pickupOrder.Status = PickupStatus.ReadyForPickup;
+                    db.SaveChanges();
+                }
+            }
+
+            db.SaveChanges();
+            TempData["Success"] = "Item arrival confirmed successfully.";
+            return RedirectToAction("PickupBranchOrders");
+        }
+
+        [HttpPost]
+        public IActionResult MarkOrderCollected(int pickupOrderId)
+        {
+            int currentId = HttpContext.Session.GetInt32("UserId")!.Value;
+
+            var pickupOrder = db.PickupOrders
+                .Include(p => p.Order)
+                .FirstOrDefault(p => p.PickupOrderId == pickupOrderId
+                                  && p.PickupBranchId == currentId);
+
+            if (pickupOrder == null)
+            {
+                TempData["Error"] = "Pickup order not found.";
+                return RedirectToAction("PickupBranchOrders");
+            }
+
+            pickupOrder.Status = PickupStatus.Collected;
+            pickupOrder.CollectedOn = DateTime.Now;
+            pickupOrder.Order.Status = OrderStatus.Delivered;
+            pickupOrder.Order.DeliveredOn = DateTime.Now;
+
+            db.SaveChanges();
+            TempData["Success"] = "Order marked as collected.";
+            return RedirectToAction("PickupBranchOrders");
+        }
+
+        //===================================Return Actions======================================
+        //public IActionResult ReturnedItems()
         //{
-        //    var order = db.Orders.Find(orderId);
-        //    var driver = db.DeliveryDrivers.Find(driverId);
+        //    int currentId = HttpContext.Session.GetInt32("UserId")!.Value;
 
-        //    if (order != null && driver != null)
+        //    var pendingReturns = db.OrderItems
+        //        .Include(i => i.Order)
+        //            .ThenInclude(o => o.Customers)
+        //        .Include(i => i.Products)
+        //            .ThenInclude(p => p.ProductPictures)
+        //        .Where(i => i.ReturnPStatus == ReturnProduct.Return_Pending
+        //                 && i.Order.OwnerId == currentId)   // ← only this shop's orders
+        //        .OrderByDescending(i => i.Order.DeliveredOn)
+        //        .ToList();
+
+        //    return View(pendingReturns);
+        //}
+
+        //// Approve the return
+        //[HttpPost]
+        //[ValidateAntiForgeryToken]
+        //public IActionResult ApproveReturn(int orderItemId)
+        //{
+        //    int currentId = HttpContext.Session.GetInt32("UserId")!.Value;
+
+        //    var item = db.OrderItems
+        //        .Include(i => i.Order)
+        //        .FirstOrDefault(i => i.OrderItemId == orderItemId
+        //                          && i.Order.OwnerId == currentId);
+
+        //    if (item == null) return NotFound();
+
+        //    // Find an available, approved driver
+        //    var availableDriver = db.DeliveryDrivers
+        //        .FirstOrDefault(d => d.IsAvailable == true
+        //                          && d.ApplicationStatus == Status.Approved);
+
+        //    if (availableDriver == null)
         //    {
-        //        order.DriverId = driverId;
-        //        order.Status = OrderStatus.Assigned;
-        //        driver.IsAvailable = false;
-        //        db.SaveChanges();
+        //        TempData["Error"] = "No drivers are currently available. Please try again later.";
+        //        return RedirectToAction("ReturnedItems");
         //    }
 
-        //    return RedirectToAction("ReceivedOrders");
+        //    // Assign the driver to the order item
+        //    item.ReturnPStatus = ReturnProduct.Collection_Assigned;
+        //    item.DriverId = availableDriver.DriverId;
+        //    item.IsAssingedForCollection = true;
+        //    item.CollectionDate = DateTime.Now.AddDays(1);
+        //    item.NewDeliveryDate = DateTime.Now.AddDays(4);
+
+        //    // Mark the driver as unavailable
+        //    availableDriver.IsAvailable = false;
+
+        //    db.SaveChanges();
+
+        //    TempData["Message"] = $"Return for '{item.ProdName}' approved and assigned to driver {availableDriver.DriverName} {availableDriver.DriverSurname}.";
+        //    return RedirectToAction("ReturnedItems");
         //}
+
+        // Shows ALL active returns (not just pending)
+        public IActionResult ReturnedItems()
+        {
+            int currentId = HttpContext.Session.GetInt32("UserId")!.Value;
+
+            var activeReturns = db.OrderItems
+                .Include(i => i.Order)
+                    .ThenInclude(o => o.Customers)
+                .Include(i => i.Products)
+                    .ThenInclude(p => p.ProductPictures)
+                .Include(i => i.DeliveryDriver)
+                .Where(i => i.Order.OwnerId == currentId
+                         && i.ReturnPStatus != ReturnProduct.No_Request
+                         && i.ReturnPStatus != ReturnProduct.Completed)
+                .OrderByDescending(i => i.Order.DeliveredOn)
+                .ToList();
+
+            return View(activeReturns);
+        }
+
+        // Step 1 — shop owner approves & assigns collection driver
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult ApproveReturn(int orderItemId)
+        {
+            int currentId = HttpContext.Session.GetInt32("UserId")!.Value;
+
+            var item = db.OrderItems
+                .Include(i => i.Order)
+                .FirstOrDefault(i => i.OrderItemId == orderItemId
+                                  && i.Order.OwnerId == currentId);
+
+            if (item == null) return NotFound();
+
+            var availableDriver = db.DeliveryDrivers
+                .FirstOrDefault(d => d.IsAvailable == true
+                                  && d.ApplicationStatus == Status.Approved);
+
+            if (availableDriver == null)
+            {
+                TempData["Error"] = "No drivers are currently available. Please try again later.";
+                return RedirectToAction("ReturnedItems");
+            }
+
+            item.ReturnPStatus = ReturnProduct.Collection_Assigned;
+            item.DriverId = availableDriver.DriverId;
+            item.IsAssingedForCollection = true;
+            item.CollectionDate = DateTime.Now.AddDays(1);
+            item.NewDeliveryDate = DateTime.Now.AddDays(4);
+
+            availableDriver.IsAvailable = false;
+            db.SaveChanges();
+
+            TempData["Message"] = $"Return for '{item.ProdName}' approved. Driver {availableDriver.DriverName} {availableDriver.DriverSurname} assigned for collection.";
+            return RedirectToAction("ReturnedItems");
+        }
+
+        // Step 2 — mark item as collected (driver picked it up, now being inspected)
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult MarkItemCollected(int orderItemId)
+        {
+            int currentId = HttpContext.Session.GetInt32("UserId")!.Value;
+
+            var item = db.OrderItems
+                .Include(i => i.Order)
+                .Include(i => i.DeliveryDriver)
+                .FirstOrDefault(i => i.OrderItemId == orderItemId
+                                  && i.Order.OwnerId == currentId
+                                  && i.ReturnPStatus == ReturnProduct.Collection_Assigned);
+
+            if (item == null) return NotFound();
+
+            // Free up the collection driver
+            if (item.DeliveryDriver != null)
+                item.DeliveryDriver.IsAvailable = true;
+
+            item.ReturnPStatus = ReturnProduct.Item_Collected;
+            item.DriverId = null;   // clear driver — new one assigned in next step
+
+            db.SaveChanges();
+
+            TempData["Message"] = $"'{item.ProdName}' marked as collected and is now being inspected/replaced.";
+            return RedirectToAction("ReturnedItems");
+        }
+
+        // Step 3 — assign a driver to deliver the replacement/exchange item
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult AssignExchangeDriver(int orderItemId)
+        {
+            int currentId = HttpContext.Session.GetInt32("UserId")!.Value;
+
+            var item = db.OrderItems
+                .Include(i => i.Order)
+                .FirstOrDefault(i => i.OrderItemId == orderItemId
+                                  && i.Order.OwnerId == currentId
+                                  && i.ReturnPStatus == ReturnProduct.Item_Collected);
+
+            if (item == null) return NotFound();
+
+            var availableDriver = db.DeliveryDrivers
+                .FirstOrDefault(d => d.IsAvailable == true
+                                  && d.ApplicationStatus == Status.Approved);
+
+            if (availableDriver == null)
+            {
+                TempData["Error"] = "No drivers available for re-delivery. Please try again later.";
+                return RedirectToAction("ReturnedItems");
+            }
+
+            item.ReturnPStatus = ReturnProduct.Exchange_Dispatched;
+            item.DriverId = availableDriver.DriverId;
+            item.IsAssingedForSecDelivery = true;
+            item.NewDeliveryDate = DateTime.Now.AddDays(1);
+
+            availableDriver.IsAvailable = false;
+            db.SaveChanges();
+
+            TempData["Message"] = $"Replacement for '{item.ProdName}' dispatched. Driver {availableDriver.DriverName} {availableDriver.DriverSurname} assigned for delivery.";
+            return RedirectToAction("ReturnedItems");
+        }
+
+        public IActionResult AssignCollection() => View();
+
+
     }
 }

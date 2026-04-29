@@ -110,33 +110,3 @@
     }
 </script>
 
-
-@* <script>
-function payWithPaystack(btn) {
-    Show spinner
-    document.getElementById('btnText').textContent = 'Opening payment…';
-    document.getElementById('btnSpinner').style.display = 'block';
-    btn.disabled = true;
-
-    var handler = PaystackPop.setup({
-    key:      'pk_test_00e0ace8896dc183d605bed4ae78c29197fa3029',
-        email:    '@Model.CustomerEmail',
-        amount:   @(Math.Round(Model.Amount * 100)), Added Math.Round
-        ref:      'ORDER-@Model.OrderId-' + Math.floor(Math.random() * 1e9),
-        currency: 'ZAR',
-
-        callback: function(response) {
-            window.location.href = '@Url.Action("Verify","Payment")?reference=' + response.reference;
-        },
-
-        onClose: function() {
-            Reset button
-            document.getElementById('btnText').textContent = 'Pay R @Model.Amount.ToString("N2") Securely';
-            document.getElementById('btnSpinner').style.display = 'none';
-            btn.disabled = false;
-        }
-    });
-
-    handler.openIframe();
-}
-</script> *@

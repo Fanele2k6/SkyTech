@@ -16,15 +16,13 @@
     <link rel="stylesheet" href="~/CSS/ShopOwnerStyle.css">
 }
 
-
-
 <!-- MAIN -->
 <main class="so-main">
 
     <div class="so-topbar">
         <div>
             <div class="so-page-title">My Profile</div>
-            <div class="so-page-sub">Your account and shop information.</div>
+            <div class="so-page-sub">Your account.</div>
         </div>
     </div>
 
@@ -39,6 +37,7 @@
             <!-- LEFT: Personal info -->
             <div>
                 <div class="so-card" style="overflow:hidden">
+
                     <div class="profile-hero">
                         <div class="profile-avatar"><i class="fas fa-user"></i></div>
                         <h2>@customer.FirstName @customer.LastName</h2>
@@ -65,7 +64,7 @@
 
                         <div class="profile-row">
                             <span class="pk"><i class="fas fa-calendar" style="color:var(--blue);margin-right:.35rem"></i>Password</span>
-                            <span class="pv">@customer.Password</span>
+                            <span class="pv">*********</span>
                         </div>
 
                     </div>
@@ -84,18 +83,24 @@
 
                         <div class="profile-row">
                             <a href="@Url.Action("OrderHistory","Customer")" class="pv">
-                                <i class="fas fa-clock-rotate-left"></i> View Order History
+                               View Order History
                             </a>
                         </div>
 
                         <div class="profile-row">
                             <a href="@Url.Action("MyOrders","Customer")" class="pv">
-                                <i class="fas fa-clock-rotate-left"></i> My Orders
+                               My Orders
+                            </a>
+                        </div>
+                       
+                        <div class="profile-row">
+                            <a href="@Url.Action("ReturnPolicy","Customer")" class="pv">
+                               Return item
                             </a>
                         </div>
                         <div class="profile-row">
-                            <a href="@Url.Action("TrackOrder","Customer")" class="pv">
-                                <i class="fas fa-clock-rotate-left"></i>Track Order
+                            <a href="@Url.Action("MyReturns","Customer")" class="pv">
+                               My Returns
                             </a>
                         </div>
 

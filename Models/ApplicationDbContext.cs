@@ -1,5 +1,6 @@
 ﻿using CM_Project.Models.Documents;
 using Microsoft.EntityFrameworkCore;
+using SkyTech.Models;
 
 
 namespace CM_Project.Models
@@ -31,26 +32,79 @@ namespace CM_Project.Models
         // ── Cart tables ──────────────────────────────────────
         public DbSet<Cart> Carts { get; set; }
         public DbSet<CartItem> CartItems { get; set; }
+        //public DbSet<Return> Return { get; set; }
+        //public DbSet<ReturnItem> ReturnItem { get; set; }
 
+
+        //New tables for pickup
+        public DbSet<PickupOrder> PickupOrders { get; set; }
+        public DbSet<InterBranchTransfer> InterBranchTransfers { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
-            // Keep cascade on OrderItems (deleting Order also deletes its items) ✅
+            // Order → OrderItems (cascade is fine)
             modelBuilder.Entity<OrderItem>()
                 .HasOne(oi => oi.Order)
                 .WithMany(o => o.OrderItems)
                 .HasForeignKey(oi => oi.OrderId)
-                .OnDelete(DeleteBehavior.Cascade);  // ← delete order = delete its items
+                .OnDelete(DeleteBehavior.Cascade);
 
-            // Break the cycle HERE instead — on the Customer → Order path
+            // Customer → Orders (no cascade)
             modelBuilder.Entity<Order>()
                 .HasOne(o => o.Customers)
                 .WithMany()
                 .HasForeignKey(o => o.CustomerId)
                 .OnDelete(DeleteBehavior.NoAction);  // ← stops the cycle
+
+            // ========== FIXED: PickupOrder configuration (NO CASCADE) ==========
+            modelBuilder.Entity<PickupOrder>()
+                .HasOne(p => p.Order)
+                .WithOne()
+                .HasForeignKey<PickupOrder>(p => p.OrderId)
+                .OnDelete(DeleteBehavior.NoAction);  // ← FIXED: NoAction instead of Cascade
+
+            // ========== FIXED: InterBranchTransfer configuration ==========
+            modelBuilder.Entity<InterBranchTransfer>()
+                .HasOne(t => t.OrderItem)
+                .WithMany()
+                .HasForeignKey(t => t.OrderItemId)
+                .OnDelete(DeleteBehavior.NoAction);  // ← FIXED: NoAction
+
+            modelBuilder.Entity<InterBranchTransfer>()
+                .HasOne(t => t.SourceBranch)
+                .WithMany()
+                .HasForeignKey(t => t.SourceBranchId)
+                .OnDelete(DeleteBehavior.NoAction);  // ← FIXED: NoAction
+
+            modelBuilder.Entity<InterBranchTransfer>()
+                .HasOne(t => t.TargetBranch)
+                .WithMany()
+                .HasForeignKey(t => t.TargetBranchId)
+                .OnDelete(DeleteBehavior.NoAction);  // ← FIXED: NoAction
+
+            modelBuilder.Entity<InterBranchTransfer>()
+                .HasOne(t => t.Driver)
+                .WithMany()
+                .HasForeignKey(t => t.DriverId)
+                // ← FIXED: NoAction
+                .OnDelete(DeleteBehavior.NoAction);
+
+            // ShopOwner → Orders (no cascade)
+            modelBuilder.Entity<Order>()
+                .HasOne(o => o.ShopOwner)
+                .WithMany()
+                .HasForeignKey(o => o.OwnerId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<OrderItem>()
+            .HasOne(i => i.DeliveryDriver)
+            .WithMany()
+            .HasForeignKey(i => i.DriverId)
+            .OnDelete(DeleteBehavior.NoAction);
         }
+
     }
 }

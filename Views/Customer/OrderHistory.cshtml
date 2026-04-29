@@ -129,8 +129,11 @@
                                             <th>Qty</th>
                                             <th>Unit Price</th>
                                             <th>Subtotal</th>
+                                           <th>Subtotal</th>
                                         </tr>
                                     </thead>
+
+
                                     <tbody>
                                         @if (order.OrderItems != null)
                                         {
@@ -142,6 +145,7 @@
                                                     <td><span class="qty-badge">@item.Quantity</span></td>
                                                     <td class="price-cell">R @item.PriceAtTimeOfPurchase.ToString("N2")</td>
                                                     <td class="price-cell">R @itemSub.ToString("N2")</td>
+                                                    @* <td class="price-cell"></td>  *@
                                                 </tr>
                                             }
                                         }
@@ -162,6 +166,10 @@
                                 <div class="row-item" style="color:#0e1b35">
                                     Total
                                     <span class="total-due">R @grandTotal.ToString("N2")</span>
+                                </div>
+                                @*================================RETUN ITEM POLICY========================= *@
+                                <div class="row-item" style="color:#0e1b35">
+                                <a class="price-cell" href="@Url.Action("ReturnItem", "Customer")"> Return Item </a>
                                 </div>
                             </div>
 

@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Identity.Client;
 using SkyTech.Models;
+using SkyTech.ViewModels;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,7 +13,7 @@ using static CM_Project.Models.Order;
 
 namespace CM_Project.Controllers
 {
-   // [AuthorizeUser]
+    // [AuthorizeUser]
     public class CustomerController : Controller
     {
         private readonly ApplicationDbContext db;
@@ -20,25 +21,23 @@ namespace CM_Project.Controllers
         public CustomerController(ApplicationDbContext context) { db = context; }
 
 
-        public IActionResult ProductDetails(int id)  // ← receive product id from URL
+        public IActionResult ProductDetails(int id)
         {
             var product = db.AddProducts
                 .Include(p => p.ProductPictures)
                 .Include(p => p.Owner)
-                .FirstOrDefault(p => p.ProdId == id);  // ← use product id, not userId
+                .FirstOrDefault(p => p.ProdId == id);
 
             if (product == null) return NotFound();
 
-            return View(product);  // single product, not a list
+            return View(product);
         }
 
         [HttpGet]
         public IActionResult ShoppingPage(string search, SelectCategory? category)
         {
-            // Make currentId nullable — guest users have no session
             int? currentId = HttpContext.Session.GetInt32("UserId");
 
-            // Only delete expired orders if logged in
             if (currentId.HasValue)
                 DeleteExpiredOrders(currentId.Value);
 
@@ -75,7 +74,6 @@ namespace CM_Project.Controllers
             if (!string.IsNullOrEmpty(search))
                 products = products.Where(p => p.ProdName.Contains(search));
 
-            // Only load cart count if logged in, otherwise show 0
             var cartNotification = currentId.HasValue
                 ? db.Carts
                     .Where(c => c.CustomerId == currentId.Value && !c.IsCheckedOut)
@@ -93,88 +91,16 @@ namespace CM_Project.Controllers
         }
 
 
-        //    [HttpGet]
-        //    public IActionResult ShoppingPage(string search, SelectCategory? category)
-        //    {
-        //        // The ! tells the compiler "trust me, this won't be null"
-        //        int currentId = HttpContext.Session.GetInt32("UserId")!.Value;
-        //        DeleteExpiredOrders(currentId);
-
-        //        //displays 10 products from any shop by default
-        //        var products = db.AddProducts
-        //            .Include(p => p.ProductPictures)
-        //            .Include(p => p.Owner)
-        //            .AsQueryable()
-        //            .Take(10);
-
-        //        //section 1 sorting by popuplar picks
-        //        //var popularPicks = db.OrderItems
-        //        //    .GroupBy(o => o.ProdId)
-        //        //    .Select(g => new { ProductId = g.Key, TotalSold = g.Sum(x => x.Quantity) })
-        //        //    .OrderByDescending(x => x.TotalSold)
-        //        //    .Take(10)
-        //        //    .Join(db.AddProducts, p => p.ProductId, prod => prod.ProdId, (p, prod) => prod)
-        //        //    .ToList();
-
-
-        //        // ✅ Fix — get IDs first, then query with Include()
-        //        var topProductIds = db.OrderItems
-        //            .GroupBy(o => o.ProdId)
-        //            .Select(g => new { ProductId = g.Key, TotalSold = g.Sum(x => x.Quantity) })
-        //            .OrderByDescending(x => x.TotalSold)
-        //            .Take(10)
-        //            .Select(x => x.ProductId)
-        //            .ToList();
-
-        //        var popularPicks = db.AddProducts
-        //.Include(p => p.ProductPictures)
-        //.Include(p => p.Owner)          // ← now Owner loads correctly
-        //.Where(p => topProductIds.Contains(p.ProdId))
-        //.ToList();
-
-        //        //section 2 sorting by category type 1
-        //        var category1 = db.AddProducts
-        //            .Include(p => p.ProductPictures)
-        //            .Include(p => p.Owner)
-        //            .Where(p => p.ProdCategory == SelectCategory.Appliances)
-        //            .Take(10)
-        //            .ToList();
-
-        //        if (category.HasValue)
-        //            products = products.Where(p => p.ProdCategory == category.Value);
-
-        //        if (!string.IsNullOrEmpty(search))
-        //            products = products.Where(p => p.ProdName.Contains(search));
-
-        //        //update cart notification
-        //        var cartNotification = db.Carts
-        //            .Where(c => c.CustomerId == currentId && !c.IsCheckedOut)
-        //            .SelectMany(c => c.CartItems)
-        //            .Count();
-
-        //        ViewBag.PopularPicks = popularPicks;
-        //        ViewBag.Groceries = category1;
-        //        ViewBag.NumberOfCartItems = cartNotification;
-        //        ViewBag.SelectedCategory = category;
-        //        ViewBag.Search = search;
-
-        //        return View(products.ToList());
-        //    }
-
-      //  [AuthorizeUser]
         public IActionResult AddToCart(int id, int quantity)
         {
-         //   int currentId= HttpContext.Session.GetInt32("UserId").Value;
             var product = db.AddProducts.Find(id);
             if (product == null || product.Status == ProdStatus.Out_Of_Stock)
                 return Content("No products / Out of stock");
 
             int? sessionId = HttpContext.Session.GetInt32("UserId");
 
-            //Allow guest users to add to cart
             if (sessionId == null)
             {
-                // Guest — store cart in session as JSON
                 var guestCart = HttpContext.Session.GetString("GuestCart");
                 var cartItems = string.IsNullOrEmpty(guestCart)
                     ? new List<GuestCartItem>()
@@ -232,7 +158,6 @@ namespace CM_Project.Controllers
             return RedirectToAction("ShoppingPage", "Customer");
         }
 
-        //  [AuthorizeUser]
 
         public IActionResult ViewCart()
         {
@@ -253,14 +178,13 @@ namespace CM_Project.Controllers
                     PriceAtTimeAdded = g.Price
                 }).ToList();
 
-                // Load product pictures for guest cart items
                 var prodIds = guestItems.Select(g => g.ProdId).ToList();
                 var guestPictures = db.AddProducts
                     .Include(p => p.ProductPictures)
                     .Where(p => prodIds.Contains(p.ProdId))
                     .ToDictionary(p => p.ProdId, p => p.ProductPictures?.FirstOrDefault()?.FilePath);
 
-                ViewBag.GuestPictures = guestPictures; // Dictionary<int, string>
+                ViewBag.GuestPictures = guestPictures;
                 ViewBag.IsGuest = true;
                 ViewBag.Address = "";
                 ViewBag.ItemsInCart = cartItems.Count;
@@ -290,6 +214,9 @@ namespace CM_Project.Controllers
             ViewBag.IsGuest = false;
             ViewBag.Address = address;
             ViewBag.ItemsInCart = itemsInCart;
+            ViewBag.AvailableBranches = db.shopowners
+                                    .Where(s => s.ApplicationStatus == ApplicationStat.Approved)
+                                    .ToList();
 
             if (cart == null)
                 return View(new List<CartItem>());
@@ -297,40 +224,7 @@ namespace CM_Project.Controllers
             return View(cart.CartItems.ToList());
         }
 
-        //public IActionResult ViewCart()
-        //{
-        //    int currentId = HttpContext.Session.GetInt32("UserId").Value;
-        //    DeleteExpiredOrders(currentId);
 
-        //    var address = db.Customers
-        //        .Where(c => c.CustomerId == currentId)
-        //        .Select(c => c.Address)
-        //        .FirstOrDefault();
-
-        //    var itemsInCart = db.Carts
-        //        .Where(c => c.CustomerId == currentId && !c.IsCheckedOut)
-        //        .SelectMany(c => c.CartItems)
-        //        .Count();
-
-        //    // ✅ ThenInclude loads Products AND ProductPictures
-        //    var cart = db.Carts
-        //        .Include(c => c.CartItems)
-        //            .ThenInclude(ci => ci.AddProduct)
-        //                .ThenInclude(p => p.ProductPictures)
-        //        .FirstOrDefault(c => c.CustomerId == currentId && !c.IsCheckedOut);
-
-        //    ViewBag.Address = address;
-        //    ViewBag.ItemsInCart = itemsInCart;
-
-        //    if (cart == null)
-        //        return View(new List<CartItem>());
-
-        //    return View(cart.CartItems.ToList());
-        //}
-
-        
-
-      //  [AuthorizeUser]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult RemoveGuestCartItem(int prodId)
@@ -360,7 +254,6 @@ namespace CM_Project.Controllers
             return RedirectToAction("ViewCart", "Customer");
         }
 
-        //   [AuthorizeUser]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult UpdateCart(int id, int quantity)
@@ -375,7 +268,6 @@ namespace CM_Project.Controllers
             return RedirectToAction("ViewCart");
         }
 
-        //for the guest users
         [HttpPost]
         [ValidateAntiForgeryToken]
         public IActionResult UpdateGuestCartItem(int prodId, int quantity)
@@ -401,13 +293,43 @@ namespace CM_Project.Controllers
             return RedirectToAction("ViewCart");
         }
 
+
+        //----------------GET Checkout -----------
+        [AuthorizeUser]
+        [HttpGet]
+        public IActionResult Checkout()
+        {
+            int currentId = HttpContext.Session.GetInt32("UserId")!.Value;
+
+            var cart = db.Carts
+                .Include(c => c.CartItems)
+                    .ThenInclude(ci => ci.AddProduct)
+                .FirstOrDefault(c => c.CustomerId == currentId && !c.IsCheckedOut);
+
+            if (cart == null || !cart.CartItems.Any())
+                return RedirectToAction("ViewCart");
+
+            double subtotal = cart.CartItems.Sum(ci => ci.PriceAtTimeAdded * ci.ProdQuantity);
+
+            var viewModel = new CheckoutViewModel
+            {
+                AvailableBranches = db.shopowners
+                    .Where(s => s.ApplicationStatus == ApplicationStat.Approved)
+                    .ToList(),
+                CartSubtotal = subtotal,
+                DeliveryFee = 50,
+                PickupFee = 25
+            };
+
+            return View(viewModel);
+        }
+
+
         [AuthorizeUser]
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Checkout(string deliveryAddress)
+        public IActionResult Checkout(string deliveryAddress, string orderType, int? selectedPickupBranchId, double Amount, string ProductName)
         {
-
-            // Redirect to login if not logged in
             if (HttpContext.Session.GetInt32("UserId") == null)
             {
                 TempData["Error"] = "Please log in to complete your order.";
@@ -415,7 +337,6 @@ namespace CM_Project.Controllers
             }
 
             int currentId = HttpContext.Session.GetInt32("UserId")!.Value;
-
 
             var cart = db.Carts
                 .Include(c => c.CartItems)
@@ -435,24 +356,65 @@ namespace CM_Project.Controllers
                 return RedirectToAction("ViewCart");
             }
 
-            if (!string.IsNullOrWhiteSpace(deliveryAddress))
+            // ========== Handle address / order type ==========
+            string address = customer.Address;
+
+            if (orderType == "delivery")
             {
-                db.Database.ExecuteSqlRaw(
-                    "UPDATE Customers SET Address = {0} WHERE CustomerId = {1}",
-                    deliveryAddress.Trim(), currentId);
+                if (!string.IsNullOrWhiteSpace(deliveryAddress))
+                {
+                    db.Database.ExecuteSqlRaw(
+                        "UPDATE Customers SET Address = {0} WHERE CustomerId = {1}",
+                        deliveryAddress.Trim(), currentId);
+                    address = deliveryAddress.Trim();
+                }
+                else if (string.IsNullOrEmpty(customer.Address))
+                {
+                    TempData["Error"] = "Please provide a delivery address.";
+                    return RedirectToAction("ViewCart");
+                }
+            }
+            else if (orderType == "pickup")
+            {
+                if (!selectedPickupBranchId.HasValue)
+                {
+                    TempData["Error"] = "Please select a pickup branch.";
+                    return RedirectToAction("ViewCart");
+                }
+
+                var branch = db.shopowners.Find(selectedPickupBranchId.Value);
+                if (branch == null)
+                {
+                    TempData["Error"] = "Selected branch does not exist.";
+                    return RedirectToAction("ViewCart");
+                }
+                address = $"Pickup at: {branch.ShopAddress}";
+            }
+            else
+            {
+                // Default to delivery for backward compatibility
+                orderType = "delivery";
+                if (!string.IsNullOrWhiteSpace(deliveryAddress))
+                {
+                    db.Database.ExecuteSqlRaw(
+                        "UPDATE Customers SET Address = {0} WHERE CustomerId = {1}",
+                        deliveryAddress.Trim(), currentId);
+                    address = deliveryAddress.Trim();
+                }
+                else if (string.IsNullOrEmpty(customer.Address))
+                {
+                    TempData["Error"] = "Please provide a delivery address.";
+                    return RedirectToAction("ViewCart");
+                }
             }
 
-            var address = string.IsNullOrWhiteSpace(deliveryAddress)
-                ? customer.Address
-                : deliveryAddress.Trim();
-
-            // Group cart items by store (OwnerId)
+            // ========== Group cart items by store ==========
             var itemsByStore = cart.CartItems
                 .Where(ci => ci.AddProduct != null)
                 .GroupBy(ci => ci.AddProduct.OwnerId)
                 .ToList();
 
-            // Check stock for all items before creating any orders
+            // ========== Stock check before creating any orders ==========
             foreach (var storeGroup in itemsByStore)
             {
                 foreach (var item in storeGroup)
@@ -468,184 +430,230 @@ namespace CM_Project.Controllers
             }
 
             double deliveryFee = 50;
+            double pickupFee = 25;
             var createdOrderIds = new List<int>();
+            PickupOrder createdPickupOrder = null;
 
-            // Create one order per store
-            foreach (var storeGroup in itemsByStore)
+
+            // ========== DELIVERY: One order per store ==========
+            if (orderType == "delivery")
             {
-                int storeOwnerId = storeGroup.Key;
+                foreach (var storeGroup in itemsByStore)
+                {
+                    int storeOwnerId = storeGroup.Key;
 
-                double storeSubtotal = storeGroup.Sum(ci =>
-                    (ci.AddProduct != null ? ci.AddProduct.ProdPrice : ci.PriceAtTimeAdded) * ci.ProdQuantity);
+                    double storeSubtotal = storeGroup.Sum(ci =>
+                        (ci.AddProduct != null ? ci.AddProduct.ProdPrice : ci.PriceAtTimeAdded) * ci.ProdQuantity);
 
-                double storeTotalAmount = storeSubtotal + deliveryFee;
+                    double storeTotalAmount = storeSubtotal + deliveryFee;
 
-                //generating a random pin
+                    var rng = new Random();
+                    string deliveryPin = rng.Next(1000, 9999).ToString();
+
+                    var order = new Order
+                    {
+                        CustomerId = currentId,
+                        OwnerId = storeOwnerId,
+                        OrderedOn = DateTime.Now,
+                        Status = OrderStatus.Pending,
+                        PaymentExpiry = DateTime.Now.AddMinutes(1),
+                        TotalAmount = storeTotalAmount,
+                        PaymentReference = "",
+                        DeliveryAddress = address,
+                        DeliveryPin = deliveryPin,
+                        ScheduledDeliveryDate = DateTime.Now.AddMinutes(2),
+                        OrderType = DeliveryType.HomeDelivery,
+                        OrderItems = storeGroup.Select(ci => new OrderItem
+                        {
+                            ProdId = ci.ProdId,
+                            ProdName = ci.ProdName,
+                            Quantity = ci.ProdQuantity,
+                            PriceAtTimeOfPurchase = ci.PriceAtTimeAdded,
+                            RefundOrExchange = GetRefund.No_Requests,
+                            QuantityReturned = 0,
+                            RetunReason = "",
+                            ReturnPStatus = ReturnProduct.No_Request,
+                            CollectionDate = null,
+                            NewDeliveryDate = null
+                        }).ToList()
+                    };
+
+                    db.Orders.Add(order);
+                    db.SaveChanges();
+                    createdOrderIds.Add(order.OrderId);
+
+                    // Deduct stock
+                    foreach (var item in storeGroup)
+                    {
+                        var product = db.AddProducts.Find(item.ProdId);
+                        if (product == null) continue;
+                        product.ProdQuantity -= item.ProdQuantity;
+                        product.Status = product.ProdQuantity == 0 ? ProdStatus.Out_Of_Stock
+                                       : product.ProdQuantity <= 5 ? ProdStatus.Low_stock
+                                                                    : ProdStatus.In_Stock;
+                    }
+                }
+            }
+
+
+            // ========== PICKUP: ONE order containing ALL items ==========
+            else
+            {
+                double totalSubtotal = itemsByStore.Sum(storeGroup =>
+                    storeGroup.Sum(ci =>
+                        (ci.AddProduct != null ? ci.AddProduct.ProdPrice : ci.PriceAtTimeAdded) * ci.ProdQuantity));
+
+                double totalAmount = totalSubtotal + pickupFee;
+
                 var rng = new Random();
                 string deliveryPin = rng.Next(1000, 9999).ToString();
 
+                // Create the order with an empty items list — items added in the loop below
                 var order = new Order
                 {
                     CustomerId = currentId,
-                    OwnerId = storeOwnerId,   // each order belongs to one store
+                    OwnerId = selectedPickupBranchId.Value,
                     OrderedOn = DateTime.Now,
                     Status = OrderStatus.Pending,
                     PaymentExpiry = DateTime.Now.AddMinutes(1),
-                    TotalAmount = storeTotalAmount,
+                    TotalAmount = totalAmount,
                     PaymentReference = "",
                     DeliveryAddress = address,
-                    DeliveryPin = deliveryPin, //also added this
-                    ScheduledDeliveryDate = DateTime.Now.AddDays(2), //i order li dilivwa after 2 days
-                    OrderItems = storeGroup.Select(ci => new OrderItem
-                    {
-                        ProdId = ci.ProdId,
-                        ProdName = ci.ProdName,
-                        Quantity = ci.ProdQuantity,
-                        PriceAtTimeOfPurchase = ci.PriceAtTimeAdded
-                    }).ToList()
+                    DeliveryPin = deliveryPin,
+                    ScheduledDeliveryDate = DateTime.Now.AddMinutes(2),
+                    OrderType = DeliveryType.InStorePickup,
+                    OrderItems = new List<OrderItem>()
                 };
 
-                db.Orders.Add(order);
-                db.SaveChanges(); // save each order to get its OrderId
+                // Add ALL items from ALL stores into the single order
+                foreach (var storeGroup in itemsByStore)
+                {
+                    foreach (var cartItem in storeGroup)
+                    {
+                        order.OrderItems.Add(new OrderItem
+                        {
+                            ProdId = cartItem.ProdId,
+                            ProdName = cartItem.ProdName,
+                            Quantity = cartItem.ProdQuantity,
+                            PriceAtTimeOfPurchase = cartItem.PriceAtTimeAdded,
+                            RefundOrExchange = GetRefund.No_Requests,
+                            QuantityReturned = 0,
+                            RetunReason = "",
+                            ReturnPStatus = ReturnProduct.No_Request,
+                            CollectionDate = null,
+                            NewDeliveryDate = null
+                        });
+                    }
+                }
 
+                db.Orders.Add(order);
+                db.SaveChanges();
                 createdOrderIds.Add(order.OrderId);
 
-                // Deduct stock for this store's items
-                foreach (var item in storeGroup)
+                // Create pickup order record
+                string pickupReference = GeneratePickupReference();
+                createdPickupOrder = new PickupOrder
                 {
-                    var product = db.AddProducts.Find(item.ProdId);
-                    if (product == null) continue;
-                    product.ProdQuantity -= item.ProdQuantity;
-                    product.Status = product.ProdQuantity == 0 ? ProdStatus.Out_Of_Stock
-                                   : product.ProdQuantity <= 5 ? ProdStatus.Low_stock
-                                                                 : ProdStatus.In_Stock;
+                    OrderId = order.OrderId,
+                    PickupBranchId = selectedPickupBranchId.Value,
+                    PickupReference = pickupReference,
+                    PickupFee = pickupFee,
+                    Status = PickupStatus.Pending,
+                    ScheduledPickupDate = DateTime.Now.AddDays(2)
+                };
+                db.PickupOrders.Add(createdPickupOrder);
+                db.SaveChanges();
+
+                order.PickupOrderId = createdPickupOrder.PickupOrderId;
+                db.SaveChanges();
+
+                // Deduct stock and create inter-branch transfers where needed
+                foreach (var storeGroup in itemsByStore)
+                {
+                    int sourceBranchId = storeGroup.Key;
+
+                    // Deduct stock
+                    foreach (var item in storeGroup)
+                    {
+                        var product = db.AddProducts.Find(item.ProdId);
+                        if (product == null) continue;
+                        product.ProdQuantity -= item.ProdQuantity;
+                        product.Status = product.ProdQuantity == 0 ? ProdStatus.Out_Of_Stock
+                                       : product.ProdQuantity <= 5 ? ProdStatus.Low_stock
+                                                                    : ProdStatus.In_Stock;
+                    }
+
+                    // If items are NOT from the pickup branch, create a transfer record
+                    if (sourceBranchId != selectedPickupBranchId.Value)
+                    {
+                        foreach (var cartItem in storeGroup)
+                        {
+                            var orderItem = order.OrderItems
+                                .FirstOrDefault(oi => oi.ProdId == cartItem.ProdId);
+
+                            if (orderItem != null)
+                            {
+                                var transfer = new InterBranchTransfer
+                                {
+                                    OrderItemId = orderItem.OrderItemId,
+                                    SourceBranchId = sourceBranchId,
+                                    TargetBranchId = selectedPickupBranchId.Value,
+                                    TransferCode = GenerateTransferCode(),
+                                    TransferStatus = ItemTransferStatus.PendingAtSource,
+                                    ScheduledTransferDate = DateTime.Now.AddDays(1),
+                                    IsDelivered = false
+                                };
+                                db.InterBranchTransfers.Add(transfer);
+                            }
+                        }
+                    }
                 }
+                db.SaveChanges();
             }
 
             // Mark cart as checked out
             cart.IsCheckedOut = true;
             db.SaveChanges();
 
-            // Calculate grand total across all store orders
+            // Grand total across all created orders
             double grandTotal = db.Orders
                 .Where(o => createdOrderIds.Contains(o.OrderId))
                 .Sum(o => o.TotalAmount);
 
-            // Redirect to payment with all order IDs
+            string orderIdsString = string.Join(",", createdOrderIds);
+
             return RedirectToAction("PaymentPage", "Payment", new
             {
-                orderIds = string.Join(",", createdOrderIds),
+                orderIds = orderIdsString,
                 amount = grandTotal,
                 customerEmail = customer.Email,
                 customerName = customer.FirstName,
                 itemCount = cart.CartItems.Sum(i => i.ProdQuantity),
-                deliveryAddress
+                deliveryAddress = address,
+                orderType = orderType,
+                pickupReference = orderType == "pickup" && createdPickupOrder != null
+                    ? createdPickupOrder.PickupReference : ""
             });
         }
 
 
-        //public IActionResult Checkout(string deliveryAddress)
-        //{
-        //    // The ! tells the compiler "trust me, this won't be null"
-        //    int currentId = HttpContext.Session.GetInt32("UserId")!.Value;
+        private string GeneratePickupReference()
+        {
+            var rng = new Random();
+            string prefix = "PICK";
+            string numbers = rng.Next(10000, 99999).ToString();
+            string suffix = DateTime.Now.ToString("MMdd");
+            return $"{prefix}-{numbers}-{suffix}";
+        }
 
-        //    // ✅ Load cart with Products included
-        //    var cart = db.Carts
-        //        .Include(c => c.CartItems)
-        //            .ThenInclude(ci => ci.AddProduct)
-        //        .FirstOrDefault(c => c.CustomerId == currentId && !c.IsCheckedOut);
+        private string GenerateTransferCode()
+        {
+            var rng = new Random();
+            string prefix = "TRANS";
+            string numbers = rng.Next(100000, 999999).ToString();
+            return $"{prefix}-{numbers}";
+        }
 
-        //    if (cart == null || !cart.CartItems.Any())
-        //    {
-        //        TempData["Error"] = "Your cart is empty.";
-        //        return RedirectToAction("ViewCart");
-        //    }
-
-        //    // ✅ Null-safe: fall back to stored price if Products is null
-        //    double totalAmount = cart.CartItems.Sum(ci =>
-        //        (ci.AddProduct != null ? ci.AddProduct.ProdPrice : ci.PriceAtTimeAdded) * ci.ProdQuantity);
-
-        //    if (!string.IsNullOrWhiteSpace(deliveryAddress))
-        //    {
-        //        db.Database.ExecuteSqlRaw(
-        //            "UPDATE Customers SET Address = {0} WHERE CustomerId = {1}",
-        //            deliveryAddress.Trim(), currentId);
-        //    }
-
-        //    // ✅ Include Products so stock check doesn't crash
-        //    var cartItems = db.CartItems
-        //        .Include(c => c.AddProduct)
-        //        .Where(c => c.Carts.CustomerId == currentId)
-        //        .ToList();
-
-        //    var address = db.Customers
-        //        .Where(a => a.CustomerId == currentId)
-        //        .Select(a => a.Address)
-        //        .FirstOrDefault();
-
-        //    var customer = db.Customers.FirstOrDefault(c => c.CustomerId == currentId);
-
-        //    if (customer == null)
-        //    {
-        //        TempData["Error"] = "Customer not found.";
-        //        return RedirectToAction("ViewCart");
-        //    }
-
-        //    foreach (var item in cartItems)
-        //    {
-        //        var product = db.AddProducts.Find(item.ProdId);
-        //        if (product == null) continue;
-
-        //        if (product.ProdQuantity < item.ProdQuantity)
-        //        {
-        //            TempData["Error"] = product.ProdName + " does not have enough stock available.";
-        //            return RedirectToAction("ViewCart");
-        //        }
-
-        //        product.ProdQuantity -= item.ProdQuantity;
-        //        product.Status = product.ProdQuantity == 0 ? ProdStatus.Out_Of_Stock
-        //                       : product.ProdQuantity <= 5 ? ProdStatus.Low_stock
-        //                                                    : ProdStatus.In_Stock;
-        //    }
-
-        //    double deliveryFee = 50;
-        //    double subtotal = cartItems.Sum(i => i.SubTotal);
-        //    double total = subtotal + deliveryFee;
-
-        //    var order = new Order
-        //    {
-        //        CustomerId = currentId,
-        //        OrderedOn = DateTime.Now,
-        //        Status = OrderStatus.Pending,
-        //        PaymentExpiry = DateTime.Now.AddMinutes(2),
-        //        TotalAmount = totalAmount,
-        //        PaymentReference = "",
-        //        DeliveryAddress = string.IsNullOrWhiteSpace(deliveryAddress)
-        //                            ? address
-        //                            : deliveryAddress.Trim(),
-
-        //        OrderItems = cart.CartItems.Select(ci => new OrderItem
-        //        {
-        //            ProdId = ci.ProdId,
-        //            ProdName = ci.ProdName,
-        //            Quantity = ci.ProdQuantity,
-        //            PriceAtTimeOfPurchase = ci.PriceAtTimeAdded
-        //        }).ToList()
-        //    };
-
-        //    db.Orders.Add(order);
-        //    db.SaveChanges();
-
-        //    return RedirectToAction("PaymentPage", "Payment", new
-        //    {
-        //        orderId = order.OrderId,
-        //        amount = total,
-        //        customerEmail = customer.Email,
-        //        customerName = customer.FirstName,
-        //        itemCount = cart.CartItems.Sum(i => i.ProdQuantity),
-        //        deliveryAddress
-        //    });
-        //}
 
         private void DeleteExpiredOrders(int customerId)
         {
@@ -669,10 +677,10 @@ namespace CM_Project.Controllers
             db.SaveChanges();
         }
 
+
         [AuthorizeUser]
         public IActionResult OrderHistory()
         {
-            // The ! tells the compiler "trust me, this won't be null"
             int currentId = HttpContext.Session.GetInt32("UserId")!.Value;
             DeleteExpiredOrders(currentId);
 
@@ -687,65 +695,59 @@ namespace CM_Project.Controllers
             return View(orders);
         }
 
+
         [AuthorizeUser]
         public IActionResult CustomerProfile()
         {
-            // The ! tells the compiler "trust me, this won't be null"
             int currentId = HttpContext.Session.GetInt32("UserId")!.Value;
             DeleteExpiredOrders(currentId);
             return View(db.Customers.Where(c => c.CustomerId == currentId).ToList());
         }
 
+
         [AuthorizeUser]
         [HttpGet]
-        public IActionResult TrackOrder(int? id)
+        public IActionResult TrackOrder(int id)
         {
-            int? customerId = HttpContext.Session.GetInt32("UserId");
-            if (customerId == null)
+            var order = db.Orders
+                .Include(o => o.OrderItems)
+                .Include(o => o.Driver)
+                .Include(o => o.ShopOwner)
+                .FirstOrDefault(o => o.OrderId == id);
+
+            if (order == null)
             {
-                ViewBag.Message = "Please log in to track your order.";
-                return View((CM_Project.Models.Order)null);
+                ViewBag.Message = "Order not found.";
+                return View();
             }
 
-            DeleteExpiredOrders(customerId.Value);
-
-            Order order;
-            if (id == null)
+            if (order.OrderType == DeliveryType.InStorePickup)
             {
-                order = db.Orders
-                    .Include(o => o.Driver)
-                    .Include(o => o.OrderItems)
-                    .Include(o => o.ShopOwner) //Needed to show store name on the order
-                    .Where(o => o.CustomerId == customerId && !o.IsArchived)
-                    .OrderByDescending(o => o.OrderedOn)
-                    .FirstOrDefault();
+                var pickupOrder = db.PickupOrders
+                    .Include(p => p.PickupBranch)
+                    .FirstOrDefault(p => p.OrderId == id);
+                ViewBag.PickupOrder = pickupOrder;
 
-                if (order == null)
-                {
-                    ViewBag.Message = "You don't have any active orders at the moment.";
-                    return View((CM_Project.Models.Order)null);
-                }
-            }
-            else
-            {
-                order = db.Orders
-                    .Include(o => o.Driver)
-                    .Include(o => o.OrderItems)
-                    .Include(o => o.ShopOwner)
-                    .FirstOrDefault(o => o.OrderId == id.Value
-                                     && o.CustomerId == customerId
-                                     && !o.IsArchived);
-
-                if (order == null)
-                {
-                    ViewBag.Message = "You don't have any active orders at the moment.";
-                    return View((CM_Project.Models.Order)null);
-                }
+                var transfers = db.InterBranchTransfers
+                    .Include(t => t.SourceBranch)
+                    .Where(t => t.OrderItem.OrderId == id)
+                    .ToList();
+                ViewBag.TransfersForOrder = transfers;
             }
 
-            ViewBag.StatusMessage = GetStatusMessage(order.Status);
+            string statusMessage = order.Status switch
+            {
+                OrderStatus.Pending => "Order confirmed",
+                OrderStatus.Assigned => "Driver assigned",
+                OrderStatus.OutForDelivery => "Out for delivery",
+                OrderStatus.Delivered => "Delivered",
+                _ => "Processing"
+            };
+            ViewBag.StatusMessage = statusMessage;
+
             return View(order);
         }
+
 
         private string GetStatusMessage(CM_Project.Models.OrderStatus status) =>
             status == CM_Project.Models.OrderStatus.Pending ? "Pending"
@@ -753,6 +755,7 @@ namespace CM_Project.Controllers
           : status == CM_Project.Models.OrderStatus.OutForDelivery ? "Out For Delivery"
           : status == CM_Project.Models.OrderStatus.Delivered ? "Delivered"
           : "";
+
 
         [HttpGet]
         public IActionResult GetOrderStatus(int orderId)
@@ -767,6 +770,7 @@ namespace CM_Project.Controllers
 
             return Json(new { currentStep = step });
         }
+
 
         [AuthorizeUser]
         [HttpPost]
@@ -797,20 +801,24 @@ namespace CM_Project.Controllers
         [HttpGet]
         public IActionResult MyOrders()
         {
-            int? customerId = HttpContext.Session.GetInt32("UserId");
-            if (customerId == null) return RedirectToAction("LogIn", "Authentication");
-
-            DeleteExpiredOrders(customerId.Value);
+            int currentId = HttpContext.Session.GetInt32("UserId")!.Value;
 
             var orders = db.Orders
-                .Include(o => o.Driver)
                 .Include(o => o.OrderItems)
-                .Where(o => o.CustomerId == customerId)
+                .Include(o => o.Driver)
+                .Where(o => o.CustomerId == currentId)
                 .OrderByDescending(o => o.OrderedOn)
                 .ToList();
 
+            var pickupOrders = db.PickupOrders
+                .Include(p => p.PickupBranch)
+                .Where(p => orders.Select(o => o.OrderId).Contains(p.OrderId))
+                .ToList();
+            ViewBag.PickupOrders = pickupOrders;
+
             return View(orders);
         }
+
 
         public IActionResult SetReturnToCart()
         {
@@ -818,5 +826,105 @@ namespace CM_Project.Controllers
             return Ok();
         }
 
+
+        //==========================================RETURN / REFUND===========================
+
+        public IActionResult ReturnPolicy() => View();
+
+        public IActionResult PastOrders()
+        {
+            int? customerId = HttpContext.Session.GetInt32("UserId");
+            if (customerId == null) return RedirectToAction("LogIn", "Authentication");
+
+            DeleteExpiredOrders(customerId.Value);
+
+            var cutoff = DateTime.Now.AddDays(-7);
+
+            var items = db.OrderItems
+                .Include(i => i.Order)
+                .Include(i => i.Products)
+                    .ThenInclude(p => p.ProductPictures)
+                .Where(i => i.Order.CustomerId == customerId
+                         && i.Order.DeliveredOn.HasValue
+                         && i.RefundOrExchange == GetRefund.No_Requests
+                         && i.ReturnPStatus == ReturnProduct.No_Request
+                         && i.Order.DeliveredOn.Value >= cutoff)
+                .OrderByDescending(i => i.Order.DeliveredOn)
+                .ToList();
+
+            return View(items);
+        }
+
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public IActionResult SubmitItemReturn(int orderItemId, string returnReason,
+                                               int quantityReturned, GetRefund refundOrExchange)
+        {
+            int? customerId = HttpContext.Session.GetInt32("UserId");
+            if (customerId == null) return RedirectToAction("LogIn", "Authentication");
+
+            var item = db.OrderItems
+                .Include(i => i.Order)
+                .FirstOrDefault(i => i.OrderItemId == orderItemId
+                                  && i.Order.CustomerId == customerId);
+
+            if (item == null) return NotFound();
+
+            item.RetunReason = returnReason;
+            item.QuantityReturned = quantityReturned;
+            item.ReturnPStatus = ReturnProduct.Return_Pending;
+            item.RefundOrExchange = refundOrExchange;
+
+            db.SaveChanges();
+
+            string choiceLabel = refundOrExchange == GetRefund.Refund ? "refund" : "exchange";
+            TempData["Message"] = $"Return for '{item.ProdName}' submitted — {choiceLabel} requested.";
+            return RedirectToAction("PastOrders");
+        }
+
+
+        [AuthorizeUser]
+        [HttpGet]
+        public IActionResult MyReturns()
+        {
+            int? customerId = HttpContext.Session.GetInt32("UserId");
+            if (customerId == null) return RedirectToAction("LogIn", "Authentication");
+
+            var returnedItems = db.OrderItems
+                .Include(oi => oi.Order)
+                .Include(oi => oi.DeliveryDriver)
+                .Where(oi => oi.Order.CustomerId == customerId
+                          && oi.ReturnPStatus != ReturnProduct.No_Request)
+                .OrderByDescending(oi => oi.Order.OrderedOn)
+                .ToList();
+
+            return View(returnedItems);
+        }
+
+
+        [AuthorizeUser]
+        [HttpGet]
+        public IActionResult TrackReturn(int id)
+        {
+            int? customerId = HttpContext.Session.GetInt32("UserId");
+            if (customerId == null) return RedirectToAction("LogIn", "Authentication");
+
+            var item = db.OrderItems
+                .Include(oi => oi.Order)
+                .Include(oi => oi.DeliveryDriver)
+                .Include(oi => oi.Products)
+                .FirstOrDefault(oi => oi.OrderItemId == id
+                                   && oi.Order.CustomerId == customerId
+                                   && oi.ReturnPStatus != ReturnProduct.No_Request);
+
+            if (item == null)
+            {
+                ViewBag.Message = "Return not found or does not belong to you.";
+                return View((CM_Project.Models.OrderItem)null);
+            }
+
+            return View(item);
+        }
     }
 }

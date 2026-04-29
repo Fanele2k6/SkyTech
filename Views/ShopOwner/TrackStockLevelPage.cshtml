@@ -4,7 +4,8 @@
     ViewBag.Title = "Track Stock";
     Layout = "~/Views/Shared/_MinimalLayout.cshtml";
     ViewBag.ActivePage = "Stock";
-
+    bool restricted = ViewBag.ApplicationStatus == ApplicationStat.Pending
+                  || ViewBag.ApplicationStatus == ApplicationStat.Rejected;
     int totalProds = Model.Count();
     int inStock = Model.Count(p => p.Status == ProdStatus.In_Stock);
     int lowStock = Model.Count(p => p.Status == ProdStatus.Low_stock);
@@ -319,10 +320,32 @@
             }
     </style>
 }
+@section Scripts {
+   
+    <script>
+        // Toggle dropdown for Received Orders
+        const dropdownToggle = document.getElementById('ordersDropdown');
+        const dropdownMenu = document.getElementById('ordersSubmenu');
 
+        if (dropdownToggle && dropdownMenu) {
+            dropdownToggle.addEventListener('click', function(e) {
+                e.preventDefault();
+                this.classList.toggle('open');
+                dropdownMenu.classList.toggle('show');
+            });
+
+            // Keep submenu open if a sub-link is active
+            if (window.location.href.includes('DeliveryOrders') || window.location.href.includes('PickupOrders')) {
+                dropdownToggle.classList.add('open');
+                dropdownMenu.classList.add('show');
+            }
+        }
+    </script>
+
+}
 <div class="so-wrap">
 
-    <!-- ── SIDEBAR ── -->
+    <!-- SIDEBAR -->
     <aside class="so-sidebar">
         <div class="so-brand">
             <div class="so-brand-icon"><i class="fas fa-store"></i></div>
@@ -333,16 +356,40 @@
         </div>
         <nav class="so-nav">
             <div class="so-nav-label">OVERVIEW</div>
-            <a href="@Url.Action("ShopOwnerDash","ShopOwner")" class="so-link"><i class="fas fa-grid-2"></i><span>Dashboard</span></a>
+
+            <a href="@Url.Action("ShopOwnerDash", "ShopOwner")" class="so-link active"><i class="fas fa-grid-2"></i><span>Dashboard</span></a>
+
             <div class="so-nav-label" style="margin-top:1rem">INVENTORY</div>
-            <a href="@Url.Action("AddProductPage","ShopOwner")" class="so-link"><i class="fas fa-circle-plus"></i><span>Add Product</span></a>
-            <a href="@Url.Action("TrackStockLevelPage","ShopOwner")" class="so-link active"><i class="fas fa-boxes-stacked"></i><span>Track Stock</span></a>
+            <a href="@Url.Action("AddProductPage", "ShopOwner")" class="so-link @(restricted ? "disabled-link" : "")"><i class="fas fa-circle-plus"></i><span>Add Product</span></a>
+            <a href="@Url.Action("TrackStockLevelPage", "ShopOwner")" class="so-link @(restricted ? "disabled-link" : "")"><i class="fas fa-boxes-stacked"></i><span>Track Stock</span></a>
+
             <div class="so-nav-label" style="margin-top:1rem">ORDERS & STAFF</div>
-            <a href="@Url.Action("ReceivedOrders","ShopOwner")" class="so-link"><i class="fas fa-bag-shopping"></i><span>Received Orders</span></a>
-            <a href="@Url.Action("StaffReg","ShopOwner")" class="so-link"><i class="fas fa-user-plus"></i><span>Register Staff</span></a>
-            <a href="@Url.Action("StaffMembers","ShopOwner")" class="so-link"><i class="fas fa-users"></i><span>Staff Members</span></a>
+
+            <!-- Received Orders with submenu -->
+            <div class="nav-item-dropdown">
+                <a href="#" class="so-link so-dropdown-toggle @(restricted ? "disabled-link" : "")" id="ordersDropdown">
+                    <i class="fas fa-bag-shopping"></i>
+                    <span>Received Orders</span>
+                    <i class="fas fa-chevron-down dropdown-icon"></i>
+                </a>
+                <div class="so-dropdown-menu" id="ordersSubmenu">
+                    <a href="@Url.Action("DeliveryOrders", "ShopOwner")" class="so-link so-sub-link @(restricted ? "disabled-link" : "")">
+                        <i class="fas fa-truck"></i> Delivery Orders
+                    </a>
+                    <a href="@Url.Action("PickupOrders", "ShopOwner")" class="so-link so-sub-link @(restricted ? "disabled-link" : "")">
+                        <i class="fas fa-store"></i> In-Store Collection
+                    </a>
+                </div>
+            </div>
+
+            <a href="@Url.Action("StaffReg", "ShopOwner")" class="so-link @(restricted ? "disabled-link" : "")"><i class="fas fa-user-plus"></i><span>Register Staff</span></a>
+            <a href="@Url.Action("StaffMembers", "ShopOwner")" class="so-link @(restricted ? "disabled-link" : "")"><i class="fas fa-users"></i><span>Staff Members</span></a>
+
+            <a href="@Url.Action("ReturnedItems","ShopOwner")" class="so-link @(restricted?"disabled-link":"")"><i class="fas fa-bag-shopping"></i><span>Returned Items</span></a>
+            <a href="@Url.Action("StaffReg","ShopOwner")" class="so-link @(restricted?"disabled-link":"")"><i class="fas fa-user-plus"></i><span>Register Staff</span></a>
+            <a href="@Url.Action("StaffMembers","ShopOwner")" class="so-link @(restricted?"disabled-link":"")"><i class="fas fa-users"></i><span>Staff Members</span></a>
             <div class="so-nav-label" style="margin-top:1rem">ACCOUNT</div>
-            <a href="@Url.Action("OwnerProfile","ShopOwner")" class="so-link"><i class="fas fa-circle-user"></i><span>Profile</span></a>
+            <a href="@Url.Action("OwnerProfile", "ShopOwner")" class="so-link"><i class="fas fa-circle-user"></i><span>Profile</span></a>
         </nav>
         <div class="so-sidebar-foot">
             <div class="so-foot-avatar"><i class="fas fa-store"></i></div>
@@ -350,7 +397,23 @@
                 <div class="so-foot-role">SkyTech</div>
             </div>
         </div>
+
+        <!--Logout button-->
+        <div style="padding:.8rem 1.2rem">
+            @using (Html.BeginForm("Logout", "Authentication", FormMethod.Post))
+            {
+                @Html.AntiForgeryToken()
+                <button type="submit" style="width:100%;background:rgba(239,68,68,.08);
+                    border:1.5px solid rgba(239,68,68,.25);border-radius:8px;
+                    padding:.6rem 1rem;cursor:pointer;color:#ef4444;
+                    font-weight:600;font-size:.85rem;display:flex;
+                    align-items:center;gap:.5rem;justify-content:center">
+                    <i class="fas fa-right-from-bracket"></i> Log Out
+                </button>
+            }
+        </div>
     </aside>
+
 
     <!-- ── MAIN ── -->
     <main class="so-main">
