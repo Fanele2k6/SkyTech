@@ -1,5 +1,6 @@
 ﻿using CM_Project.Models;
 using CM_Project.Models.Documents;
+using SkyTech.Models;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -163,5 +164,28 @@ namespace CM_Project.ViewModels
       public IFormFile ProductPicture { get; set; }
 
   
+    }
+
+
+    public class ProposeItemViewModel()
+    {
+        [Required]
+        public string ProdName { get; set; }
+
+        [Required]
+        public SelectCategory ProdCategory { get; set; }
+
+        [Required]
+        public SelectCondition ProdCondition { get; set; }
+
+        [Required]
+        [StringLength(500)]
+        public string ProdDescription { get; set; }
+        public virtual ICollection<ReceiptPic> ReceiptPics { get; set; } = new List<ReceiptPic>();
+        public virtual ICollection<ProposedProdPic> ProposedProdPics { get; set; } = new List<ProposedProdPic>();
+
+        // File uploads
+        public List<IFormFile> ReceiptPic { get; set; }
+        public List<IFormFile> ProposedProdPic { get; set; }
     }
 }

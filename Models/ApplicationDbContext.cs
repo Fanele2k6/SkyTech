@@ -39,6 +39,13 @@ namespace CM_Project.Models
         //New tables for pickup
         public DbSet<PickupOrder> PickupOrders { get; set; }
         public DbSet<InterBranchTransfer> InterBranchTransfers { get; set; }
+        /// <summary>
+        /// 
+        /// </summary>
+        public DbSet<ProposeItem> ProposeItems { get; set; }
+        public DbSet<AcceptOffer> AcceptOffers { get; set; }
+        public DbSet<ReceiptPic> ReceiptPics { get; set; }
+        public DbSet<ProposedProdPic> ProposedProdPic { get; set; }
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

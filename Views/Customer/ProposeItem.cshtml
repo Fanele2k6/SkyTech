@@ -1,0 +1,54 @@
+﻿@using SkyTech.Models
+@model CM_Project.ViewModels.ProposeItemViewModel
+
+@{
+    ViewData["Title"] = "ProposeItem";
+}
+
+<form asp-action="ProposeItem" asp-controller="Customer" method="post" enctype="multipart/form-data">
+
+    <div class="form-group">
+        <label asp-for="ProdName"></label>
+        <input asp-for="ProdName" class="form-control" />
+        <span asp-validation-for="ProdName" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="ProdCategory"></label>
+        <select asp-for="ProdCategory" class="form-control"
+                asp-items="Html.GetEnumSelectList<SelectCategory>()">
+        </select>
+        <span asp-validation-for="ProdCategory" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="ProdCondition"></label>
+        <select asp-for="ProdCondition" class="form-control"
+                asp-items="Html.GetEnumSelectList<SelectCondition>()">
+        </select>
+        <span asp-validation-for="ProdCondition" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="ProdDescription"></label>
+        <textarea asp-for="ProdDescription" class="form-control"></textarea>
+        <span asp-validation-for="ProdDescription" class="text-danger"></span>
+    </div>
+
+    <!-- ✅ Receipt Images -->
+    <div class="form-group">
+        <label>Upload Receipt Images</label>
+        <input type="file" name="ReceiptPic" multiple class="form-control" />
+    </div>
+
+    <!-- ✅ Product Images -->
+    <div class="form-group">
+        <label>Upload Product Images</label>
+        <input type="file" name="ProposedProdPic" multiple class="form-control" />
+    </div>
+
+    <br />
+
+    <button type="submit" class="btn btn-primary">Submit Proposal</button>
+
+</form>

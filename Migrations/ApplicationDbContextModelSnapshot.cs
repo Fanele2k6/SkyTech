@@ -421,6 +421,82 @@ namespace SkyTech.Migrations
                     b.ToTable("ProductPicture");
                 });
 
+            modelBuilder.Entity("CM_Project.Models.Documents.ProposedProdPic", b =>
+                {
+                    b.Property<int>("ProposedId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ProposedId"));
+
+                    b.Property<int>("CustomerId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("FilePath")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("FileType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("ProposeItemPropItemId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("SavedOn")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("ProposedId");
+
+                    b.HasIndex("CustomerId");
+
+                    b.HasIndex("ProposeItemPropItemId");
+
+                    b.ToTable("ProposedProdPic");
+                });
+
+            modelBuilder.Entity("CM_Project.Models.Documents.ReceiptPic", b =>
+                {
+                    b.Property<int>("ReceiptId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ReceiptId"));
+
+                    b.Property<int>("CustomerId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("FilePath")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("FileType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("ProposeItemPropItemId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("SavedOn")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("ReceiptId");
+
+                    b.HasIndex("CustomerId");
+
+                    b.HasIndex("ProposeItemPropItemId");
+
+                    b.ToTable("ReceiptPics");
+                });
+
             modelBuilder.Entity("CM_Project.Models.Order", b =>
                 {
                     b.Property<int>("OrderId")
@@ -707,6 +783,40 @@ namespace SkyTech.Migrations
                     b.ToTable("SystemAdmins");
                 });
 
+            modelBuilder.Entity("SkyTech.Models.AcceptOffer", b =>
+                {
+                    b.Property<int>("OfferId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("OfferId"));
+
+                    b.Property<string>("AccountNumber")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Address")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("BankName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PhoneNumber")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("PropItemId")
+                        .HasColumnType("int");
+
+                    b.HasKey("OfferId");
+
+                    b.HasIndex("PropItemId");
+
+                    b.ToTable("AcceptOffers");
+                });
+
             modelBuilder.Entity("SkyTech.Models.InterBranchTransfer", b =>
                 {
                     b.Property<int>("TransferId")
@@ -794,6 +904,39 @@ namespace SkyTech.Migrations
                     b.HasIndex("PickupBranchId");
 
                     b.ToTable("PickupOrders");
+                });
+
+            modelBuilder.Entity("SkyTech.Models.ProposeItem", b =>
+                {
+                    b.Property<int>("PropItemId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("PropItemId"));
+
+                    b.Property<int>("ProdCategory")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ProdCondition")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ProdDescription")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ProdName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("ProdStatus")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("SavedOn")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("PropItemId");
+
+                    b.ToTable("ProposeItems");
                 });
 
             modelBuilder.Entity("CM_Project.Models.AddProduct", b =>
@@ -896,6 +1039,36 @@ namespace SkyTech.Migrations
                     b.Navigation("ShopOwner");
                 });
 
+            modelBuilder.Entity("CM_Project.Models.Documents.ProposedProdPic", b =>
+                {
+                    b.HasOne("CM_Project.Models.Customer", "Customer")
+                        .WithMany()
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("SkyTech.Models.ProposeItem", null)
+                        .WithMany("ProposedProdPics")
+                        .HasForeignKey("ProposeItemPropItemId");
+
+                    b.Navigation("Customer");
+                });
+
+            modelBuilder.Entity("CM_Project.Models.Documents.ReceiptPic", b =>
+                {
+                    b.HasOne("CM_Project.Models.Customer", "Customer")
+                        .WithMany()
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("SkyTech.Models.ProposeItem", null)
+                        .WithMany("ReceiptPics")
+                        .HasForeignKey("ProposeItemPropItemId");
+
+                    b.Navigation("Customer");
+                });
+
             modelBuilder.Entity("CM_Project.Models.Order", b =>
                 {
                     b.HasOne("CM_Project.Models.Customer", "Customers")
@@ -955,6 +1128,17 @@ namespace SkyTech.Migrations
                         .IsRequired();
 
                     b.Navigation("Owner");
+                });
+
+            modelBuilder.Entity("SkyTech.Models.AcceptOffer", b =>
+                {
+                    b.HasOne("SkyTech.Models.ProposeItem", "ProposeItem")
+                        .WithMany()
+                        .HasForeignKey("PropItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ProposeItem");
                 });
 
             modelBuilder.Entity("SkyTech.Models.InterBranchTransfer", b =>
@@ -1039,6 +1223,13 @@ namespace SkyTech.Migrations
                     b.Navigation("BussRegCertificates");
 
                     b.Navigation("OwnerIdentityBooks");
+                });
+
+            modelBuilder.Entity("SkyTech.Models.ProposeItem", b =>
+                {
+                    b.Navigation("ProposedProdPics");
+
+                    b.Navigation("ReceiptPics");
                 });
 #pragma warning restore 612, 618
         }

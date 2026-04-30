@@ -104,6 +104,12 @@
                             </a>
                         </div>
 
+                        <div class="profile-row">
+                            <a href="@Url.Action("ProposeItem","Customer")" class="pv">
+                               Sell Item
+                            </a>
+                        </div>
+
                         <!--Logout button-->
                         <div class="profile-row" style="margin-top:.8rem">
                             @using (Html.BeginForm("Logout", "Authentication", FormMethod.Post))

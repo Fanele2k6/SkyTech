@@ -29,6 +29,7 @@ namespace SkyTech.Models
         public string ProdDescription { get; set; }
 
         public virtual ICollection<ReceiptPic> ReceiptPics { get; set; } = new List<ReceiptPic>();
+        public virtual ICollection<ProposedProdPic> ProposedProdPics { get; set; } = new List<ProposedProdPic>();
 
         //Proposed product pictures
 
@@ -36,8 +37,6 @@ namespace SkyTech.Models
 
         public Status ProdStatus { get; set; }
 
-
-
-
+        public DateTime SavedOn { get; set; }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace SkyTech.Models
 {
@@ -10,9 +11,13 @@ namespace SkyTech.Models
     }
     public class AcceptOffer
     {
-        // Notify them to bring their ID
+        //Notify them to bring their ID
         [Key]
         public int OfferId { get; set; }
+        public int PropItemId { get; set; }
+
+        [ForeignKey("PropItemId")]
+        public virtual ProposeItem ProposeItem { get; set; }
 
         [Required]
         public string PhoneNumber { get; set; }
@@ -26,9 +31,7 @@ namespace SkyTech.Models
         [Required]
         public string AccountNumber { get; set; }
 
-
-
-
+       
 
     }
 }

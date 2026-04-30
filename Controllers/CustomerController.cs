@@ -1,5 +1,7 @@
 ﻿using CM_Project.Models;
+using CM_Project.Models.Documents;
 using CM_Project.Services;
+using CM_Project.ViewModels;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -926,5 +928,87 @@ namespace CM_Project.Controllers
 
             return View(item);
         }
+
+        [AuthorizeUser]
+        public IActionResult ProposeItem() => View();
+
+        [HttpPost]
+        [AuthorizeUser]
+        public async Task <IActionResult> ProposeItem(ProposeItemViewModel vm)
+        {
+            if (!ModelState.IsValid) return View("ProposeItem");
+
+           
+            int currentId = HttpContext.Session.GetInt32("UserId").Value;
+
+            var model = new ProposeItem
+            {
+                ProdName = vm.ProdName,
+                ProdCategory = vm.ProdCategory,
+                ProdCondition = vm.ProdCondition,
+                ProdDescription = vm.ProdDescription,
+                ProdStatus = Status.Pending,
+                SavedOn = DateTime.Now
+            };
+
+            // Save receipt images
+            if (vm.ReceiptPic != null)
+            {
+                foreach (var file in vm.ReceiptPic)
+                {
+                    var fileName = Path.GetFileName(file.FileName);
+                    var path = Path.Combine("wwwroot/uploads/receipts", fileName);
+
+                    using (var stream = new FileStream(path, FileMode.Create))
+                    {
+                        await file.CopyToAsync(stream);
+                    }
+
+                    model.ReceiptPics.Add(new ReceiptPic
+                    {
+                        CustomerId = currentId,
+                        FileName = fileName,
+                        FilePath = path,
+                        FileType = file.ContentType,
+                        SavedOn = DateTime.Now
+               
+                    });
+                }
+            }
+
+            // Save product images
+            if (vm.ProposedProdPic != null)
+            {
+                foreach (var file in vm.ProposedProdPic)
+                {
+                    var fileName = Path.GetFileName(file.FileName);
+                    var path = Path.Combine("wwwroot/uploads/products", fileName);
+
+                    using (var stream = new FileStream(path, FileMode.Create))
+                    {
+                        await file.CopyToAsync(stream);
+                    }
+
+                    model.ProposedProdPics.Add(new ProposedProdPic
+                    {
+                        CustomerId = currentId,
+
+                        FileName = fileName,
+                        FilePath = path,
+                        FileType = file.ContentType,
+                        SavedOn = DateTime.Now
+                    });
+                }
+            }
+
+            db.ProposeItems.Add(model);
+            await db.SaveChangesAsync();
+
+            return RedirectToAction("ProposeItem");
+
+        }
     }
+
+
+
 }

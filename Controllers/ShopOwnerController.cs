@@ -291,44 +291,6 @@ namespace CM_Project.Controllers
             return View(db.shopowners.Where(p => p.OwnerId == currentId).ToList());
         }
 
-
-        //public IActionResult ReceivedOrders()
-        //{
-        //    int currentId = HttpContext.Session.GetInt32("UserId")!.Value;
-
-        //    // Normal orders belonging to this branch
-        //    var orders = db.Orders
-        //        .Include(o => o.OrderItems)
-        //            .ThenInclude(i => i.Products)
-        //        .Include(o => o.Driver)
-        //        .Where(o => o.OwnerId == currentId)
-        //        .OrderByDescending(o => o.OrderedOn)
-        //        .ToList();
-
-        //    // Transfers OUT — items from this branch going to another pickup branch
-        //    var transfersOut = db.InterBranchTransfers
-        //        .Include(t => t.OrderItem)
-        //            .ThenInclude(oi => oi.Order)
-        //                .ThenInclude(o => o.Customers)
-        //        .Include(t => t.OrderItem)
-        //            .ThenInclude(oi => oi.Products)
-        //        .Include(t => t.TargetBranch)
-        //        .Include(t => t.Driver)
-        //        .Where(t => t.SourceBranchId == currentId
-        //                 && t.TransferStatus != ItemTransferStatus.DeliveredToPickupBranch)
-        //        .OrderBy(t => t.ScheduledTransferDate)
-        //        .ToList();
-
-        //    // Available drivers for transfer assignment
-        //    ViewBag.AvailableDrivers = db.DeliveryDrivers
-        //        .Where(d => d.IsAvailable && d.ApplicationStatus == Status.Approved)
-        //        .ToList();
-
-        //    ViewBag.TransfersOut = transfersOut;
-
-        //    return View(orders);
-        //}
-
         //Separating orders
         // DELIVERY ORDERS - Shows orders delivered to this branch AND items that need to be transported OUT
         public IActionResult DeliveryOrders()
@@ -632,65 +594,7 @@ namespace CM_Project.Controllers
             return RedirectToAction("PickupBranchOrders");
         }
 
-        //===================================Return Actions======================================
-        //public IActionResult ReturnedItems()
-        //{
-        //    int currentId = HttpContext.Session.GetInt32("UserId")!.Value;
-
-        //    var pendingReturns = db.OrderItems
-        //        .Include(i => i.Order)
-        //            .ThenInclude(o => o.Customers)
-        //        .Include(i => i.Products)
-        //            .ThenInclude(p => p.ProductPictures)
-        //        .Where(i => i.ReturnPStatus == ReturnProduct.Return_Pending
-        //                 && i.Order.OwnerId == currentId)   // ← only this shop's orders
-        //        .OrderByDescending(i => i.Order.DeliveredOn)
-        //        .ToList();
-
-        //    return View(pendingReturns);
-        //}
-
-        //// Approve the return
-        //[HttpPost]
-        //[ValidateAntiForgeryToken]
-        //public IActionResult ApproveReturn(int orderItemId)
-        //{
-        //    int currentId = HttpContext.Session.GetInt32("UserId")!.Value;
-
-        //    var item = db.OrderItems
-        //        .Include(i => i.Order)
-        //        .FirstOrDefault(i => i.OrderItemId == orderItemId
-        //                          && i.Order.OwnerId == currentId);
-
-        //    if (item == null) return NotFound();
-
-        //    // Find an available, approved driver
-        //    var availableDriver = db.DeliveryDrivers
-        //        .FirstOrDefault(d => d.IsAvailable == true
-        //                          && d.ApplicationStatus == Status.Approved);
-
-        //    if (availableDriver == null)
-        //    {
-        //        TempData["Error"] = "No drivers are currently available. Please try again later.";
-        //        return RedirectToAction("ReturnedItems");
-        //    }
-
-        //    // Assign the driver to the order item
-        //    item.ReturnPStatus = ReturnProduct.Collection_Assigned;
-        //    item.DriverId = availableDriver.DriverId;
-        //    item.IsAssingedForCollection = true;
-        //    item.CollectionDate = DateTime.Now.AddDays(1);
-        //    item.NewDeliveryDate = DateTime.Now.AddDays(4);
-
-        //    // Mark the driver as unavailable
-        //    availableDriver.IsAvailable = false;
-
-        //    db.SaveChanges();
-
-        //    TempData["Message"] = $"Return for '{item.ProdName}' approved and assigned to driver {availableDriver.DriverName} {availableDriver.DriverSurname}.";
-        //    return RedirectToAction("ReturnedItems");
-        //}
-
+       
         // Shows ALL active returns (not just pending)
         public IActionResult ReturnedItems()
         {
@@ -815,6 +719,10 @@ namespace CM_Project.Controllers
         }
 
         public IActionResult AssignCollection() => View();
+
+
+       
+
 
 
     }
