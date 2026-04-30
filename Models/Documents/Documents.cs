@@ -85,4 +85,19 @@ namespace CM_Project.Models.Documents
         public DateTime SavedOn { get; set; }
     }
 
+    //Picture of the receipt
+    public class ReceiptPic
+    {
+        [Key]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+        public int ReceiptId { get; set; }
+        public int CustomerId { get; set; }
+        [ForeignKey("CustomerId")] //forcing the compiler to consider this as foreign key
+        public virtual Customer ShoCustomer { get; set; }
+        public string FilePath { get; set; }
+        public string FileName { get; set; }
+        public string FileType { get; set; }
+        public DateTime SavedOn { get; set; }
+    }
+
 }
