@@ -1,6 +1,7 @@
 ﻿using CM_Project.Models;
 using CM_Project.Models.Documents;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace SkyTech.Models
 {
@@ -15,6 +16,15 @@ namespace SkyTech.Models
     {
         [Key]
         public int PropItemId { get; set; }
+
+        public int CustomerId { get; set; }
+
+        [ForeignKey("CustomerId")]
+        public virtual Customer Customer { get; set; }
+
+        public int? AssignedDriverId { get; set; }
+        [ForeignKey("AssignedDriverId")]
+        public virtual DeliveryDriver AssignedDriver { get; set; }
 
         [Required]
         public string ProdName { get; set; }
@@ -36,7 +46,13 @@ namespace SkyTech.Models
         // You must add serial number in pictures that are uploaded
 
         public Status ProdStatus { get; set; }
+        public double AmountProposed { get; set; }
 
         public DateTime SavedOn { get; set; }
+
+
+        public DateTime? CollectionDate { get; set; }   // ← add
+
+        public virtual ProposalCheckout Checkout { get; set; }
     }
 }

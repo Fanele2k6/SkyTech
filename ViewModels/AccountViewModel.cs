@@ -188,4 +188,35 @@ namespace CM_Project.ViewModels
         public List<IFormFile> ReceiptPic { get; set; }
         public List<IFormFile> ProposedProdPic { get; set; }
     }
+
+    public class ProposalCheckoutViewModel
+    {
+        public int PropItemId { get; set; }
+        public string ProdName { get; set; }        // read-only display
+        public double AmountProposed { get; set; }  // read-only display
+
+        [Required(ErrorMessage = "Phone number is required")]
+        [Phone(ErrorMessage = "Enter a valid phone number")]
+        public string PhoneNumber { get; set; }
+
+        [Required(ErrorMessage = "Street address is required")]
+        public string Address { get; set; }
+
+        [Required(ErrorMessage = "Please select a delivery option")]
+        public Delivery SelectDelivery { get; set; }  // ← add this
+
+        [Required(ErrorMessage = "Bank name is required")]
+        public string BankName { get; set; }
+
+        [Required(ErrorMessage = "Account holder name is required")]
+        public string AccountHolderName { get; set; }
+
+        [Required(ErrorMessage = "Account number is required")]
+        public string AccountNumber { get; set; }
+
+        [Required(ErrorMessage = "Branch code is required")]
+        public string BranchCode { get; set; }
+
+        public AccountType AccountType { get; set; }
+    }
 }

@@ -6,24 +6,23 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace SkyTech.Migrations
 {
     /// <inheritdoc />
-    public partial class NewProperties : Migration
+    public partial class AddCollectionFields : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AddColumn<DateTime>(
-                name: "SavedOn",
+                name: "CollectionDate",
                 table: "ProposeItems",
                 type: "datetime2",
-                nullable: false,
-                defaultValue: new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified));
+                nullable: true);
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropColumn(
-                name: "SavedOn",
+                name: "CollectionDate",
                 table: "ProposeItems");
         }
     }

@@ -1,0 +1,137 @@
+﻿@using SkyTech.Models
+@using CM_Project.ViewModels
+@model CM_Project.ViewModels.ProposalCheckoutViewModel
+
+@{
+    ViewData["Title"] = "Complete Your Details";
+    Layout = "~/Views/Shared/_MinimalLayout.cshtml";
+
+}
+
+<div class="container mt-4" style="max-width:650px;">
+
+    <h3>Complete Your Details</h3>
+    <p class="text-muted">Please provide your details so we can process your payout.</p>
+
+    <!-- Summary card -->
+    <div class="alert alert-success mb-4">
+        <strong>Item:</strong> @Model.ProdName &nbsp;|&nbsp;
+        <strong>Offered Amount:</strong> R @Model.AmountProposed.ToString("F2")
+    </div>
+
+    <form asp-action="ProposalCheckout" asp-controller="Customer" method="post">
+
+        <input type="hidden" asp-for="PropItemId" />
+        <input type="hidden" asp-for="ProdName" />
+        <input type="hidden" asp-for="AmountProposed" />
+
+        <!-- ── Contact ── -->
+        <h5 class="mt-3">Contact</h5>
+        <hr />
+
+        <div class="form-group mb-3">
+            <label asp-for="PhoneNumber">Phone Number</label>
+            <input asp-for="PhoneNumber" class="form-control" placeholder="e.g. 0821234567" />
+            <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+        </div>
+
+        <!-- ── Delivery Option ── -->
+        <h5 class="mt-3">Delivery Option</h5>
+        <hr />
+
+        <div class="form-group mb-3">
+            <label asp-for="SelectDelivery">How will the item be handed over?</label>
+
+            <div class="form-check mt-2">
+                <input class="form-check-input" type="radio"
+                       name="SelectDelivery" id="customerWillBring"
+                       value="1"
+                       onchange="toggleAddress(false)"
+                @(Model.SelectDelivery == Delivery.Customer_Will_Bring ? "checked" : "") />
+                <label class="form-check-label" for="customerWillBring">
+                    🚶 I will bring the item to the shop
+                </label>
+            </div>
+
+            <div class="form-check mt-1">
+                <input class="form-check-input" type="radio"
+                       name="SelectDelivery" id="shopWillCollect"
+                       value="0"
+                       onchange="toggleAddress(true)"
+                @(Model.SelectDelivery == Delivery.Shop_Will_Collect ? "checked" : "") />
+                <label class="form-check-label" for="shopWillCollect">
+                    🚚 Shop must collect from me
+                </label>
+            </div>
+
+            <span asp-validation-for="SelectDelivery" class="text-danger"></span>
+        </div>
+
+
+        <!-- ── Address ── -->
+        <h5 class="mt-3">Address</h5>
+        <hr />
+
+        <div class="form-group mb-3">
+            <label asp-for="Address">Street Address</label>
+            <input asp-for="Address" class="form-control" placeholder="e.g. 12 Main Road" />
+            <span asp-validation-for="Address" class="text-danger"></span>
+        </div>
+
+        <!-- ── Banking Details ── -->
+        <h5 class="mt-3">Banking Details</h5>
+        <hr />
+
+        <div class="form-group mb-3">
+            <label asp-for="BankName">Bank Name</label>
+            <select asp-for="BankName" class="form-control">
+                <option value="">-- Select Bank --</option>
+                <option>ABSA</option>
+                <option>Standard Bank</option>
+                <option>FNB</option>
+                <option>Nedbank</option>
+                <option>Capitec</option>
+                <option>African Bank</option>
+                <option>Investec</option>
+            </select>
+            <span asp-validation-for="BankName" class="text-danger"></span>
+        </div>
+
+        <div class="form-group mb-3">
+            <label asp-for="AccountHolderName">Account Holder Name</label>
+            <input asp-for="AccountHolderName" class="form-control" placeholder="Full name as on bank account" />
+            <span asp-validation-for="AccountHolderName" class="text-danger"></span>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6 form-group mb-3">
+                <label asp-for="AccountNumber">Account Number</label>
+                <input asp-for="AccountNumber" class="form-control" placeholder="e.g. 1234567890" />
+                <span asp-validation-for="AccountNumber" class="text-danger"></span>
+            </div>
+            <div class="col-md-6 form-group mb-3">
+                <label asp-for="BranchCode">Branch Code</label>
+                <input asp-for="BranchCode" class="form-control" placeholder="e.g. 632005" />
+                <span asp-validation-for="BranchCode" class="text-danger"></span>
+            </div>
+        </div>
+
+        <div class="form-group mb-4">
+            <label asp-for="AccountType">Account Type</label>
+            <select asp-for="AccountType" class="form-control"
+                    asp-items="Html.GetEnumSelectList<AccountType>()">
+            </select>
+            <span asp-validation-for="AccountType" class="text-danger"></span>
+        </div>
+
+        <button type="submit" class="btn btn-success w-100">Submit Details</button>
+        <a asp-action="MyProposals" class="btn btn-secondary w-100 mt-2">Back to My Proposals</a>
+
+    </form>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

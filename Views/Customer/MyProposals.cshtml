@@ -1,0 +1,196 @@
+﻿@using SkyTech.Models
+@model List<SkyTech.Models.ProposeItem>
+@{
+    Layout = "~/Views/Shared/_MinimalLayout.cshtml";
+}
+
+<h2>My Proposals</h2>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info">You have not submitted any proposals yet.</div>
+}
+else
+{
+    foreach (var item in Model)
+    {
+        string badgeClass = item.ProdStatus switch
+        {
+            Status.Pending => "badge bg-warning text-dark",
+            Status.Approved => "badge bg-primary",
+            Status.Rejected => "badge bg-danger",
+            Status.CustomerAccepted => "badge bg-success",
+            Status.CustomerDeclined => "badge bg-secondary",
+            Status.CollectionScheduled => "badge bg-info text-dark",
+            Status.PaymentMade => "badge bg-dark",
+            _ => "badge bg-light"
+        };
+
+        <div class="card mb-4 shadow-sm">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">@item.ProdName</h5>
+                <span class="@badgeClass">
+                    @item.ProdStatus.ToString().Replace("_", " ")
+                </span>
+            </div>
+
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <strong>Category:</strong> @item.ProdCategory
+                    </div>
+                    <div class="col-md-4">
+                        <strong>Condition:</strong>
+                        @item.ProdCondition.ToString().Replace("_", " ")
+                    </div>
+                    <div class="col-md-4">
+                        <strong>Submitted On:</strong>
+                        @item.SavedOn.ToString("dd MMM yyyy")
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <strong>Description:</strong>
+                    <p>@item.ProdDescription</p>
+                </div>
+
+                <!-- Offered amount -->
+                @if (item.ProdStatus == Status.Approved ||
+                                     item.ProdStatus == Status.CustomerAccepted ||
+                                     item.ProdStatus == Status.CustomerDeclined ||
+                                     item.ProdStatus == Status.CollectionScheduled ||
+                                     item.ProdStatus == Status.PaymentMade)
+                {
+                    <div class="alert alert-primary">
+                        <strong>Shop Owner's Offered Amount:</strong>
+                        R @item.AmountProposed.ToString("F2")
+                    </div>
+                }
+
+                <!-- Collection scheduled notification -->
+                @if (item.ProdStatus == Status.CollectionScheduled)
+                {
+                    <div class="alert alert-info">
+                        <strong>📅 Collection Scheduled:</strong>
+                        @(item.CollectionDate.HasValue
+                            ? item.CollectionDate.Value.ToString("dd MMM yyyy HH:mm")
+                            : "TBD")
+                        <br />
+                        <small>
+                            A driver has been assigned and will collect your item
+                            at the scheduled time.
+                        </small>
+                    </div>
+                }
+
+                <!-- Payment made notification -->
+                @if (item.ProdStatus == Status.PaymentMade)
+                {
+                    <div class="alert alert-success">
+                        ✅ Payment has been made to your account. Thank you!
+                    </div>
+                }
+
+                <!-- Receipt Images -->
+                @if (item.ReceiptPics.Any())
+                {
+                    <div class="mb-3">
+                        <strong>Receipt Images:</strong>
+                        <div class="d-flex flex-wrap gap-2 mt-1">
+                            @foreach (var pic in item.ReceiptPics)
+                            {
+                                <img src="@pic.FilePath" width="90" height="90"
+                                     style="object-fit:cover; border-radius:6px;
+                                border:1px solid #ddd;" />
+                            }
+                        </div>
+                    </div>
+                }
+
+                <!-- Product Images -->
+                @if (item.ProposedProdPics.Any())
+                {
+                    <div class="mb-3">
+                        <strong>Product Images:</strong>
+                        <div class="d-flex flex-wrap gap-2 mt-1">
+                            @foreach (var pic in item.ProposedProdPics)
+                            {
+                                <img src="@pic.FilePath" width="90" height="90"
+                                     style="object-fit:cover; border-radius:6px;
+                                border:1px solid #ddd;" />
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <!-- Action buttons -->
+            <div class="card-footer d-flex gap-2 flex-wrap">
+
+                @if (item.ProdStatus == Status.Approved)
+                {
+                    <form asp-action="CustomerAcceptOffer" asp-controller="Customer"
+                          method="post">
+                        <input type="hidden" name="id" value="@item.PropItemId" />
+                        <button type="submit" class="btn btn-success">
+                            ✅ Accept Offer (R@item.AmountProposed.ToString("F2"))
+                        </button>
+                    </form>
+
+                    <form asp-action="CustomerDeclineOffer" asp-controller="Customer"
+                          method="post">
+                        <input type="hidden" name="id" value="@item.PropItemId" />
+                        <button type="submit" class="btn btn-warning">
+                            ❌ Decline Offer
+                        </button>
+                    </form>
+                }
+
+                @if (item.ProdStatus == Status.Pending ||
+                                     item.ProdStatus == Status.CustomerDeclined)
+                {
+                    <form asp-action="CancelProposal" asp-controller="Customer"
+                          method="post"
+                          onsubmit="return confirm('Cancel this proposal?');">
+                        <input type="hidden" name="id" value="@item.PropItemId" />
+                        <button type="submit" class="btn btn-danger">
+                            🗑 Cancel Proposal
+                        </button>
+                    </form>
+                }
+
+                @if (item.ProdStatus == Status.Rejected)
+                {
+                    <span class="text-danger fw-bold">
+                        This proposal was rejected by the shop.
+                    </span>
+                }
+
+                @if (item.ProdStatus == Status.CustomerAccepted)
+                {
+                    <span class="text-success fw-bold">
+                        ✅ You accepted this offer. Please wait for collection scheduling.
+                    </span>
+                }
+
+                @if (item.ProdStatus == Status.CollectionScheduled)
+                {
+                    <span class="text-info fw-bold">
+                        🚗 A driver is on the way on
+                        @(item.CollectionDate.HasValue
+                            ? item.CollectionDate.Value.ToString("dd MMM yyyy HH:mm")
+                            : "the scheduled date").
+                    </span>
+                }
+
+                @if (item.ProdStatus == Status.PaymentMade)
+                {
+                    <span class="text-success fw-bold">
+                        💳 Payment complete. Thank you for doing business with us!
+                    </span>
+                }
+
+            </div>
+        </div>
+    }
+}

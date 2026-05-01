@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace SkyTech.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260430214805_NewProperties")]
-    partial class NewProperties
+    [Migration("20260501185909_Migrations")]
+    partial class Migrations
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -909,6 +909,60 @@ namespace SkyTech.Migrations
                     b.ToTable("PickupOrders");
                 });
 
+            modelBuilder.Entity("SkyTech.Models.ProposalCheckout", b =>
+                {
+                    b.Property<int>("CheckoutId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("CheckoutId"));
+
+                    b.Property<string>("AccountHolderName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("AccountNumber")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("AccountType")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Address")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("BankName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("BranchCode")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("CustomerId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("PhoneNumber")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("PropItemId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("SubmittedOn")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("CheckoutId");
+
+                    b.HasIndex("CustomerId");
+
+                    b.HasIndex("PropItemId")
+                        .IsUnique();
+
+                    b.ToTable("ProposalCheckouts");
+                });
+
             modelBuilder.Entity("SkyTech.Models.ProposeItem", b =>
                 {
                     b.Property<int>("PropItemId")
@@ -916,6 +970,12 @@ namespace SkyTech.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("PropItemId"));
+
+                    b.Property<double>("AmountProposed")
+                        .HasColumnType("float");
+
+                    b.Property<int>("CustomerId")
+                        .HasColumnType("int");
 
                     b.Property<int>("ProdCategory")
                         .HasColumnType("int");
@@ -938,6 +998,8 @@ namespace SkyTech.Migrations
                         .HasColumnType("datetime2");
 
                     b.HasKey("PropItemId");
+
+                    b.HasIndex("CustomerId");
 
                     b.ToTable("ProposeItems");
                 });
@@ -1197,6 +1259,36 @@ namespace SkyTech.Migrations
                     b.Navigation("PickupBranch");
                 });
 
+            modelBuilder.Entity("SkyTech.Models.ProposalCheckout", b =>
+                {
+                    b.HasOne("CM_Project.Models.Customer", "Customer")
+                        .WithMany()
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("SkyTech.Models.ProposeItem", "ProposeItem")
+                        .WithOne("Checkout")
+                        .HasForeignKey("SkyTech.Models.ProposalCheckout", "PropItemId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Customer");
+
+                    b.Navigation("ProposeItem");
+                });
+
+            modelBuilder.Entity("SkyTech.Models.ProposeItem", b =>
+                {
+                    b.HasOne("CM_Project.Models.Customer", "Customer")
+                        .WithMany("ProposeItems")
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.Navigation("Customer");
+                });
+
             modelBuilder.Entity("CM_Project.Models.AddProduct", b =>
                 {
                     b.Navigation("CartItems");
@@ -1207,6 +1299,11 @@ namespace SkyTech.Migrations
             modelBuilder.Entity("CM_Project.Models.Cart", b =>
                 {
                     b.Navigation("CartItems");
+                });
+
+            modelBuilder.Entity("CM_Project.Models.Customer", b =>
+                {
+                    b.Navigation("ProposeItems");
                 });
 
             modelBuilder.Entity("CM_Project.Models.DeliveryDriver", b =>
@@ -1230,6 +1327,9 @@ namespace SkyTech.Migrations
 
             modelBuilder.Entity("SkyTech.Models.ProposeItem", b =>
                 {
+                    b.Navigation("Checkout")
+                        .IsRequired();
+
                     b.Navigation("ProposedProdPics");
 
                     b.Navigation("ReceiptPics");

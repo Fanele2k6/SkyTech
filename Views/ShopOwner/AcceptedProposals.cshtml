@@ -1,0 +1,144 @@
+﻿@using SkyTech.Models
+@model List<SkyTech.Models.ProposeItem>
+@{
+    Layout = "~/Views/Shared/_MinimalLayout.cshtml";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h3>Accepted Proposals</h3>
+    <a asp-action="EvaluateProposal" asp-controller="ShopOwner" class="btn btn-secondary">
+        ← Back to Pending
+    </a>
+</div>
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-warning">@TempData["Error"]</div>
+}
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info">No accepted proposals yet.</div>
+}
+else
+{
+    <table class="table table-bordered align-middle">
+        <thead>
+            <tr>
+                <th>Product</th>
+                <th>Category</th>
+                <th>Condition</th>
+                <th>Offered Amount</th>
+                <th>Status</th>
+                <th>Delivery</th>
+                <th>Customer Details</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+           
+            @foreach (var item in Model)
+            {
+                bool checkoutSubmitted = item.Checkout != null;
+                bool customerBringing = checkoutSubmitted &&
+                                         item.Checkout.SelectDelivery == Delivery.Customer_Will_Bring;
+                bool shopCollects = checkoutSubmitted &&
+                                         item.Checkout.SelectDelivery == Delivery.Shop_Will_Collect;
+
+                <tr>
+                    <td>@item.ProdName</td>
+                    <td>@item.ProdCategory</td>
+                    <td>@item.ProdCondition.ToString().Replace("_", " ")</td>
+                    <td>R @item.AmountProposed.ToString("F2")</td>
+
+                    <td>
+                        <span class="badgeClass">
+                            @item.ProdStatus.ToString().Replace("_", " ")
+                        </span>
+                    </td>
+
+                    <td>
+                        @if (!checkoutSubmitted)
+                        {
+                            <span class="badge bg-warning text-dark">⏳ Awaiting Customer</span>
+                        }
+                        else if (customerBringing)
+                        {
+                            <span class="badge bg-secondary">🚶 Customer Bringing</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-warning text-dark">🚚 Shop Must Collect</span>
+                            @if (item.CollectionDate.HasValue)
+                            {
+                                <br />
+                                <small>📅 @item.CollectionDate.Value.ToString("dd MMM yyyy HH:mm")</small>
+                            }
+                        }
+                    </td>
+
+                    <td>
+                        @if (checkoutSubmitted)
+                        {
+                            <span class="badge bg-success">✔ Submitted</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-warning text-dark">⏳ Pending</span>
+                        }
+                    </td>
+
+                    <td class="d-flex flex-column gap-1">
+
+                        <!--
+                Schedule Collection rules:
+                - No checkout       → disabled
+                - Customer bringing → disabled
+                - Shop collects     → enabled
+            -->
+                        @if (shopCollects)
+                        {
+                            <a asp-action="ScheduleCollection"
+                                   asp-controller="ShopOwner"
+                                   asp-route-id="@item.PropItemId"
+                                   class="btn btn-info btn-sm">
+                                📅 Schedule Collection
+                            </a>
+                        }
+                        else
+                        {
+                            <button class="btn btn-outline-secondary btn-sm" disabled
+                                    title="@(!checkoutSubmitted ? "Awaiting customer details" : "Customer is bringing the item")">
+                                📅 Schedule Collection
+                            </button>
+                        }
+
+                        <!--
+                Make Payment rules:
+                - No checkout       → disabled
+                - Customer bringing → enabled
+                - Shop collects     → enabled
+            -->
+                        @if (checkoutSubmitted)
+                        {
+                            <a asp-action="MakePayment"
+                                   asp-controller="ShopOwner"
+                                   asp-route-id="@item.PropItemId"
+                                   class="btn btn-success btn-sm">
+                                💳 Make Payment
+                            </a>
+                        }
+                        else
+                        {
+                            <button class="btn btn-outline-secondary btn-sm" disabled
+                                    title="Awaiting customer details">
+                                💳 Make Payment
+                            </button>
+                        }
+
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

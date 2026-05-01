@@ -720,10 +720,145 @@ namespace CM_Project.Controllers
 
         public IActionResult AssignCollection() => View();
 
+        //=================================Increament 2 ==========================
 
-       
+        //public IActionResult EvaluateProposal() => View();
+        public IActionResult EvaluateProposal()
+        {
+            var proposals = db.ProposeItems
+                .Include(p => p.ReceiptPics)
+                .Include(p => p.ProposedProdPics)
+                .Where(p => p.ProdStatus == Status.Pending) // ← only show pending
+                .ToList();
 
+            return View(proposals);
+        }
 
+        // action to open the partial view so that the shop owner can enter the proposed amount 
+        [HttpGet]
+        public IActionResult AcceptProposal(int id)
+        {
+            var proposal = db.ProposeItems.Find(id);
+            if (proposal == null) return NotFound();
 
+            return PartialView("_AcceptProposalModal", proposal);
+        }
+
+        [HttpPost]
+        public IActionResult AcceptProposal(int id, double amount)
+        {
+            var proposal = db.ProposeItems.Find(id);
+            if (proposal == null) return NotFound();
+
+            proposal.AmountProposed = amount;
+            proposal.ProdStatus = Status.Approved;
+
+            db.SaveChanges();
+
+            return RedirectToAction("EvaluateProposal");
+        }
+
+        // this one declines the proposal
+        [HttpPost]
+        public IActionResult DeclineProposal(int id)
+        {
+            var proposal = db.ProposeItems.Find(id);
+            if (proposal == null) return NotFound();
+
+            proposal.ProdStatus = Status.Rejected;
+
+            db.SaveChanges();
+
+            return RedirectToAction("EvaluateProposal");
+        }
+
+        public IActionResult AcceptedProposals()
+        {
+            var proposals = db.ProposeItems
+                .Include(p => p.ReceiptPics)
+                .Include(p => p.ProposedProdPics)
+                .Include(p => p.Checkout)
+                .Where(p => p.ProdStatus == Status.Approved ||
+                            p.ProdStatus == Status.CustomerAccepted)
+                .ToList();
+
+            return View(proposals);
+        }
+
+        [HttpGet]
+        public IActionResult ScheduleCollection(int id)
+        {
+            var proposal = db.ProposeItems
+                .Include(p => p.Checkout)
+                .FirstOrDefault(p => p.PropItemId == id);
+
+            if (proposal == null) return NotFound();
+
+            return View(proposal);
+        }
+
+        [HttpPost]
+        public IActionResult ScheduleCollection(int id, DateTime collectionDate)
+        {
+            var proposal = db.ProposeItems
+                .Include(p => p.Checkout)
+                .FirstOrDefault(p => p.PropItemId == id);
+
+            if (proposal == null) return NotFound();
+
+            // Auto-assign available driver
+            var availableDriver = db.DeliveryDrivers
+                .FirstOrDefault(d => d.IsAvailable == true &&
+                                     d.ApplicationStatus == Status.Approved);
+
+            if (availableDriver == null)
+            {
+                TempData["Error"] = "No drivers are currently available. Please try again later.";
+                return RedirectToAction("AcceptedProposals");
+            }
+
+            proposal.CollectionDate = collectionDate;
+            proposal.ProdStatus = Status.CollectionScheduled;
+            proposal.AssignedDriverId = availableDriver.DriverId; // ← add this to ProposeItem
+
+            availableDriver.IsAvailable = false; // mark driver as busy
+
+            db.SaveChanges();
+
+            TempData["Success"] = $"Collection scheduled. Driver {availableDriver.DriverName} " +
+                                  $"{availableDriver.DriverSurname} has been assigned.";
+
+            return RedirectToAction("AcceptedProposals");
+        }
+
+        //[HttpGet]
+        //public IActionResult MakePayment(int id)
+        //{
+        //    var proposal = db.ProposeItems
+        //        .Include(p => p.Checkout)
+        //        .FirstOrDefault(p => p.PropItemId == id);
+
+        //    if (proposal == null) return NotFound();
+
+        //    if (proposal.Checkout == null)
+        //    {
+        //        TempData["Error"] = "Customer has not submitted their payment details yet.";
+        //        return RedirectToAction("AcceptedProposals");
+        //    }
+
+        //    return View(proposal);
+        //}
+
+        //[HttpPost]
+        //public IActionResult ConfirmPayment(int id)
+        //{
+        //    var proposal = db.ProposeItems.Find(id);
+        //    if (proposal == null) return NotFound();
+
+        //    proposal.ProdStatus = Status.PaymentMade;
+        //    db.SaveChanges();
+
+        //    return RedirectToAction("AcceptedProposals");
+        //}
     }
 }

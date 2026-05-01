@@ -1,0 +1,84 @@
+﻿@model List<SkyTech.Models.ProposeItem>
+@{
+    Layout = "~/Views/Shared/_MinimalLayout.cshtml";
+}
+
+<script>
+    function openAcceptModal(id) {
+        fetch('/ShopOwner/AcceptProposal?id=' + id)
+            .then(res => {
+                if (!res.ok) throw new Error('Failed to load modal');
+                return res.text();
+            })
+            .then(html => {
+                document.getElementById('modalContainer').innerHTML = html;
+            })
+            .catch(err => alert('Error loading modal: ' + err.message));
+    }
+</script>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h3>Pending Proposals</h3>
+    <a asp-action="AcceptedProposals" asp-controller="ShopOwner" class="btn btn-primary">
+        View Accepted Proposals
+    </a>
+</div>
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info">No pending proposals at the moment.</div>
+}
+else
+{
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Product Name</th>
+                <th>Category</th>
+                <th>Condition</th>
+                <th>Description</th>
+                <th>Receipt Images</th>
+                <th>Product Images</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>@item.ProdName</td>
+                    <td>@item.ProdCategory</td>
+                    <td>@item.ProdCondition</td>
+                    <td>@item.ProdDescription</td>
+
+                    <td>
+                        @foreach (var pic in item.ReceiptPics)
+                        {
+                            <img src="@pic.FilePath" width="80" height="80" style="margin:5px;" />
+                        }
+                    </td>
+
+                    <td>
+                        @foreach (var pic in item.ProposedProdPics)
+                        {
+                            <img src="@pic.FilePath" width="80" height="80" style="margin:5px;" />
+                        }
+                    </td>
+
+                    <td>
+                        <button class="btn btn-success btn-sm" onclick="openAcceptModal(@item.PropItemId)">
+                            Accept
+                        </button>
+                        <form asp-action="DeclineProposal" asp-controller="ShopOwner"
+                              method="post" style="display:inline;">
+                            <input type="hidden" name="id" value="@item.PropItemId" />
+                            <button type="submit" class="btn btn-danger btn-sm">Decline</button>
+                        </form>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+<div id="modalContainer"></div>

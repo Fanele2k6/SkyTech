@@ -43,9 +43,11 @@ namespace CM_Project.Models
         /// 
         /// </summary>
         public DbSet<ProposeItem> ProposeItems { get; set; }
-        public DbSet<AcceptOffer> AcceptOffers { get; set; }
+       
         public DbSet<ReceiptPic> ReceiptPics { get; set; }
         public DbSet<ProposedProdPic> ProposedProdPic { get; set; }
+        public DbSet<ProposalCheckout> ProposalCheckouts { get; set; }
+
 
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -111,7 +113,29 @@ namespace CM_Project.Models
             .WithMany()
             .HasForeignKey(i => i.DriverId)
             .OnDelete(DeleteBehavior.NoAction);
+
+            // Fix cascade conflict on ProposeItems → Customer
+            modelBuilder.Entity<ProposeItem>()
+                .HasOne(p => p.Customer)
+                .WithMany(c => c.ProposeItems)
+                .HasForeignKey(p => p.CustomerId)
+                .OnDelete(DeleteBehavior.NoAction); // ← fixes the error
+
+            // Fix cascade conflict on ProposalCheckout → ProposeItem
+            modelBuilder.Entity<ProposalCheckout>()
+                .HasOne(c => c.ProposeItem)
+                .WithOne(p => p.Checkout)
+                .HasForeignKey<ProposalCheckout>(c => c.PropItemId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            // Fix cascade conflict on ProposalCheckout → Customer
+            modelBuilder.Entity<ProposalCheckout>()
+                .HasOne(c => c.Customer)
+                .WithMany()
+                .HasForeignKey(c => c.CustomerId)
+                .OnDelete(DeleteBehavior.NoAction);
         }
+
 
     }
 }

@@ -1,0 +1,50 @@
+﻿@model SkyTech.Models.ProposeItem
+@{
+    Layout = "~/Views/Shared/_MinimalLayout.cshtml";
+}
+
+<div class="container mt-4" style="max-width:500px;">
+    <h3>Schedule Collection</h3>
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">@TempData["Error"]</div>
+    }
+
+    <div class="alert alert-info">
+        <strong>Item:</strong> @Model.ProdName &nbsp;|&nbsp;
+        <strong>Amount:</strong> R @Model.AmountProposed.ToString("F2")
+    </div>
+
+    @if (Model.Checkout != null)
+    {
+        <div class="card mb-3">
+            <div class="card-header"><strong>Collection Address</strong></div>
+            <div class="card-body">
+                <p class="mb-1">📍 @Model.Checkout.Address</p>
+                <p class="mb-0">📞 @Model.Checkout.PhoneNumber</p>
+            </div>
+        </div>
+    }
+
+    <div class="alert alert-secondary">
+        🚗 A driver will be automatically assigned based on availability.
+    </div>
+
+    <form asp-action="ScheduleCollection" asp-controller="ShopOwner" method="post">
+        <input type="hidden" name="id" value="@Model.PropItemId" />
+
+        <div class="form-group mb-4">
+            <label>Collection Date & Time</label>
+            <input type="datetime-local"
+                   name="collectionDate"
+                   class="form-control"
+                   min="@DateTime.Now.ToString("yyyy-MM-ddTHH:mm")"
+                   required />
+        </div>
+
+        <button type="submit" class="btn btn-info w-100">Confirm & Assign Driver</button>
+        <a asp-action="AcceptedProposals" asp-controller="ShopOwner"
+           class="btn btn-secondary w-100 mt-2">Cancel</a>
+    </form>
+</div>
