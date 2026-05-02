@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace SkyTech.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260501210935_Nzuzo")]
-    partial class Nzuzo
+    [Migration("20260502182619_CleanMigr")]
+    partial class CleanMigr
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -943,6 +943,12 @@ namespace SkyTech.Migrations
                     b.Property<double>("AmountProposed")
                         .HasColumnType("float");
 
+                    b.Property<int?>("AssignedDriverId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("CollectionDate")
+                        .HasColumnType("datetime2");
+
                     b.Property<int>("CustomerId")
                         .HasColumnType("int");
 
@@ -966,7 +972,13 @@ namespace SkyTech.Migrations
                     b.Property<DateTime>("SavedOn")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("StoreAddress")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.HasKey("PropItemId");
+
+                    b.HasIndex("AssignedDriverId");
 
                     b.HasIndex("CustomerId");
 
@@ -1238,11 +1250,17 @@ namespace SkyTech.Migrations
 
             modelBuilder.Entity("SkyTech.Models.ProposeItem", b =>
                 {
+                    b.HasOne("CM_Project.Models.DeliveryDriver", "AssignedDriver")
+                        .WithMany()
+                        .HasForeignKey("AssignedDriverId");
+
                     b.HasOne("CM_Project.Models.Customer", "Customer")
                         .WithMany("ProposeItems")
                         .HasForeignKey("CustomerId")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
+
+                    b.Navigation("AssignedDriver");
 
                     b.Navigation("Customer");
                 });

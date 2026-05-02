@@ -5,25 +5,25 @@
 namespace SkyTech.Migrations
 {
     /// <inheritdoc />
-    public partial class Nzuzo : Migration
+    public partial class CustomerAddressClmn : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AddColumn<int>(
-                name: "SelectDelivery",
-                table: "ProposalCheckouts",
-                type: "int",
+            migrationBuilder.AddColumn<string>(
+                name: "CustomerAddress",
+                table: "ProposeItems",
+                type: "nvarchar(max)",
                 nullable: false,
-                defaultValue: 0);
+                defaultValue: "");
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropColumn(
-                name: "SelectDelivery",
-                table: "ProposalCheckouts");
+                name: "CustomerAddress",
+                table: "ProposeItems");
         }
     }
 }

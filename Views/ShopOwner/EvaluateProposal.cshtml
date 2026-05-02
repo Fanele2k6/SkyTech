@@ -2,7 +2,11 @@
 @{
     Layout = "~/Views/Shared/_MinimalLayout.cshtml";
 }
+@section Styles {
+    <link rel="stylesheet" href="~/CSS/ShopOwnerStyle.css">
+    <link rel="stylesheet" href="~/CSS/ManageProposalStyles.css">
 
+    }
 <script>
     function openAcceptModal(id) {
         fetch('/ShopOwner/AcceptProposal?id=' + id)

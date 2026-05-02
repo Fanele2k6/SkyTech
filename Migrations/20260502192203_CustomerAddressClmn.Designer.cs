@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace SkyTech.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260501185909_Migrations")]
-    partial class Migrations
+    [Migration("20260502192203_CustomerAddressClmn")]
+    partial class CustomerAddressClmn
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -786,40 +786,6 @@ namespace SkyTech.Migrations
                     b.ToTable("SystemAdmins");
                 });
 
-            modelBuilder.Entity("SkyTech.Models.AcceptOffer", b =>
-                {
-                    b.Property<int>("OfferId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("OfferId"));
-
-                    b.Property<string>("AccountNumber")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Address")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("BankName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("PhoneNumber")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("PropItemId")
-                        .HasColumnType("int");
-
-                    b.HasKey("OfferId");
-
-                    b.HasIndex("PropItemId");
-
-                    b.ToTable("AcceptOffers");
-                });
-
             modelBuilder.Entity("SkyTech.Models.InterBranchTransfer", b =>
                 {
                     b.Property<int>("TransferId")
@@ -950,6 +916,9 @@ namespace SkyTech.Migrations
                     b.Property<int>("PropItemId")
                         .HasColumnType("int");
 
+                    b.Property<int>("SelectDelivery")
+                        .HasColumnType("int");
+
                     b.Property<DateTime>("SubmittedOn")
                         .HasColumnType("datetime2");
 
@@ -974,6 +943,16 @@ namespace SkyTech.Migrations
                     b.Property<double>("AmountProposed")
                         .HasColumnType("float");
 
+                    b.Property<int?>("AssignedDriverId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("CollectionDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CustomerAddress")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int>("CustomerId")
                         .HasColumnType("int");
 
@@ -997,7 +976,13 @@ namespace SkyTech.Migrations
                     b.Property<DateTime>("SavedOn")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("StoreAddress")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.HasKey("PropItemId");
+
+                    b.HasIndex("AssignedDriverId");
 
                     b.HasIndex("CustomerId");
 
@@ -1195,17 +1180,6 @@ namespace SkyTech.Migrations
                     b.Navigation("Owner");
                 });
 
-            modelBuilder.Entity("SkyTech.Models.AcceptOffer", b =>
-                {
-                    b.HasOne("SkyTech.Models.ProposeItem", "ProposeItem")
-                        .WithMany()
-                        .HasForeignKey("PropItemId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("ProposeItem");
-                });
-
             modelBuilder.Entity("SkyTech.Models.InterBranchTransfer", b =>
                 {
                     b.HasOne("CM_Project.Models.DeliveryDriver", "Driver")
@@ -1280,11 +1254,17 @@ namespace SkyTech.Migrations
 
             modelBuilder.Entity("SkyTech.Models.ProposeItem", b =>
                 {
+                    b.HasOne("CM_Project.Models.DeliveryDriver", "AssignedDriver")
+                        .WithMany()
+                        .HasForeignKey("AssignedDriverId");
+
                     b.HasOne("CM_Project.Models.Customer", "Customer")
                         .WithMany("ProposeItems")
                         .HasForeignKey("CustomerId")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
+
+                    b.Navigation("AssignedDriver");
 
                     b.Navigation("Customer");
                 });

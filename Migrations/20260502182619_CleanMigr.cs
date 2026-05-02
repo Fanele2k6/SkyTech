@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace SkyTech.Migrations
 {
     /// <inheritdoc />
-    public partial class Migrations : Migration
+    public partial class CleanMigr : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -122,31 +122,6 @@ namespace SkyTech.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "ProposeItems",
-                columns: table => new
-                {
-                    PropItemId = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    CustomerId = table.Column<int>(type: "int", nullable: false),
-                    ProdName = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    ProdCategory = table.Column<int>(type: "int", nullable: false),
-                    ProdCondition = table.Column<int>(type: "int", nullable: false),
-                    ProdDescription = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    ProdStatus = table.Column<int>(type: "int", nullable: false),
-                    AmountProposed = table.Column<double>(type: "float", nullable: false),
-                    SavedOn = table.Column<DateTime>(type: "datetime2", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_ProposeItems", x => x.PropItemId);
-                    table.ForeignKey(
-                        name: "FK_ProposeItems_Customers_CustomerId",
-                        column: x => x.CustomerId,
-                        principalTable: "Customers",
-                        principalColumn: "CustomerId");
-                });
-
-            migrationBuilder.CreateTable(
                 name: "DriverIdentityBooks",
                 columns: table => new
                 {
@@ -190,6 +165,39 @@ namespace SkyTech.Migrations
                         principalTable: "DeliveryDrivers",
                         principalColumn: "DriverId",
                         onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ProposeItems",
+                columns: table => new
+                {
+                    PropItemId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    CustomerId = table.Column<int>(type: "int", nullable: false),
+                    AssignedDriverId = table.Column<int>(type: "int", nullable: true),
+                    ProdName = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    ProdCategory = table.Column<int>(type: "int", nullable: false),
+                    ProdCondition = table.Column<int>(type: "int", nullable: false),
+                    ProdDescription = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    ProdStatus = table.Column<int>(type: "int", nullable: false),
+                    AmountProposed = table.Column<double>(type: "float", nullable: false),
+                    StoreAddress = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    SavedOn = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CollectionDate = table.Column<DateTime>(type: "datetime2", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ProposeItems", x => x.PropItemId);
+                    table.ForeignKey(
+                        name: "FK_ProposeItems_Customers_CustomerId",
+                        column: x => x.CustomerId,
+                        principalTable: "Customers",
+                        principalColumn: "CustomerId");
+                    table.ForeignKey(
+                        name: "FK_ProposeItems_DeliveryDrivers_AssignedDriverId",
+                        column: x => x.AssignedDriverId,
+                        principalTable: "DeliveryDrivers",
+                        principalColumn: "DriverId");
                 });
 
             migrationBuilder.CreateTable(
@@ -335,29 +343,6 @@ namespace SkyTech.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "AcceptOffers",
-                columns: table => new
-                {
-                    OfferId = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    PropItemId = table.Column<int>(type: "int", nullable: false),
-                    PhoneNumber = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Address = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    BankName = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    AccountNumber = table.Column<string>(type: "nvarchar(max)", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_AcceptOffers", x => x.OfferId);
-                    table.ForeignKey(
-                        name: "FK_AcceptOffers_ProposeItems_PropItemId",
-                        column: x => x.PropItemId,
-                        principalTable: "ProposeItems",
-                        principalColumn: "PropItemId",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "ProposalCheckouts",
                 columns: table => new
                 {
@@ -365,6 +350,7 @@ namespace SkyTech.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     PropItemId = table.Column<int>(type: "int", nullable: false),
                     CustomerId = table.Column<int>(type: "int", nullable: false),
+                    SelectDelivery = table.Column<int>(type: "int", nullable: false),
                     PhoneNumber = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Address = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     BankName = table.Column<string>(type: "nvarchar(max)", nullable: false),
@@ -620,11 +606,6 @@ namespace SkyTech.Migrations
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_AcceptOffers_PropItemId",
-                table: "AcceptOffers",
-                column: "PropItemId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_AddProducts_OwnerId",
                 table: "AddProducts",
                 column: "OwnerId");
@@ -757,6 +738,11 @@ namespace SkyTech.Migrations
                 column: "ProposeItemPropItemId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_ProposeItems_AssignedDriverId",
+                table: "ProposeItems",
+                column: "AssignedDriverId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_ProposeItems_CustomerId",
                 table: "ProposeItems",
                 column: "CustomerId");
@@ -780,9 +766,6 @@ namespace SkyTech.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropTable(
-                name: "AcceptOffers");
-
             migrationBuilder.DropTable(
                 name: "BusRegCertificates");
 

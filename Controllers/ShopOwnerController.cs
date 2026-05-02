@@ -750,7 +750,13 @@ namespace CM_Project.Controllers
             var proposal = db.ProposeItems.Find(id);
             if (proposal == null) return NotFound();
 
+            int currentId = HttpContext.Session.GetInt32("UserId").Value;
+
+            // Fetch the logged-in shop owner's address
+            var shopOwner = db.shopowners.FirstOrDefault(s => s.OwnerId == currentId);
+
             proposal.AmountProposed = amount;
+            proposal.StoreAddress = shopOwner?.ShopAddress ?? "Address not found";
             proposal.ProdStatus = Status.Approved;
 
             db.SaveChanges();
@@ -784,7 +790,7 @@ namespace CM_Project.Controllers
 
             return View(proposals);
         }
-
+        // GET — shows confirmation page
         [HttpGet]
         public IActionResult ScheduleCollection(int id)
         {
@@ -797,68 +803,50 @@ namespace CM_Project.Controllers
             return View(proposal);
         }
 
+        // POST — does the actual work
         [HttpPost]
-        public IActionResult ScheduleCollection(int id, DateTime collectionDate)
+        [ActionName("ScheduleCollection")]  // ← tells ASP.NET this is still "ScheduleCollection"
+        public IActionResult ScheduleCollectionConfirmed(int id)  // ← different method name
         {
-            var proposal = db.ProposeItems
-                .Include(p => p.Checkout)
-                .FirstOrDefault(p => p.PropItemId == id);
+            var proposal = db.ProposeItems.Find(id);
 
             if (proposal == null) return NotFound();
 
-            // Auto-assign available driver
+            bool anyDriversExist = db.DeliveryDrivers
+                .Any(d => d.ApplicationStatus == Status.Approved);
+
+            if (!anyDriversExist)
+            {
+                TempData["Error"] = "No drivers are registered in the system yet.";
+                return RedirectToAction("AcceptedProposals");
+            }
+
             var availableDriver = db.DeliveryDrivers
                 .FirstOrDefault(d => d.IsAvailable == true &&
                                      d.ApplicationStatus == Status.Approved);
 
             if (availableDriver == null)
             {
-                TempData["Error"] = "No drivers are currently available. Please try again later.";
+                TempData["Error"] = "All drivers are currently busy. Please try again later.";
                 return RedirectToAction("AcceptedProposals");
             }
 
+            DateTime collectionDate = DateTime.Now.AddDays(4);
+
             proposal.CollectionDate = collectionDate;
             proposal.ProdStatus = Status.CollectionScheduled;
-            proposal.AssignedDriverId = availableDriver.DriverId; // ← add this to ProposeItem
+            proposal.AssignedDriverId = availableDriver.DriverId;
 
-            availableDriver.IsAvailable = false; // mark driver as busy
+            availableDriver.IsAvailable = true;
 
             db.SaveChanges();
 
-            TempData["Success"] = $"Collection scheduled. Driver {availableDriver.DriverName} " +
+            TempData["Success"] = $"Collection scheduled for {collectionDate:dd MMM yyyy}. " +
+                                  $"Driver {availableDriver.DriverName} " +
                                   $"{availableDriver.DriverSurname} has been assigned.";
 
             return RedirectToAction("AcceptedProposals");
         }
 
-        //[HttpGet]
-        //public IActionResult MakePayment(int id)
-        //{
-        //    var proposal = db.ProposeItems
-        //        .Include(p => p.Checkout)
-        //        .FirstOrDefault(p => p.PropItemId == id);
-
-        //    if (proposal == null) return NotFound();
-
-        //    if (proposal.Checkout == null)
-        //    {
-        //        TempData["Error"] = "Customer has not submitted their payment details yet.";
-        //        return RedirectToAction("AcceptedProposals");
-        //    }
-
-        //    return View(proposal);
-        //}
-
-        //[HttpPost]
-        //public IActionResult ConfirmPayment(int id)
-        //{
-        //    var proposal = db.ProposeItems.Find(id);
-        //    if (proposal == null) return NotFound();
-
-        //    proposal.ProdStatus = Status.PaymentMade;
-        //    db.SaveChanges();
-
-        //    return RedirectToAction("AcceptedProposals");
-        //}
     }
 }

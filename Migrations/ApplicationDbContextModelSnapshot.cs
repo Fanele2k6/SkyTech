@@ -946,6 +946,10 @@ namespace SkyTech.Migrations
                     b.Property<DateTime?>("CollectionDate")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("CustomerAddress")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int>("CustomerId")
                         .HasColumnType("int");
 
@@ -968,6 +972,10 @@ namespace SkyTech.Migrations
 
                     b.Property<DateTime>("SavedOn")
                         .HasColumnType("datetime2");
+
+                    b.Property<string>("StoreAddress")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("PropItemId");
 

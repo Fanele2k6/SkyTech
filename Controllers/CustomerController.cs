@@ -936,19 +936,24 @@ namespace CM_Project.Controllers
 
         [HttpPost]
         [AuthorizeUser]
-        [HttpPost]
-        [AuthorizeUser]
         public async Task<IActionResult> ProposeItem(ProposeItemViewModel vm)
         {
             if (!ModelState.IsValid) return View(vm);
 
             int currentId = HttpContext.Session.GetInt32("UserId").Value;
 
+            var address = db.Customers
+                .Where(c => c.CustomerId == currentId)
+                .Select(c => c.Address)
+                .FirstOrDefault();
+
             var model = new ProposeItem
             {
                 CustomerId = currentId,  // ← this line was missing
                 ProdName = vm.ProdName,
                 ProdCategory = vm.ProdCategory,
+                StoreAddress = "",
+                CustomerAddress = address,
                 ProdCondition = vm.ProdCondition,
                 ProdDescription = vm.ProdDescription,
                 ProdStatus = Status.Pending,
@@ -1033,12 +1038,12 @@ namespace CM_Project.Controllers
             var proposals = db.ProposeItems
                 .Include(p => p.ReceiptPics)
                 .Include(p => p.ProposedProdPics)
-                .Where(p => p.CustomerId == currentId) // make sure ProposeItem has CustomerId
+                .Where(p => p.CustomerId == currentId)
+                .OrderByDescending(p => p.PropItemId)
                 .ToList();
 
             return View(proposals);
         }
-
         // Customer accepts the shop owner's proposed amount
         [HttpPost]
         [AuthorizeUser]
@@ -1144,5 +1149,8 @@ namespace CM_Project.Controllers
 
             return RedirectToAction("ProposalCheckout", new { id = id }); // ← updated
         }
+
+
+
     }
 }

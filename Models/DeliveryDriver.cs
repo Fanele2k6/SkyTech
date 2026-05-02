@@ -8,8 +8,10 @@ namespace CM_Project.Models
 {
     public enum Status { 
 
-        Pending, Approved, Rejected, Cancelled, CustomerAccepted, CustomerDeclined, CollectionScheduled,
-        PaymentMade
+        Pending, Approved, Rejected, Cancelled, 
+        CustomerAccepted, CustomerDeclined, CollectionScheduled,
+        Item_Collected, PaymentMade,
+
     }
 
     public class DeliveryDriver

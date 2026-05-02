@@ -47,6 +47,9 @@ namespace SkyTech.Models
 
         public Status ProdStatus { get; set; }
         public double AmountProposed { get; set; }
+        public string StoreAddress { get; set; }
+        public string CustomerAddress { get; set; }
+   
 
         public DateTime SavedOn { get; set; }
 
