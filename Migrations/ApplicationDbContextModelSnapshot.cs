@@ -953,6 +953,9 @@ namespace SkyTech.Migrations
                     b.Property<int>("CustomerId")
                         .HasColumnType("int");
 
+                    b.Property<bool>("IsCollected")
+                        .HasColumnType("bit");
+
                     b.Property<int>("ProdCategory")
                         .HasColumnType("int");
 

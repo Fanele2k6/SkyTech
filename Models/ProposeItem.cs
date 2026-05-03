@@ -56,6 +56,7 @@ namespace SkyTech.Models
 
         public DateTime? CollectionDate { get; set; }   // ← add
 
+        public bool IsCollected { get; set; }
         public virtual ProposalCheckout Checkout { get; set; }
     }
 }

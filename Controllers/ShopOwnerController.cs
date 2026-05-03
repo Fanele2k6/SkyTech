@@ -785,6 +785,9 @@ namespace CM_Project.Controllers
                 .Include(p => p.ProposedProdPics)
                 .Include(p => p.Checkout)
                 .Where(p => p.ProdStatus == Status.Approved ||
+                            p.ProdStatus == Status.CustomerAccepted ||
+                            p.ProdStatus == Status.Item_Collected ||
+                            p.ProdStatus == Status.CollectionScheduled ||
                             p.ProdStatus == Status.CustomerAccepted)
                 .ToList();
 

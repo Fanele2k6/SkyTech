@@ -10,7 +10,7 @@ namespace CM_Project.Models
 
         Pending, Approved, Rejected, Cancelled, 
         CustomerAccepted, CustomerDeclined, CollectionScheduled,
-        Item_Collected, PaymentMade,
+        Item_Collected, PaymentMade
 
     }
 
