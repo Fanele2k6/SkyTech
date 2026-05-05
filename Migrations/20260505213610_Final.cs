@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace SkyTech.Migrations
 {
     /// <inheritdoc />
-    public partial class CleanMigr : Migration
+    public partial class Final : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -182,8 +182,10 @@ namespace SkyTech.Migrations
                     ProdStatus = table.Column<int>(type: "int", nullable: false),
                     AmountProposed = table.Column<double>(type: "float", nullable: false),
                     StoreAddress = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    CustomerAddress = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     SavedOn = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    CollectionDate = table.Column<DateTime>(type: "datetime2", nullable: true)
+                    CollectionDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsCollected = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -354,6 +356,7 @@ namespace SkyTech.Migrations
                     PhoneNumber = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Address = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     BankName = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    BankCode = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     AccountHolderName = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     AccountNumber = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     BranchCode = table.Column<string>(type: "nvarchar(max)", nullable: false),

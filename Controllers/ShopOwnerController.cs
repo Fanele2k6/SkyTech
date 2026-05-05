@@ -1,5 +1,6 @@
 ﻿using CM_Project.Models;
 using CM_Project.Models.Documents;
+using CM_Project.Services;
 using CM_Project.ViewModels;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -11,6 +12,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.NetworkInformation;
+using System.Security.Cryptography.Xml;
 
 namespace CM_Project.Controllers
 {
@@ -21,10 +23,16 @@ namespace CM_Project.Controllers
         private readonly EmailServices _services = null;  // ← add this
         private readonly IWebHostEnvironment _webHostEnvironment;
 
-
-        public ShopOwnerController(ApplicationDbContext context, EmailServices services, IWebHostEnvironment webHostEnvironment)
+        //paying customer their money
+        private readonly PayStackTransferService _transfer;
+   
+        public ShopOwnerController(ApplicationDbContext context, EmailServices services, IWebHostEnvironment webHostEnvironment, PayStackTransferService transfer)
         {
+            //this.db = db;
+
             db = context;
+            _transfer = transfer;
+
             _services = services;
             _webHostEnvironment = webHostEnvironment;
         }
@@ -850,6 +858,141 @@ namespace CM_Project.Controllers
 
             return RedirectToAction("AcceptedProposals");
         }
+
+        // ── Add these to ShopOwnerController ──────────────────────────────────────────
+        // Also inject PayStackTransferService via constructor:
+        //
+        //   private readonly PayStackTransferService _transfer;
+        //   public ShopOwnerController(ApplicationDbContext context, PayStackTransferService transfer)
+        //   { db = context; _transfer = transfer; }
+        //
+        // Register in Program.cs:
+        //   builder.Services.AddScoped<PayStackTransferService>();
+
+        // ── GET: show payment confirmation page ───────────────────────────────────────
+        [HttpGet]
+        public IActionResult MakePayment(int id)
+        {
+            int currentId = HttpContext.Session.GetInt32("UserId")!.Value;
+
+            var proposal = db.ProposeItems
+                .Include(p => p.Customer)
+                .Include(p => p.Checkout)
+                .FirstOrDefault(p => p.PropItemId == id);
+
+            if (proposal == null) return NotFound();
+
+            if (proposal.Checkout == null)
+            {
+                TempData["Error"] = "Customer has not submitted their details yet.";
+                return RedirectToAction("AcceptedProposals");
+            }
+
+            if (proposal.ProdStatus == Status.PaymentMade)
+            {
+                TempData["Error"] = "Payment has already been made for this proposal.";
+                return RedirectToAction("AcceptedProposals");
+            }
+
+            return View(proposal);
+        }
+
+        // ── POST: process the PayStack transfer ───────────────────────────────────────
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [ActionName("MakePayment")]  // ← tells ASP.NET this is still "MakePayment"
+
+        public async Task<IActionResult> MakeTranferPayment(int propItemId)
+        {
+            try
+            {
+                int currentId = HttpContext.Session.GetInt32("UserId")!.Value;
+
+                var proposal = db.ProposeItems
+                    .Include(p => p.Customer)
+                    .Include(p => p.Checkout)
+                    .FirstOrDefault(p => p.PropItemId == propItemId);
+
+                if (proposal == null) return NotFound();
+
+                var checkout = proposal.Checkout;
+
+                if (checkout == null)
+                {
+                    TempData["Error"] = "Customer banking details are missing.";
+                    return RedirectToAction("AcceptedProposals");
+                }
+                // ── 1. Resolve bank code ──────────────────────────────────────────────────
+                // Try branch code first (e.g. "051001"), fall back to bank name
+                //string bankCode = await _transfer.ResolveBankCode(checkout.BranchCode)
+                //               ?? await _transfer.ResolveBankCode(checkout.BankName);
+
+                // ── 1. Bank code now comes straight from the database — no lookup needed ──
+                string bankCode = checkout.BankCode;
+
+                if (string.IsNullOrEmpty(bankCode))
+                {
+                    TempData["Error"] = "Bank code is missing. Customer may need to re-submit their details.";
+                    return RedirectToAction("MakePayment", new { id = propItemId });
+                }
+
+                // ── 2. Create transfer recipient ──────────────────────────────────────────
+                var recipient = await _transfer.CreateRecipient(
+                    name: checkout.AccountHolderName,
+                    accountNumber: checkout.AccountNumber,
+                    bankCode: bankCode
+                );
+
+                //// ── 2. Create transfer recipient ──────────────────────────────────────────
+                //var recipient = await _transfer.CreateRecipient(
+                //    name: checkout.AccountHolderName,
+                //    accountNumber: checkout.AccountNumber,
+                //    bankCode: bankCode
+                //);
+
+                if (!recipient.Success)
+                {
+                    TempData["Error"] = "Could not create payment recipient: " + recipient.Message;
+                    return RedirectToAction("MakePayment", new { id = propItemId });
+                }
+
+                // ── 3. Initiate the transfer ──────────────────────────────────────────────
+                string reference = $"PROP-{propItemId}-{DateTime.Now.Ticks}";
+                string reason = $"Payment for item: {proposal.ProdName}";
+
+                var transfer = await _transfer.InitiateTransfer(
+                    recipientCode: recipient.RecipientCode,
+                    amountRand: proposal.AmountProposed,
+                    reason: reason,
+                    reference: reference
+                );
+
+                if (!transfer.Success)
+                {
+                    TempData["Error"] = "Transfer failed: " + transfer.Message;
+                    return RedirectToAction("MakePayment", new { id = propItemId });
+                }
+
+                // ── 4. Mark proposal as paid ──────────────────────────────────────────────
+                proposal.ProdStatus = Status.PaymentMade;
+                db.SaveChanges();
+
+                TempData["Success"] = $"Payment of R {proposal.AmountProposed:N2} sent to {checkout.AccountHolderName}.";
+                TempData["TransferCode"] = transfer.TransferCode;
+                TempData["Reference"] = reference;
+
+                return RedirectToAction("AcceptedProposals");
+
+            }
+            catch (Exception ex)
+            {
+                // Temporarily show the full error
+                TempData["Error"] = "Exception: " + ex.Message + " | " + ex.InnerException?.Message;
+                return RedirectToAction("MakePayment", new { id = propItemId });
+            }
+        }
+            
+
 
     }
 }

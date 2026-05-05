@@ -13,36 +13,31 @@ namespace SkyTech.Models
     }
     public class ProposalCheckout
     {
-
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int CheckoutId { get; set; }
 
-        // Linked to the proposal
         public int PropItemId { get; set; }
         [ForeignKey("PropItemId")]
         public virtual ProposeItem ProposeItem { get; set; }
 
-        // Linked to the customer
         public int CustomerId { get; set; }
         [ForeignKey("CustomerId")]
         public virtual Customer Customer { get; set; }
 
         public Delivery SelectDelivery { get; set; }
 
-        // ── Contact ──────────────────────────────
-        [Required]
-        [Phone]
+        [Required, Phone]
         public string PhoneNumber { get; set; }
 
-        // ── Address ──────────────────────────────
         [Required]
         public string Address { get; set; }
 
-
-        // ── Banking Details ───────────────────────
         [Required]
-        public string BankName { get; set; }
+        public string BankName { get; set; }       // display name e.g. "Standard Bank of South Africa"
+
+        [Required]
+        public string BankCode { get; set; }        // ← ADD THIS — PayStack code e.g. "057"
 
         [Required]
         public string AccountHolderName { get; set; }
@@ -51,7 +46,7 @@ namespace SkyTech.Models
         public string AccountNumber { get; set; }
 
         [Required]
-        public string BranchCode { get; set; }
+        public string BranchCode { get; set; }      // customer's branch code — keep for records
 
         public AccountType AccountType { get; set; }
 

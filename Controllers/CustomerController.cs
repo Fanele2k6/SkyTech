@@ -20,8 +20,19 @@ namespace CM_Project.Controllers
     {
         private readonly ApplicationDbContext db;
 
-        public CustomerController(ApplicationDbContext context) { db = context; }
+        public CustomerController(ApplicationDbContext context, PayStackTransferService paystackService)
+        {
+            db = context;
+            _paystackService = paystackService;
+        }
+        private readonly PayStackTransferService _paystackService;
 
+        [HttpGet]
+        public async Task<IActionResult> GetZaBanks()
+        {
+            var banks = await _paystackService.GetZaBanks();
+            return Json(banks);
+        }
 
         public IActionResult ProductDetails(int id)
         {
@@ -1121,6 +1132,7 @@ namespace CM_Project.Controllers
                 CustomerId = currentId,
                 SelectDelivery = vm.SelectDelivery,  // ← add this
                 PhoneNumber = vm.PhoneNumber,
+                BankCode = vm.BankCode,   // ← store this
                 Address = vm.Address,
                 BankName = vm.BankName,
                 AccountHolderName = vm.AccountHolderName,
@@ -1149,6 +1161,7 @@ namespace CM_Project.Controllers
 
             return RedirectToAction("ProposalCheckout", new { id = id }); // ← updated
         }
+
 
 
 

@@ -208,6 +208,9 @@ namespace CM_Project.ViewModels
         [Required(ErrorMessage = "Bank name is required")]
         public string BankName { get; set; }
 
+        [Required]
+        public string BankCode { get; set; }   // ← ADD THIS
+
         [Required(ErrorMessage = "Account holder name is required")]
         public string AccountHolderName { get; set; }
 

@@ -8,9 +8,15 @@ namespace CM_Project.Models
 {
     public enum Status { 
 
-        Pending, Approved, Rejected, Cancelled, 
-        CustomerAccepted, CustomerDeclined, CollectionScheduled,
-        Item_Collected, PaymentMade
+        Pending,   //0
+        Approved,  //1
+        Rejected,   //2
+        Cancelled,   //3
+        CustomerAccepted, //4
+        CustomerDeclined,  //5
+        CollectionScheduled,  //6
+        Item_Collected, //7
+        PaymentMade //8
 
     }
 

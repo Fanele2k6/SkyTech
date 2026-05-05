@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace SkyTech.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260502192203_CustomerAddressClmn")]
-    partial class CustomerAddressClmn
+    [Migration("20260505213610_Final")]
+    partial class Final
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -898,6 +898,10 @@ namespace SkyTech.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("BankCode")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("BankName")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -955,6 +959,9 @@ namespace SkyTech.Migrations
 
                     b.Property<int>("CustomerId")
                         .HasColumnType("int");
+
+                    b.Property<bool>("IsCollected")
+                        .HasColumnType("bit");
 
                     b.Property<int>("ProdCategory")
                         .HasColumnType("int");

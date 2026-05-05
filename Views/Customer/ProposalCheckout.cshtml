@@ -7,13 +7,11 @@
     Layout = "~/Views/Shared/_MinimalLayout.cshtml";
 
 }
-
 <div class="container mt-4" style="max-width:650px;">
 
     <h3>Complete Your Details</h3>
     <p class="text-muted">Please provide your details so we can process your payout.</p>
 
-    <!-- Summary card -->
     <div class="alert alert-success mb-4">
         <strong>Item:</strong> @Model.ProdName &nbsp;|&nbsp;
         <strong>Offered Amount:</strong> R @Model.AmountProposed.ToString("F2")
@@ -25,75 +23,57 @@
         <input type="hidden" asp-for="ProdName" />
         <input type="hidden" asp-for="AmountProposed" />
 
-        <!-- ── Contact ── -->
         <h5 class="mt-3">Contact</h5>
         <hr />
-
         <div class="form-group mb-3">
             <label asp-for="PhoneNumber">Phone Number</label>
             <input asp-for="PhoneNumber" class="form-control" placeholder="e.g. 0821234567" />
             <span asp-validation-for="PhoneNumber" class="text-danger"></span>
         </div>
 
-        <!-- ── Delivery Option ── -->
         <h5 class="mt-3">Delivery Option</h5>
         <hr />
-
         <div class="form-group mb-3">
             <label asp-for="SelectDelivery">How will the item be handed over?</label>
-
             <div class="form-check mt-2">
                 <input class="form-check-input" type="radio"
-                       name="SelectDelivery" id="customerWillBring"
-                       value="1"
-                       onchange="toggleAddress(false)"
+                       name="SelectDelivery" id="customerWillBring" value="1"
                 @(Model.SelectDelivery == Delivery.Customer_Will_Bring ? "checked" : "") />
                 <label class="form-check-label" for="customerWillBring">
                     🚶 I will bring the item to the shop
                 </label>
             </div>
-
             <div class="form-check mt-1">
                 <input class="form-check-input" type="radio"
-                       name="SelectDelivery" id="shopWillCollect"
-                       value="0"
-                       onchange="toggleAddress(true)"
+                       name="SelectDelivery" id="shopWillCollect" value="0"
                 @(Model.SelectDelivery == Delivery.Shop_Will_Collect ? "checked" : "") />
                 <label class="form-check-label" for="shopWillCollect">
                     🚚 Shop must collect from me
                 </label>
             </div>
-
             <span asp-validation-for="SelectDelivery" class="text-danger"></span>
         </div>
 
-
-        <!-- ── Address ── -->
         <h5 class="mt-3">Address</h5>
         <hr />
-
         <div class="form-group mb-3">
             <label asp-for="Address">Street Address</label>
             <input asp-for="Address" class="form-control" placeholder="e.g. 12 Main Road" />
             <span asp-validation-for="Address" class="text-danger"></span>
         </div>
 
-        <!-- ── Banking Details ── -->
         <h5 class="mt-3">Banking Details</h5>
         <hr />
-
         <div class="form-group mb-3">
-            <label asp-for="BankName">Bank Name</label>
-            <select asp-for="BankName" class="form-control">
-                <option value="">-- Select Bank --</option>
-                <option>ABSA</option>
-                <option>Standard Bank</option>
-                <option>FNB</option>
-                <option>Nedbank</option>
-                <option>Capitec</option>
-                <option>African Bank</option>
-                <option>Investec</option>
+            <label>Bank Name</label>
+            <select id="bankSelect" class="form-control">
+                <option value="">-- Loading banks... --</option>
             </select>
+            <small id="bankError" class="text-danger" style="display:none">
+                Failed to load banks. Please refresh the page.
+            </small>
+            <input type="hidden" asp-for="BankName" id="bankNameHidden" />
+            <input type="hidden" asp-for="BankCode" id="bankCodeHidden" />
             <span asp-validation-for="BankName" class="text-danger"></span>
         </div>
 
@@ -111,7 +91,7 @@
             </div>
             <div class="col-md-6 form-group mb-3">
                 <label asp-for="BranchCode">Branch Code</label>
-                <input asp-for="BranchCode" class="form-control" placeholder="e.g. 632005" />
+                <input asp-for="BranchCode" class="form-control" placeholder="e.g. 051001" />
                 <span asp-validation-for="BranchCode" class="text-danger"></span>
             </div>
         </div>
@@ -125,13 +105,54 @@
         </div>
 
         <button type="submit" class="btn btn-success w-100">Submit Details</button>
-        <a asp-action="MyProposals" class="btn btn-secondary w-100 mt-2">Back to My Proposals</a>
+        <a asp-action="MyProposals" asp-controller="Customer" class="btn btn-secondary w-100 mt-2">
+            Back to My Proposals
+        </a>
 
     </form>
 </div>
 
+@* ── Scripts at the BOTTOM so the DOM elements above already exist ── *@
 @section Scripts {
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
+
+    <script>
+        const sel       = document.getElementById('bankSelect');
+        const nameHidden = document.getElementById('bankNameHidden');
+        const codeHidden = document.getElementById('bankCodeHidden');
+        const bankError  = document.getElementById('bankError');
+        const savedName  = '@Model.BankName'; // pre-select on edit
+
+        fetch('/Customer/GetZaBanks')
+            .then(r => {
+                if (!r.ok) throw new Error('Network error');
+                return r.json();
+            })
+            .then(banks => {
+                sel.innerHTML = '<option value="">-- Select Bank --</option>';
+                banks.forEach(b => {
+                    const opt = document.createElement('option');
+                    opt.value          = b.code;
+                    opt.dataset.name   = b.name;
+                    opt.textContent    = b.name;
+                    if (b.name === savedName) opt.selected = true;
+                    sel.appendChild(opt);
+                });
+                updateHiddens();
+            })
+            .catch(() => {
+                sel.innerHTML = '<option value="">-- Failed to load --</option>';
+                bankError.style.display = 'block';
+            });
+
+        sel.addEventListener('change', updateHiddens);
+
+        function updateHiddens() {
+            const opt = sel.options[sel.selectedIndex];
+            codeHidden.value = opt ? opt.value          : '';
+            nameHidden.value = opt ? (opt.dataset.name || '') : '';
+        }
+    </script>
 }

@@ -18,7 +18,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 // Session
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession();
-
+builder.Services.AddScoped<PayStackTransferService>();
 // Your Services class (email + DI)
 builder.Services.AddScoped<EmailServices>();
 

@@ -203,14 +203,23 @@
                             <div class="offer-amount">R @item.AmountProposed.ToString("N2")</div>
                             <div class="offer-note">Review this offer and accept or decline below.</div>
                         </div>
-                        <div class="offer-actions">
-                            <a href="/Proposals/AcceptOffer/@item.PropItemId" class="btn-accept">
-                                <i class="fas fa-check"></i> Accept
-                            </a>
-                            <a href="/Proposals/DeclineOffer/@item.PropItemId" class="btn-decline">
-                                <i class="fas fa-xmark"></i> Decline
-                            </a>
-                        </div>
+                                <div class="offer-actions">
+
+                                    <!-- Accept: plain GET link to ProposalCheckout -->
+                                    <a href="@Url.Action("ProposalCheckout", "Customer", new { id = item.PropItemId })" class="btn-accept">
+                                        <i class="fas fa-check"></i> Accept
+                                    </a>
+
+                                    <!-- Decline: POST form styled as a button -->
+                                    <form method="post" asp-action="CustomerDeclineOffer" asp-controller="Customer" style="display:inline">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@item.PropItemId" />
+                                        <button type="submit" class="btn-decline">
+                                            <i class="fas fa-xmark"></i> Decline
+                                        </button>
+                                    </form>
+
+                                </div>
                     </div>
                 }
 

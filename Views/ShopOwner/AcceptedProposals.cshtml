@@ -113,7 +113,7 @@ else
                     <td class="d-flex flex-column gap-1">
 
                         <!-- Schedule Collection -->
-                        @if (shopCollects && item.ProdStatus == Status.CustomerAccepted)
+                        @if (shopCollects && (item.ProdStatus == Status.Approved || item.ProdStatus == Status.CustomerAccepted))
                         {
                             <!-- Shop collects + not yet scheduled → enabled -->
                             <a asp-action="ScheduleCollection"
@@ -144,7 +144,8 @@ else
                         <!-- Make Payment -->
                         @if (checkoutSubmitted && item.ProdStatus != Status.PaymentMade)
                         {
-                            <a asp-action="MakePayment"
+                            <!--when btn is pressed it submits to make payement acrion link-->
+                            <a asp-action="MakePayment" 
                                    asp-controller="ShopOwner"
                                    asp-route-id="@item.PropItemId"
                                    class="btn btn-success btn-sm">
