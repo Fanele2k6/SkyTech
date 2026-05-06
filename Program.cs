@@ -23,6 +23,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 // Session
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession();
+builder.Services.AddScoped<PayStackTransferService>();
 
 
 // I moved this from the bottom to up heereeeeeeeeeeeeeee

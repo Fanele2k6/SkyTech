@@ -1,3 +1,4 @@
+﻿using SkyTech.Models;
 ﻿using SkyTech.Models.Repair_Item_Services;
 using System;
 using System.ComponentModel.DataAnnotations;
@@ -36,6 +37,7 @@ namespace CM_Project.Models
         public string UserType { get; set; }
         public DateTime RegisteredOn { get; set; }
 
+        public virtual ICollection<ProposeItem> ProposeItems { get; set; } = new List<ProposeItem>();
 
 
 

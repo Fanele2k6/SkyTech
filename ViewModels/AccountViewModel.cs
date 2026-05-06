@@ -1,5 +1,6 @@
 ﻿using CM_Project.Models;
 using CM_Project.Models.Documents;
+using SkyTech.Models;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
@@ -204,5 +205,62 @@ namespace CM_Project.ViewModels
       public IFormFile ProductPicture { get; set; }
 
   
+    }
+
+
+    public class ProposeItemViewModel()
+    {
+        [Required]
+        public string ProdName { get; set; }
+
+        [Required]
+        public SelectCategory ProdCategory { get; set; }
+
+        [Required]
+        public SelectCondition ProdCondition { get; set; }
+
+        [Required]
+        [StringLength(500)]
+        public string ProdDescription { get; set; }
+        public virtual ICollection<ReceiptPic> ReceiptPics { get; set; } = new List<ReceiptPic>();
+        public virtual ICollection<ProposedProdPic> ProposedProdPics { get; set; } = new List<ProposedProdPic>();
+
+        // File uploads
+        public List<IFormFile> ReceiptPic { get; set; }
+        public List<IFormFile> ProposedProdPic { get; set; }
+    }
+
+    public class ProposalCheckoutViewModel
+    {
+        public int PropItemId { get; set; }
+        public string ProdName { get; set; }        // read-only display
+        public double AmountProposed { get; set; }  // read-only display
+
+        [Required(ErrorMessage = "Phone number is required")]
+        [Phone(ErrorMessage = "Enter a valid phone number")]
+        public string PhoneNumber { get; set; }
+
+        [Required(ErrorMessage = "Street address is required")]
+        public string Address { get; set; }
+
+        [Required(ErrorMessage = "Please select a delivery option")]
+        public Delivery SelectDelivery { get; set; }  // ← add this
+
+        [Required(ErrorMessage = "Bank name is required")]
+        public string BankName { get; set; }
+
+        [Required]
+        public string BankCode { get; set; }   // ← ADD THIS
+
+        [Required(ErrorMessage = "Account holder name is required")]
+        public string AccountHolderName { get; set; }
+
+        [Required(ErrorMessage = "Account number is required")]
+        public string AccountNumber { get; set; }
+
+        [Required(ErrorMessage = "Branch code is required")]
+        public string BranchCode { get; set; }
+
+        public AccountType AccountType { get; set; }
     }
 }

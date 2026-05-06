@@ -1,5 +1,7 @@
 ﻿using CM_Project.Models;
+using CM_Project.Models.Documents;
 using CM_Project.Services;
+using CM_Project.ViewModels;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -20,8 +22,19 @@ namespace CM_Project.Controllers
     {
         private readonly ApplicationDbContext db;
 
-        public CustomerController(ApplicationDbContext context) { db = context; }
+        public CustomerController(ApplicationDbContext context, PayStackTransferService paystackService)
+        {
+            db = context;
+            _paystackService = paystackService;
+        }
+        private readonly PayStackTransferService _paystackService;
 
+        [HttpGet]
+        public async Task<IActionResult> GetZaBanks()
+        {
+            var banks = await _paystackService.GetZaBanks();
+            return Json(banks);
+        }
 
         public IActionResult ProductDetails(int id)
         {
@@ -1104,6 +1117,182 @@ namespace CM_Project.Controllers
             return View(item);
         }
 
+
+        //=====================================Increament 2===============================
+        [AuthorizeUser]
+        public IActionResult ProposeItem() => View();
+
+        [HttpPost]
+        [AuthorizeUser]
+        public async Task<IActionResult> ProposeItem(ProposeItemViewModel vm)
+        {
+            if (!ModelState.IsValid) return View(vm);
+
+            int currentId = HttpContext.Session.GetInt32("UserId").Value;
+
+            var address = db.Customers
+                .Where(c => c.CustomerId == currentId)
+                .Select(c => c.Address)
+                .FirstOrDefault();
+
+            var model = new ProposeItem
+            {
+                CustomerId = currentId,  // ← this line was missing
+                ProdName = vm.ProdName,
+                ProdCategory = vm.ProdCategory,
+                StoreAddress = "",
+                CustomerAddress = address,
+                ProdCondition = vm.ProdCondition,
+                ProdDescription = vm.ProdDescription,
+                ProdStatus = Status.Pending,
+                SavedOn = DateTime.Now
+            };
+
+            // ================= RECEIPT IMAGES =================
+            if (vm.ReceiptPic != null && vm.ReceiptPic.Any())
+            {
+                string receiptFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/uploads/receipts");
+
+                if (!Directory.Exists(receiptFolder))
+                    Directory.CreateDirectory(receiptFolder);
+
+                foreach (var file in vm.ReceiptPic)
+                {
+                    if (file.Length > 0)
+                    {
+                        string fileName = Guid.NewGuid() + Path.GetExtension(file.FileName);
+                        string fullPath = Path.Combine(receiptFolder, fileName);
+
+                        using (var stream = new FileStream(fullPath, FileMode.Create))
+                        {
+                            await file.CopyToAsync(stream);
+                        }
+
+                        model.ReceiptPics.Add(new ReceiptPic
+                        {
+                            CustomerId = currentId,
+                            FileName = fileName,
+                            FilePath = "/uploads/receipts/" + fileName, // ✅ FIXED
+                            FileType = file.ContentType,
+                            SavedOn = DateTime.Now
+                        });
+                    }
+                }
+            }
+
+            // ================= PRODUCT IMAGES =================
+            if (vm.ProposedProdPic != null && vm.ProposedProdPic.Any())
+            {
+                string productFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/uploads/products");
+
+                if (!Directory.Exists(productFolder))
+                    Directory.CreateDirectory(productFolder);
+
+                foreach (var file in vm.ProposedProdPic)
+                {
+                    if (file.Length > 0)
+                    {
+                        string fileName = Guid.NewGuid() + Path.GetExtension(file.FileName);
+                        string fullPath = Path.Combine(productFolder, fileName);
+
+                        using (var stream = new FileStream(fullPath, FileMode.Create))
+                        {
+                            await file.CopyToAsync(stream);
+                        }
+
+                        model.ProposedProdPics.Add(new ProposedProdPic
+                        {
+                            CustomerId = currentId,
+                            FileName = fileName,
+                            FilePath = "/uploads/products/" + fileName, // ✅ FIXED
+                            FileType = file.ContentType,
+                            SavedOn = DateTime.Now
+                        });
+                    }
+                }
+            }
+
+            db.ProposeItems.Add(model);
+            await db.SaveChangesAsync();
+
+            return RedirectToAction("ProposeItem");
+        }
+
+        [AuthorizeUser]
+        public IActionResult MyProposals()
+        {
+            int currentId = HttpContext.Session.GetInt32("UserId").Value;
+
+            var proposals = db.ProposeItems
+                .Include(p => p.ReceiptPics)
+                .Include(p => p.ProposedProdPics)
+                .Where(p => p.CustomerId == currentId && p.ProdStatus == Status.Pending || p.ProdStatus == Status.Approved)
+                .OrderByDescending(p => p.PropItemId)
+                .ToList();
+
+            return View(proposals);
+        }
+        // Customer accepts the shop owner's proposed amount
+        [HttpPost]
+        [AuthorizeUser]
+        public IActionResult CustomerAcceptOffer(int id)
+        {
+            var proposal = db.ProposeItems.Find(id);
+            if (proposal == null) return NotFound();
+
+            proposal.ProdStatus = Status.CustomerAccepted;
+            db.SaveChanges();
+
+            // ← id was not being passed, so ProposalCheckout received id = 0
+            return RedirectToAction("ProposalCheckout", new { id = id });
+        }
+
+        // Customer declines the shop owner's proposed amount
+        [HttpPost]
+        [AuthorizeUser]
+        public IActionResult CustomerDeclineOffer(int id)
+        {
+            var proposal = db.ProposeItems.Find(id);
+            if (proposal == null) return NotFound();
+
+            proposal.ProdStatus = Status.CustomerDeclined;
+            db.SaveChanges();
+
+            return RedirectToAction("MyProposals");
+        }
+
+        // Customer cancels/withdraws their proposal entirely
+        [HttpPost]
+        [AuthorizeUser]
+        public IActionResult CancelProposal(int id)
+        {
+            var proposal = db.ProposeItems
+                .Include(p => p.ReceiptPics)
+                .Include(p => p.ProposedProdPics)
+                .FirstOrDefault(p => p.PropItemId == id);
+
+            if (proposal == null) return NotFound();
+
+            db.ProposeItems.Remove(proposal);
+            db.SaveChanges();
+
+            return RedirectToAction("MyProposals");
+        }
+
+        [AuthorizeUser]
+        [HttpGet]
+        public IActionResult ProposalCheckout(int id)
+        {
+            var proposal = db.ProposeItems.Find(id);
+            if (proposal == null) return NotFound();
+
+            var vm = new ProposalCheckoutViewModel
+            {
+                PropItemId = proposal.PropItemId,
+                ProdName = proposal.ProdName,
+                AmountProposed = proposal.AmountProposed
+                
+            };
         private int GetCustomerId()
         {
             return HttpContext.Session.GetInt32("UserId") ?? 0;
@@ -1148,6 +1337,67 @@ namespace CM_Project.Controllers
         }
 
         [HttpPost]
+        [AuthorizeUser]
+        public IActionResult ProposalCheckout(ProposalCheckoutViewModel vm)
+        {
+            if (!ModelState.IsValid) return View(vm);
+
+            int currentId = HttpContext.Session.GetInt32("UserId").Value;
+
+            var checkout = new ProposalCheckout
+            {
+                PropItemId = vm.PropItemId,
+                CustomerId = currentId,
+                SelectDelivery = vm.SelectDelivery,
+                PhoneNumber = vm.PhoneNumber,
+                BankCode = vm.BankCode,
+                Address = vm.Address,
+                BankName = vm.BankName,
+                AccountHolderName = vm.AccountHolderName,
+                AccountNumber = vm.AccountNumber,
+                BranchCode = vm.BranchCode,
+                AccountType = vm.AccountType,
+                SubmittedOn = DateTime.Now
+            };
+
+            db.ProposalCheckouts.Add(checkout);
+
+            // ── Update status on the ProposeItem ──────────────────────
+            var propItem = db.ProposeItems
+                             .FirstOrDefault(p => p.PropItemId == vm.PropItemId);
+
+            if (propItem != null)
+                propItem.ProdStatus = Status.CustomerAccepted;
+            // ─────────────────────────────────────────────────────────
+
+            db.SaveChanges();
+
+            return RedirectToAction("MyProposals");
+        }
+
+        //db.ProposalCheckouts.Add(checkout);
+        //    db.SaveChanges();
+
+        //    return RedirectToAction("MyProposals");
+        //}
+
+        // Also update the redirect inside CustomerAcceptOffer
+        [HttpPost]
+        [AuthorizeUser]
+        public IActionResult AcceptProposalOffer(int id)
+        {
+            var proposal = db.ProposeItems.Find(id);
+            if (proposal == null) return NotFound();
+
+            proposal.ProdStatus = Status.CustomerAccepted;
+            db.SaveChanges();
+
+            return RedirectToAction("ProposalCheckout", new { id = id }); // ← updated
+        }
+
+
+
+
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> AcceptQuotation(int quotationId)
         {

@@ -1,5 +1,6 @@
 ﻿using CM_Project.Models;
 using CM_Project.Models.Documents;
+using CM_Project.Services;
 using CM_Project.ViewModels;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -11,6 +12,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.NetworkInformation;
+using System.Security.Cryptography.Xml;
 
 namespace CM_Project.Controllers
 {
@@ -21,10 +23,16 @@ namespace CM_Project.Controllers
         private readonly EmailServices _services = null;  // ← add this
         private readonly IWebHostEnvironment _webHostEnvironment;
 
-
-        public ShopOwnerController(ApplicationDbContext context, EmailServices services, IWebHostEnvironment webHostEnvironment)
+        //paying customer their money
+        private readonly PayStackTransferService _transfer;
+   
+        public ShopOwnerController(ApplicationDbContext context, EmailServices services, IWebHostEnvironment webHostEnvironment, PayStackTransferService transfer)
         {
+            //this.db = db;
+
             db = context;
+            _transfer = transfer;
+
             _services = services;
             _webHostEnvironment = webHostEnvironment;
         }
@@ -290,44 +298,6 @@ namespace CM_Project.Controllers
             int currentId = HttpContext.Session.GetInt32("UserId").Value;
             return View(db.shopowners.Where(p => p.OwnerId == currentId).ToList());
         }
-
-
-        //public IActionResult ReceivedOrders()
-        //{
-        //    int currentId = HttpContext.Session.GetInt32("UserId")!.Value;
-
-        //    // Normal orders belonging to this branch
-        //    var orders = db.Orders
-        //        .Include(o => o.OrderItems)
-        //            .ThenInclude(i => i.Products)
-        //        .Include(o => o.Driver)
-        //        .Where(o => o.OwnerId == currentId)
-        //        .OrderByDescending(o => o.OrderedOn)
-        //        .ToList();
-
-        //    // Transfers OUT — items from this branch going to another pickup branch
-        //    var transfersOut = db.InterBranchTransfers
-        //        .Include(t => t.OrderItem)
-        //            .ThenInclude(oi => oi.Order)
-        //                .ThenInclude(o => o.Customers)
-        //        .Include(t => t.OrderItem)
-        //            .ThenInclude(oi => oi.Products)
-        //        .Include(t => t.TargetBranch)
-        //        .Include(t => t.Driver)
-        //        .Where(t => t.SourceBranchId == currentId
-        //                 && t.TransferStatus != ItemTransferStatus.DeliveredToPickupBranch)
-        //        .OrderBy(t => t.ScheduledTransferDate)
-        //        .ToList();
-
-        //    // Available drivers for transfer assignment
-        //    ViewBag.AvailableDrivers = db.DeliveryDrivers
-        //        .Where(d => d.IsAvailable && d.ApplicationStatus == Status.Approved)
-        //        .ToList();
-
-        //    ViewBag.TransfersOut = transfersOut;
-
-        //    return View(orders);
-        //}
 
         //Separating orders
         // DELIVERY ORDERS - Shows orders delivered to this branch AND items that need to be transported OUT
@@ -632,65 +602,7 @@ namespace CM_Project.Controllers
             return RedirectToAction("PickupBranchOrders");
         }
 
-        //===================================Return Actions======================================
-        //public IActionResult ReturnedItems()
-        //{
-        //    int currentId = HttpContext.Session.GetInt32("UserId")!.Value;
-
-        //    var pendingReturns = db.OrderItems
-        //        .Include(i => i.Order)
-        //            .ThenInclude(o => o.Customers)
-        //        .Include(i => i.Products)
-        //            .ThenInclude(p => p.ProductPictures)
-        //        .Where(i => i.ReturnPStatus == ReturnProduct.Return_Pending
-        //                 && i.Order.OwnerId == currentId)   // ← only this shop's orders
-        //        .OrderByDescending(i => i.Order.DeliveredOn)
-        //        .ToList();
-
-        //    return View(pendingReturns);
-        //}
-
-        //// Approve the return
-        //[HttpPost]
-        //[ValidateAntiForgeryToken]
-        //public IActionResult ApproveReturn(int orderItemId)
-        //{
-        //    int currentId = HttpContext.Session.GetInt32("UserId")!.Value;
-
-        //    var item = db.OrderItems
-        //        .Include(i => i.Order)
-        //        .FirstOrDefault(i => i.OrderItemId == orderItemId
-        //                          && i.Order.OwnerId == currentId);
-
-        //    if (item == null) return NotFound();
-
-        //    // Find an available, approved driver
-        //    var availableDriver = db.DeliveryDrivers
-        //        .FirstOrDefault(d => d.IsAvailable == true
-        //                          && d.ApplicationStatus == Status.Approved);
-
-        //    if (availableDriver == null)
-        //    {
-        //        TempData["Error"] = "No drivers are currently available. Please try again later.";
-        //        return RedirectToAction("ReturnedItems");
-        //    }
-
-        //    // Assign the driver to the order item
-        //    item.ReturnPStatus = ReturnProduct.Collection_Assigned;
-        //    item.DriverId = availableDriver.DriverId;
-        //    item.IsAssingedForCollection = true;
-        //    item.CollectionDate = DateTime.Now.AddDays(1);
-        //    item.NewDeliveryDate = DateTime.Now.AddDays(4);
-
-        //    // Mark the driver as unavailable
-        //    availableDriver.IsAvailable = false;
-
-        //    db.SaveChanges();
-
-        //    TempData["Message"] = $"Return for '{item.ProdName}' approved and assigned to driver {availableDriver.DriverName} {availableDriver.DriverSurname}.";
-        //    return RedirectToAction("ReturnedItems");
-        //}
-
+       
         // Shows ALL active returns (not just pending)
         public IActionResult ReturnedItems()
         {
@@ -815,6 +727,301 @@ namespace CM_Project.Controllers
         }
 
         public IActionResult AssignCollection() => View();
+
+        //=================================Increament 2 ==========================
+
+        //public IActionResult EvaluateProposal() => View();
+        public IActionResult EvaluateProposal()
+        {
+            var proposals = db.ProposeItems
+                .Include(p => p.ReceiptPics)
+                .Include(p => p.ProposedProdPics)
+                .Where(p => p.ProdStatus == Status.Pending) // ← only show pending
+                .ToList();
+
+            return View(proposals);
+        }
+
+        // action to open the partial view so that the shop owner can enter the proposed amount 
+        [HttpGet]
+        public IActionResult AcceptProposal(int id)
+        {
+            var proposal = db.ProposeItems.Find(id);
+            if (proposal == null) return NotFound();
+
+            return PartialView("_AcceptProposalModal", proposal);
+        }
+
+        [HttpPost]
+        public IActionResult AcceptProposal(int id, double amount)
+        {
+            var proposal = db.ProposeItems.Find(id);
+            if (proposal == null) return NotFound();
+
+            int currentId = HttpContext.Session.GetInt32("UserId").Value;
+
+            // Fetch the logged-in shop owner's address
+            var shopOwner = db.shopowners.FirstOrDefault(s => s.OwnerId == currentId);
+
+            proposal.AmountProposed = amount;
+            proposal.StoreAddress = shopOwner?.ShopAddress ?? "Address not found";
+            proposal.ProdStatus = Status.Approved;
+
+            db.SaveChanges();
+
+            return RedirectToAction("EvaluateProposal");
+        }
+
+        // this one declines the proposal
+        [HttpPost]
+        public IActionResult DeclineProposal(int id)
+        {
+            var proposal = db.ProposeItems.Find(id);
+            if (proposal == null) return NotFound();
+
+            proposal.ProdStatus = Status.Rejected;
+
+            db.SaveChanges();
+
+            return RedirectToAction("EvaluateProposal");
+        }
+
+        public IActionResult AcceptedProposals()
+        {
+            var proposals = db.ProposeItems
+                .Include(p => p.ReceiptPics)
+                .Include(p => p.ProposedProdPics)
+                .Include(p => p.Checkout)
+                .Where(p => p.ProdStatus == Status.Approved ||
+                            p.ProdStatus == Status.CustomerAccepted ||
+                            p.ProdStatus == Status.Item_Collected ||
+                            p.ProdStatus == Status.CollectionScheduled ||
+                            p.ProdStatus == Status.CustomerAccepted)
+                .ToList();
+
+            return View(proposals);
+        }
+        // GET — shows confirmation page
+        [HttpGet]
+        public IActionResult ScheduleCollection(int id)
+        {
+            var proposal = db.ProposeItems
+                .Include(p => p.Checkout)
+                .FirstOrDefault(p => p.PropItemId == id);
+
+            if (proposal == null) return NotFound();
+
+            return View(proposal);
+        }
+
+        // POST — does the actual work
+        [HttpPost]
+        [ActionName("ScheduleCollection")]  // ← tells ASP.NET this is still "ScheduleCollection"
+        public IActionResult ScheduleCollectionConfirmed(int id)  // ← different method name
+        {
+            var proposal = db.ProposeItems.Find(id);
+
+            if (proposal == null) return NotFound();
+
+            bool anyDriversExist = db.DeliveryDrivers
+                .Any(d => d.ApplicationStatus == Status.Approved);
+
+            if (!anyDriversExist)
+            {
+                TempData["Error"] = "No drivers are registered in the system yet.";
+                return RedirectToAction("AcceptedProposals");
+            }
+
+            var availableDriver = db.DeliveryDrivers
+                .FirstOrDefault(d => d.IsAvailable == true &&
+                                     d.ApplicationStatus == Status.Approved);
+
+            if (availableDriver == null)
+            {
+                TempData["Error"] = "All drivers are currently busy. Please try again later.";
+                return RedirectToAction("AcceptedProposals");
+            }
+
+            DateTime collectionDate = DateTime.Now.AddDays(4);
+
+            proposal.CollectionDate = collectionDate;
+            proposal.ProdStatus = Status.CollectionScheduled;
+            proposal.AssignedDriverId = availableDriver.DriverId;
+
+            availableDriver.IsAvailable = true;
+
+            db.SaveChanges();
+
+            TempData["Success"] = $"Collection scheduled for {collectionDate:dd MMM yyyy}. " +
+                                  $"Driver {availableDriver.DriverName} " +
+                                  $"{availableDriver.DriverSurname} has been assigned.";
+
+            return RedirectToAction("AcceptedProposals");
+        }
+
+        // ── Add these to ShopOwnerController ──────────────────────────────────────────
+        // Also inject PayStackTransferService via constructor:
+        //
+        //   private readonly PayStackTransferService _transfer;
+        //   public ShopOwnerController(ApplicationDbContext context, PayStackTransferService transfer)
+        //   { db = context; _transfer = transfer; }
+        //
+        // Register in Program.cs:
+        //   builder.Services.AddScoped<PayStackTransferService>();
+
+        // ── GET: show payment confirmation page ───────────────────────────────────────
+        [HttpGet]
+        public IActionResult MakePayment(int id)
+        {
+            int currentId = HttpContext.Session.GetInt32("UserId")!.Value;
+
+            var proposal = db.ProposeItems
+                .Include(p => p.Customer)
+                .Include(p => p.Checkout)
+                .FirstOrDefault(p => p.PropItemId == id);
+
+            if (proposal == null) return NotFound();
+
+            if (proposal.Checkout == null)
+            {
+                TempData["Error"] = "Customer has not submitted their details yet.";
+                return RedirectToAction("AcceptedProposals");
+            }
+
+            if (proposal.ProdStatus == Status.PaymentMade)
+            {
+                TempData["Error"] = "Payment has already been made for this proposal.";
+                return RedirectToAction("AcceptedProposals");
+            }
+
+            return View(proposal);
+        }
+
+        // ── POST: process the PayStack transfer ───────────────────────────────────────
+        //[HttpPost]
+        //[ValidateAntiForgeryToken]
+        //[ActionName("MakePayment")]  // ← tells ASP.NET this is still "MakePayment"
+
+        //public async Task<IActionResult> MakeTranferPayment(int propItemId)
+        //{
+        //    try
+        //    {
+        //        int currentId = HttpContext.Session.GetInt32("UserId")!.Value;
+
+        //        var proposal = db.ProposeItems
+        //            .Include(p => p.Customer)
+        //            .Include(p => p.Checkout)
+        //            .FirstOrDefault(p => p.PropItemId == propItemId);
+
+        //        if (proposal == null) return NotFound();
+
+        //        var checkout = proposal.Checkout;
+
+        //        if (checkout == null)
+        //        {
+        //            TempData["Error"] = "Customer banking details are missing.";
+        //            return RedirectToAction("AcceptedProposals");
+        //        }
+        //        // ── 1. Resolve bank code ──────────────────────────────────────────────────
+        //        // Try branch code first (e.g. "051001"), fall back to bank name
+        //        //string bankCode = await _transfer.ResolveBankCode(checkout.BranchCode)
+        //        //               ?? await _transfer.ResolveBankCode(checkout.BankName);
+
+        //        // ── 1. Bank code now comes straight from the database — no lookup needed ──
+        //        string bankCode = checkout.BankCode;
+
+        //        if (string.IsNullOrEmpty(bankCode))
+        //        {
+        //            TempData["Error"] = "Bank code is missing. Customer may need to re-submit their details.";
+        //            return RedirectToAction("MakePayment", new { id = propItemId });
+        //        }
+
+        //        // ── 2. Create transfer recipient ──────────────────────────────────────────
+        //        var recipient = await _transfer.CreateRecipient(
+        //            name: checkout.AccountHolderName,
+        //            accountNumber: checkout.AccountNumber,
+        //            bankCode: bankCode
+        //        );
+
+        //        //// ── 2. Create transfer recipient ──────────────────────────────────────────
+        //        //var recipient = await _transfer.CreateRecipient(
+        //        //    name: checkout.AccountHolderName,
+        //        //    accountNumber: checkout.AccountNumber,
+        //        //    bankCode: bankCode
+        //        //);
+
+        //        if (!recipient.Success)
+        //        {
+        //            TempData["Error"] = "Could not create payment recipient: " + recipient.Message;
+        //            return RedirectToAction("MakePayment", new { id = propItemId });
+        //        }
+
+        //        // ── 3. Initiate the transfer ──────────────────────────────────────────────
+        //        string reference = $"PROP-{propItemId}-{DateTime.Now.Ticks}";
+        //        string reason = $"Payment for item: {proposal.ProdName}";
+
+        //        var transfer = await _transfer.InitiateTransfer(
+        //            recipientCode: recipient.RecipientCode,
+        //            amountRand: proposal.AmountProposed,
+        //            reason: reason,
+        //            reference: reference
+        //        );
+
+        //        if (!transfer.Success)
+        //        {
+        //            TempData["Error"] = "Transfer failed: " + transfer.Message;
+        //            return RedirectToAction("MakePayment", new { id = propItemId });
+        //        }
+
+        //        // ── 4. Mark proposal as paid ──────────────────────────────────────────────
+        //        proposal.ProdStatus = Status.PaymentMade;
+        //        db.SaveChanges();
+
+        //        TempData["Success"] = $"Payment of R {proposal.AmountProposed:N2} sent to {checkout.AccountHolderName}.";
+        //        TempData["TransferCode"] = transfer.TransferCode;
+        //        TempData["Reference"] = reference;
+
+        //        return RedirectToAction("AcceptedProposals");
+
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        // Temporarily show the full error
+        //        TempData["Error"] = "Exception: " + ex.Message + " | " + ex.InnerException?.Message;
+        //        return RedirectToAction("MakePayment", new { id = propItemId });
+        //    }
+        //}
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [ActionName("MakePayment")]
+        public IActionResult MakeTranferPayment(int propItemId)
+        {
+            var proposal = db.ProposeItems
+                .Include(p => p.Customer)
+                .Include(p => p.Checkout)
+                .FirstOrDefault(p => p.PropItemId == propItemId);
+
+            if (proposal == null) return NotFound();
+
+            if (proposal.ProdStatus == Status.PaymentMade)
+            {
+                TempData["Error"] = "Payment has already been made for this proposal.";
+                return RedirectToAction("AcceptedProposals");
+            }
+
+            // Mark as paid
+            proposal.ProdStatus = Status.PaymentMade;
+            db.SaveChanges();
+
+            // Pass details to the view via TempData so the success popup can display them
+            TempData["PaymentSuccess"] = "true";
+            TempData["PaidAmount"] = proposal.AmountProposed.ToString("N2");
+            TempData["PaidToName"] = proposal.Checkout?.AccountHolderName ?? "Customer";
+            TempData["PaidProductName"] = proposal.ProdName;
+
+            return RedirectToAction("AcceptedProposals");
+        }
 
 
     }
