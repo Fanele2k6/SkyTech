@@ -3,6 +3,198 @@
 @{
     Layout = "~/Views/Shared/_MinimalLayout.cshtml";
     ViewData["Title"] = "Confirm Payment";
+    var checkout = Model.Checkout;
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/CSS/MakePaymentStyle.css">
+}
+
+<!-- ── Payment Overlay ── -->
+<div class="pay-overlay" id="payOverlay">
+    <div class="pay-modal phase-loading" id="payModal">
+
+        <!-- Loading spinner -->
+        <div class="modal-icon" id="spinnerIcon"></div>
+
+        <!-- Success tick (hidden initially) -->
+        <div class="modal-success" id="successIcon">
+            <i class="fas fa-check"></i>
+        </div>
+
+        <div class="modal-title" id="modalTitle">Processing Payment…</div>
+        <div class="modal-sub"   id="modalSub">
+            Please wait while we process the transfer.
+        </div>
+
+        <div class="modal-amount" id="modalAmount" style="display:none">
+            R @Model.AmountProposed.ToString("N2")
+        </div>
+        <div class="modal-to" id="modalTo" style="display:none">
+            Paid to @(checkout?.AccountHolderName ?? "Customer")
+        </div>
+
+        <button class="modal-close-btn" id="modalCloseBtn" onclick="goBack()">
+            ✓ Done — Back to Proposals
+        </button>
+    </div>
+</div>
+
+<!-- ── Page card ── -->
+<div class="pay-wrapper">
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger mb-3">⚠️ @TempData["Error"]</div>
+    }
+
+    <div class="pay-card">
+
+        <div class="pay-header">
+            <h4><i class="fas fa-money-bill-transfer me-2"></i>Confirm Payout</h4>
+            <p>Review the details below before sending the payment.</p>
+        </div>
+
+        <div class="pay-body">
+
+            <div class="section-title">Proposal Details</div>
+            <div class="info-row">
+                <span class="info-label">Item</span>
+                <span class="info-value">@Model.ProdName</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Category</span>
+                <span class="info-value">@Model.ProdCategory</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Customer</span>
+                <span class="info-value">
+                    @(Model.Customer != null
+                        ? Model.Customer.FirstName + " " + Model.Customer.LastName
+                        : "—")
+                </span>
+            </div>
+
+            <div class="amount-highlight">
+                <span class="lbl">Payout Amount</span>
+                <span class="val">R @Model.AmountProposed.ToString("N2")</span>
+            </div>
+
+            @if (checkout != null)
+            {
+                <div class="section-title">Banking Details</div>
+                <div class="info-row">
+                    <span class="info-label">Account Holder</span>
+                    <span class="info-value">@checkout.AccountHolderName</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Bank</span>
+                    <span class="info-value">@checkout.BankName</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Account Number</span>
+                    <span class="info-value">@checkout.AccountNumber</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Branch Code</span>
+                    <span class="info-value">@checkout.BranchCode</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Account Type</span>
+                    <span class="info-value">@checkout.AccountType</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Phone</span>
+                    <span class="info-value">@checkout.PhoneNumber</span>
+                </div>
+            }
+
+            <div class="warning-box mt-3">
+                <i class="fas fa-triangle-exclamation mt-1"></i>
+                <span>
+                    <strong>This action cannot be undone.</strong>
+                    Once confirmed, R @Model.AmountProposed.ToString("N2") will be transferred
+                    to the customer's bank account. Verify all details before proceeding.
+                </span>
+            </div>
+
+            <!-- Clicking the button triggers the popup + submits the form after the animation -->
+            <button type="button" class="btn-pay" id="payBtn" onclick="startPayment()">
+                <i class="fas fa-paper-plane"></i>
+                Send R @Model.AmountProposed.ToString("N2") to @(checkout?.AccountHolderName ?? "Customer")
+            </button>
+
+            <!-- Hidden form — submitted programmatically after the animation -->
+            <form id="payForm"
+                  method="post"
+                  asp-action="MakePayment"
+                  asp-controller="ShopOwner"
+                  style="display:none">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="propItemId" value="@Model.PropItemId" />
+            </form>
+
+            <a asp-action="AcceptedProposals" asp-controller="ShopOwner" class="btn-back">
+                ← Cancel &amp; Go Back
+            </a>
+
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function startPayment() {
+            // Disable the button immediately to prevent double-clicks
+            const btn = document.getElementById('payBtn');
+            btn.disabled = true;
+
+            // Show the overlay in loading phase
+            document.getElementById('payOverlay').classList.add('show');
+
+            // After 2.5 s — switch to success
+            setTimeout(() => {
+                switchToSuccess();
+
+                // After the success animation settle (0.5 s) — submit the real form
+                setTimeout(() => {
+                    document.getElementById('payForm').submit();
+                }, 500);
+
+            }, 2500);
+        }
+
+        function switchToSuccess() {
+            const modal = document.getElementById('payModal');
+            modal.classList.remove('phase-loading');
+            modal.classList.add('phase-success');
+
+            document.getElementById('modalTitle').textContent  = 'Payment Successful!';
+            document.getElementById('modalSub').textContent    = 'The transfer has been processed successfully.';
+            document.getElementById('modalAmount').style.display = 'block';
+            document.getElementById('modalTo').style.display    = 'block';
+        }
+
+        // Fallback — if the form submission causes a redirect back here
+        // and TempData signals success, show the modal in success state immediately
+        window.addEventListener('DOMContentLoaded', () => {
+            // nothing needed here since we redirect to AcceptedProposals on success
+        });
+
+        function goBack() {
+            window.location.href = '@Url.Action("AcceptedProposals", "ShopOwner")';
+        }
+    </script>
+}
+
+
+
+
+@* @using SkyTech.Models
+@model SkyTech.Models.ProposeItem
+@{
+    Layout = "~/Views/Shared/_MinimalLayout.cshtml";
+    ViewData["Title"] = "Confirm Payment";
 
     var checkout = Model.Checkout;
 }
@@ -267,9 +459,9 @@
                 @Html.AntiForgeryToken()
 
                 @* propItemId must match the parameter name in MakeTranferPayment(int propItemId) *@
-                <input type="hidden" name="propItemId" value="@Model.PropItemId" />
+                @* <input type="hidden" name="propItemId" value="@Model.PropItemId" /> *@
 
-                <button type="submit" class="btn-pay" id="payBtn">
+@*                 <button type="submit" class="btn-pay" id="payBtn">
                     <i class="fas fa-paper-plane"></i>
                     Send R @Model.AmountProposed.ToString("N2") to @(checkout?.AccountHolderName ?? "Customer")
                 </button>
@@ -281,9 +473,9 @@
 
         </div>
     </div>
-</div>
+</div> *@
 
-@section Scripts {
+@* @section Scripts {
     <script>
         function disableBtn(form) {
             const btn = document.getElementById('payBtn');
@@ -291,5 +483,5 @@
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing…';
             return true; // allow form to submit
         }
-    </script>
-}
+    </script> *@
+ @* } *@ 

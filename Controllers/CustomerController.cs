@@ -1049,7 +1049,7 @@ namespace CM_Project.Controllers
             var proposals = db.ProposeItems
                 .Include(p => p.ReceiptPics)
                 .Include(p => p.ProposedProdPics)
-                .Where(p => p.CustomerId == currentId)
+                .Where(p => p.CustomerId == currentId && p.ProdStatus == Status.Pending || p.ProdStatus == Status.Approved)
                 .OrderByDescending(p => p.PropItemId)
                 .ToList();
 
@@ -1114,6 +1114,7 @@ namespace CM_Project.Controllers
                 PropItemId = proposal.PropItemId,
                 ProdName = proposal.ProdName,
                 AmountProposed = proposal.AmountProposed
+                
             };
             return View(vm);
         }
@@ -1130,9 +1131,9 @@ namespace CM_Project.Controllers
             {
                 PropItemId = vm.PropItemId,
                 CustomerId = currentId,
-                SelectDelivery = vm.SelectDelivery,  // ← add this
+                SelectDelivery = vm.SelectDelivery,
                 PhoneNumber = vm.PhoneNumber,
-                BankCode = vm.BankCode,   // ← store this
+                BankCode = vm.BankCode,
                 Address = vm.Address,
                 BankName = vm.BankName,
                 AccountHolderName = vm.AccountHolderName,
@@ -1143,10 +1144,25 @@ namespace CM_Project.Controllers
             };
 
             db.ProposalCheckouts.Add(checkout);
+
+            // ── Update status on the ProposeItem ──────────────────────
+            var propItem = db.ProposeItems
+                             .FirstOrDefault(p => p.PropItemId == vm.PropItemId);
+
+            if (propItem != null)
+                propItem.ProdStatus = Status.CustomerAccepted;
+            // ─────────────────────────────────────────────────────────
+
             db.SaveChanges();
 
             return RedirectToAction("MyProposals");
         }
+
+        //db.ProposalCheckouts.Add(checkout);
+        //    db.SaveChanges();
+
+        //    return RedirectToAction("MyProposals");
+        //}
 
         // Also update the redirect inside CustomerAcceptOffer
         [HttpPost]

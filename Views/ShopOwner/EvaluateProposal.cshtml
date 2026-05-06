@@ -1,12 +1,14 @@
-﻿@model List<SkyTech.Models.ProposeItem>
+﻿@using SkyTech.Models
+@model List<SkyTech.Models.ProposeItem>
 @{
     Layout = "~/Views/Shared/_MinimalLayout.cshtml";
+    ViewData["Title"] = "Pending Proposals";
 }
-@section Styles {
-    <link rel="stylesheet" href="~/CSS/ShopOwnerStyle.css">
-    <link rel="stylesheet" href="~/CSS/ManageProposalStyles.css">
 
-    }
+@section Styles {
+    <link rel="stylesheet" href="~/CSS/EvaluateProposal.css">
+}
+
 <script>
     function openAcceptModal(id) {
         fetch('/ShopOwner/AcceptProposal?id=' + id)
@@ -21,68 +23,100 @@
     }
 </script>
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h3>Pending Proposals</h3>
-    <a asp-action="AcceptedProposals" asp-controller="ShopOwner" class="btn btn-primary">
-        View Accepted Proposals
-    </a>
-</div>
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
 
-@if (!Model.Any())
-{
-    <div class="alert alert-info">No pending proposals at the moment.</div>
-}
-else
-{
-    <table class="table table-bordered">
-        <thead>
-            <tr>
-                <th>Product Name</th>
-                <th>Category</th>
-                <th>Condition</th>
-                <th>Description</th>
-                <th>Receipt Images</th>
-                <th>Product Images</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
+<div class="page-wrapper">
+
+    <!-- Top bar -->
+    <div class="page-topbar">
+        <div class="page-title-group">
+            <div class="page-title-icon">📋</div>
+            <div>
+                <h1>Pending Proposals</h1>
+                <p>Review and evaluate customer submissions</p>
+            </div>
+        </div>
+        <a asp-action="AcceptedProposals" asp-controller="ShopOwner" class="btn-primary-pill">
+            ✅ View Accepted Proposals
+        </a>
+    </div>
+
+    <!-- Content -->
+    @if (!Model.Any())
+    {
+        <div class="empty-card">
+            <div class="empty-icon">📭</div>
+            <h3>No pending proposals</h3>
+            <p>New customer proposals will appear here for review.</p>
+        </div>
+    }
+    else
+    {
+        <div class="proposals-grid">
             @foreach (var item in Model)
             {
-                <tr>
-                    <td>@item.ProdName</td>
-                    <td>@item.ProdCategory</td>
-                    <td>@item.ProdCondition</td>
-                    <td>@item.ProdDescription</td>
+                <div class="proposal-card">
 
-                    <td>
-                        @foreach (var pic in item.ReceiptPics)
+                    <div class="proposal-card-header">
+                        <div>
+                            <div class="prod-name">@item.ProdName</div>
+                            <div class="prod-badges">
+                                <span class="badge-pill badge-category">@item.ProdCategory</span>
+                                <span class="badge-pill badge-condition">@item.ProdCondition</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="proposal-card-body">
+
+                        <p class="prod-desc">@item.ProdDescription</p>
+
+                        @if (item.ReceiptPics != null && item.ReceiptPics.Any())
                         {
-                            <img src="@pic.FilePath" width="80" height="80" style="margin:5px;" />
+                            <div class="img-section">
+                                <div class="img-section-label">🧾 Receipts</div>
+                                <div class="img-row">
+                                    @foreach (var pic in item.ReceiptPics)
+                                    {
+                                        <img src="@pic.FilePath" alt="Receipt" />
+                                    }
+                                </div>
+                            </div>
                         }
-                    </td>
 
-                    <td>
-                        @foreach (var pic in item.ProposedProdPics)
+                        @if (item.ProposedProdPics != null && item.ProposedProdPics.Any())
                         {
-                            <img src="@pic.FilePath" width="80" height="80" style="margin:5px;" />
+                            <div class="img-section">
+                                <div class="img-section-label">📸 Product Photos</div>
+                                <div class="img-row">
+                                    @foreach (var pic in item.ProposedProdPics)
+                                    {
+                                        <img src="@pic.FilePath" alt="Product" />
+                                    }
+                                </div>
+                            </div>
                         }
-                    </td>
 
-                    <td>
-                        <button class="btn btn-success btn-sm" onclick="openAcceptModal(@item.PropItemId)">
-                            Accept
-                        </button>
+                    </div>
+
+                    <div class="proposal-card-footer">
                         <form asp-action="DeclineProposal" asp-controller="ShopOwner"
-                              method="post" style="display:inline;">
+                              method="post" style="margin:0;">
                             <input type="hidden" name="id" value="@item.PropItemId" />
-                            <button type="submit" class="btn btn-danger btn-sm">Decline</button>
+                            <button type="submit" class="btn-decline">✕ Decline</button>
                         </form>
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
-}
+                        <button class="btn-accept" onclick="openAcceptModal(@item.PropItemId)">
+                            ✓ Accept
+                        </button>
+                    </div>
 
+                </div>
+            }
+        </div>
+    }
+
+</div>
+
+<!-- Modal container -->
 <div id="modalContainer"></div>
