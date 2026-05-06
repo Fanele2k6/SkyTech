@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace SkyTech.Migrations
 {
     /// <inheritdoc />
-    public partial class initial : Migration
+    public partial class Initi : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -56,6 +56,19 @@ namespace SkyTech.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_DeliveryDrivers", x => x.DriverId);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "RepairItemCategories",
+                columns: table => new
+                {
+                    CategoryId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    CategoryName = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_RepairItemCategories", x => x.CategoryId);
                 });
 
             migrationBuilder.CreateTable(
@@ -164,6 +177,98 @@ namespace SkyTech.Migrations
                         column: x => x.DriverId,
                         principalTable: "DeliveryDrivers",
                         principalColumn: "DriverId",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ProposeItems",
+                columns: table => new
+                {
+                    PropItemId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    CustomerId = table.Column<int>(type: "int", nullable: false),
+                    AssignedDriverId = table.Column<int>(type: "int", nullable: true),
+                    ProdName = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    ProdCategory = table.Column<int>(type: "int", nullable: false),
+                    ProdCondition = table.Column<int>(type: "int", nullable: false),
+                    ProdDescription = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    ProdStatus = table.Column<int>(type: "int", nullable: false),
+                    AmountProposed = table.Column<double>(type: "float", nullable: false),
+                    StoreAddress = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    CustomerAddress = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    SavedOn = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CollectionDate = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    IsCollected = table.Column<bool>(type: "bit", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ProposeItems", x => x.PropItemId);
+                    table.ForeignKey(
+                        name: "FK_ProposeItems_Customers_CustomerId",
+                        column: x => x.CustomerId,
+                        principalTable: "Customers",
+                        principalColumn: "CustomerId");
+                    table.ForeignKey(
+                        name: "FK_ProposeItems_DeliveryDrivers_AssignedDriverId",
+                        column: x => x.AssignedDriverId,
+                        principalTable: "DeliveryDrivers",
+                        principalColumn: "DriverId");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "RepairRequests",
+                columns: table => new
+                {
+                    RequestId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    CustomerId = table.Column<int>(type: "int", nullable: true),
+                    ItemName = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    ItemDescription = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    IssueDescription = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    DateCreated = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Status = table.Column<int>(type: "int", nullable: false),
+                    CategoryId = table.Column<int>(type: "int", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_RepairRequests", x => x.RequestId);
+                    table.ForeignKey(
+                        name: "FK_RepairRequests_Customers_CustomerId",
+                        column: x => x.CustomerId,
+                        principalTable: "Customers",
+                        principalColumn: "CustomerId");
+                    table.ForeignKey(
+                        name: "FK_RepairRequests_RepairItemCategories_CategoryId",
+                        column: x => x.CategoryId,
+                        principalTable: "RepairItemCategories",
+                        principalColumn: "CategoryId");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Technicians",
+                columns: table => new
+                {
+                    TechnicianId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    TechnicianFirstName = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    TechnicianLastName = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Email = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Password = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    PhoneNumber = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Address = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    UserType = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    RegisteredOn = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Status = table.Column<int>(type: "int", nullable: false),
+                    CategoryId = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Technicians", x => x.TechnicianId);
+                    table.ForeignKey(
+                        name: "FK_Technicians_RepairItemCategories_CategoryId",
+                        column: x => x.CategoryId,
+                        principalTable: "RepairItemCategories",
+                        principalColumn: "CategoryId",
                         onDelete: ReferentialAction.Cascade);
                 });
 
@@ -310,6 +415,177 @@ namespace SkyTech.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "ProposalCheckouts",
+                columns: table => new
+                {
+                    CheckoutId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    PropItemId = table.Column<int>(type: "int", nullable: false),
+                    CustomerId = table.Column<int>(type: "int", nullable: false),
+                    SelectDelivery = table.Column<int>(type: "int", nullable: false),
+                    PhoneNumber = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Address = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    BankName = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    BankCode = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    AccountHolderName = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    AccountNumber = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    BranchCode = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    AccountType = table.Column<int>(type: "int", nullable: false),
+                    SubmittedOn = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ProposalCheckouts", x => x.CheckoutId);
+                    table.ForeignKey(
+                        name: "FK_ProposalCheckouts_Customers_CustomerId",
+                        column: x => x.CustomerId,
+                        principalTable: "Customers",
+                        principalColumn: "CustomerId");
+                    table.ForeignKey(
+                        name: "FK_ProposalCheckouts_ProposeItems_PropItemId",
+                        column: x => x.PropItemId,
+                        principalTable: "ProposeItems",
+                        principalColumn: "PropItemId");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ProposedProdPic",
+                columns: table => new
+                {
+                    ProposedId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    CustomerId = table.Column<int>(type: "int", nullable: false),
+                    FilePath = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    FileName = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    FileType = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    SavedOn = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ProposeItemPropItemId = table.Column<int>(type: "int", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ProposedProdPic", x => x.ProposedId);
+                    table.ForeignKey(
+                        name: "FK_ProposedProdPic_Customers_CustomerId",
+                        column: x => x.CustomerId,
+                        principalTable: "Customers",
+                        principalColumn: "CustomerId",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_ProposedProdPic_ProposeItems_ProposeItemPropItemId",
+                        column: x => x.ProposeItemPropItemId,
+                        principalTable: "ProposeItems",
+                        principalColumn: "PropItemId");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "ReceiptPics",
+                columns: table => new
+                {
+                    ReceiptId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    CustomerId = table.Column<int>(type: "int", nullable: false),
+                    FilePath = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    FileName = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    FileType = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    SavedOn = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ProposeItemPropItemId = table.Column<int>(type: "int", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ReceiptPics", x => x.ReceiptId);
+                    table.ForeignKey(
+                        name: "FK_ReceiptPics_Customers_CustomerId",
+                        column: x => x.CustomerId,
+                        principalTable: "Customers",
+                        principalColumn: "CustomerId",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_ReceiptPics_ProposeItems_ProposeItemPropItemId",
+                        column: x => x.ProposeItemPropItemId,
+                        principalTable: "ProposeItems",
+                        principalColumn: "PropItemId");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "RepairTrackings",
+                columns: table => new
+                {
+                    TrackingId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    RepairRequestId = table.Column<int>(type: "int", nullable: false),
+                    Status = table.Column<int>(type: "int", nullable: false),
+                    UpdatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    StatusMessage = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_RepairTrackings", x => x.TrackingId);
+                    table.ForeignKey(
+                        name: "FK_RepairTrackings_RepairRequests_RepairRequestId",
+                        column: x => x.RepairRequestId,
+                        principalTable: "RepairRequests",
+                        principalColumn: "RequestId",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Quotations",
+                columns: table => new
+                {
+                    QuotationId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    RepairRequestId = table.Column<int>(type: "int", nullable: false),
+                    TechnicianId = table.Column<int>(type: "int", nullable: true),
+                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Status = table.Column<int>(type: "int", nullable: false),
+                    TotalCost = table.Column<decimal>(type: "decimal(10,2)", nullable: false),
+                    TechnicianNotes = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Quotations", x => x.QuotationId);
+                    table.ForeignKey(
+                        name: "FK_Quotations_RepairRequests_RepairRequestId",
+                        column: x => x.RepairRequestId,
+                        principalTable: "RepairRequests",
+                        principalColumn: "RequestId",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Quotations_Technicians_TechnicianId",
+                        column: x => x.TechnicianId,
+                        principalTable: "Technicians",
+                        principalColumn: "TechnicianId");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "RepairAssignments",
+                columns: table => new
+                {
+                    AssignmentId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    RepairRequestId = table.Column<int>(type: "int", nullable: false),
+                    TechnicianId = table.Column<int>(type: "int", nullable: false),
+                    AssignedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    AssignmentNotes = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_RepairAssignments", x => x.AssignmentId);
+                    table.ForeignKey(
+                        name: "FK_RepairAssignments_RepairRequests_RepairRequestId",
+                        column: x => x.RepairRequestId,
+                        principalTable: "RepairRequests",
+                        principalColumn: "RequestId",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_RepairAssignments_Technicians_TechnicianId",
+                        column: x => x.TechnicianId,
+                        principalTable: "Technicians",
+                        principalColumn: "TechnicianId",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "CartItems",
                 columns: table => new
                 {
@@ -438,6 +714,63 @@ namespace SkyTech.Migrations
                         principalTable: "shopowners",
                         principalColumn: "OwnerId",
                         onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "QuotationItems",
+                columns: table => new
+                {
+                    QuotationItemId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    QuotationId = table.Column<int>(type: "int", nullable: false),
+                    ItemDescription = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    UnitCost = table.Column<decimal>(type: "decimal(10,2)", nullable: false),
+                    Quantity = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_QuotationItems", x => x.QuotationItemId);
+                    table.ForeignKey(
+                        name: "FK_QuotationItems_Quotations_QuotationId",
+                        column: x => x.QuotationId,
+                        principalTable: "Quotations",
+                        principalColumn: "QuotationId",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Receipts",
+                columns: table => new
+                {
+                    ReceiptId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    RepairRequestId = table.Column<int>(type: "int", nullable: false),
+                    QuotationId = table.Column<int>(type: "int", nullable: true),
+                    TechnicianId = table.Column<int>(type: "int", nullable: true),
+                    IssuedDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    FinalAmount = table.Column<decimal>(type: "decimal(10,2)", nullable: false),
+                    ReceiptNumber = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Notes = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Receipts", x => x.ReceiptId);
+                    table.ForeignKey(
+                        name: "FK_Receipts_Quotations_QuotationId",
+                        column: x => x.QuotationId,
+                        principalTable: "Quotations",
+                        principalColumn: "QuotationId");
+                    table.ForeignKey(
+                        name: "FK_Receipts_RepairRequests_RepairRequestId",
+                        column: x => x.RepairRequestId,
+                        principalTable: "RepairRequests",
+                        principalColumn: "RequestId",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Receipts_Technicians_TechnicianId",
+                        column: x => x.TechnicianId,
+                        principalTable: "Technicians",
+                        principalColumn: "TechnicianId");
                 });
 
             migrationBuilder.CreateTable(
@@ -593,9 +926,110 @@ namespace SkyTech.Migrations
                 column: "OwnerId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_ProposalCheckouts_CustomerId",
+                table: "ProposalCheckouts",
+                column: "CustomerId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ProposalCheckouts_PropItemId",
+                table: "ProposalCheckouts",
+                column: "PropItemId",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ProposedProdPic_CustomerId",
+                table: "ProposedProdPic",
+                column: "CustomerId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ProposedProdPic_ProposeItemPropItemId",
+                table: "ProposedProdPic",
+                column: "ProposeItemPropItemId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ProposeItems_AssignedDriverId",
+                table: "ProposeItems",
+                column: "AssignedDriverId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ProposeItems_CustomerId",
+                table: "ProposeItems",
+                column: "CustomerId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_QuotationItems_QuotationId",
+                table: "QuotationItems",
+                column: "QuotationId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Quotations_RepairRequestId",
+                table: "Quotations",
+                column: "RepairRequestId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Quotations_TechnicianId",
+                table: "Quotations",
+                column: "TechnicianId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ReceiptPics_CustomerId",
+                table: "ReceiptPics",
+                column: "CustomerId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ReceiptPics_ProposeItemPropItemId",
+                table: "ReceiptPics",
+                column: "ProposeItemPropItemId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Receipts_QuotationId",
+                table: "Receipts",
+                column: "QuotationId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Receipts_RepairRequestId",
+                table: "Receipts",
+                column: "RepairRequestId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Receipts_TechnicianId",
+                table: "Receipts",
+                column: "TechnicianId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_RepairAssignments_RepairRequestId",
+                table: "RepairAssignments",
+                column: "RepairRequestId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_RepairAssignments_TechnicianId",
+                table: "RepairAssignments",
+                column: "TechnicianId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_RepairRequests_CategoryId",
+                table: "RepairRequests",
+                column: "CategoryId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_RepairRequests_CustomerId",
+                table: "RepairRequests",
+                column: "CustomerId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_RepairTrackings_RepairRequestId",
+                table: "RepairTrackings",
+                column: "RepairRequestId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Staffs_OwnerId",
                 table: "Staffs",
                 column: "OwnerId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Technicians_CategoryId",
+                table: "Technicians",
+                column: "CategoryId");
         }
 
         /// <inheritdoc />
@@ -626,6 +1060,27 @@ namespace SkyTech.Migrations
                 name: "ProductPicture");
 
             migrationBuilder.DropTable(
+                name: "ProposalCheckouts");
+
+            migrationBuilder.DropTable(
+                name: "ProposedProdPic");
+
+            migrationBuilder.DropTable(
+                name: "QuotationItems");
+
+            migrationBuilder.DropTable(
+                name: "ReceiptPics");
+
+            migrationBuilder.DropTable(
+                name: "Receipts");
+
+            migrationBuilder.DropTable(
+                name: "RepairAssignments");
+
+            migrationBuilder.DropTable(
+                name: "RepairTrackings");
+
+            migrationBuilder.DropTable(
                 name: "Staffs");
 
             migrationBuilder.DropTable(
@@ -638,19 +1093,34 @@ namespace SkyTech.Migrations
                 name: "OrderItems");
 
             migrationBuilder.DropTable(
+                name: "ProposeItems");
+
+            migrationBuilder.DropTable(
+                name: "Quotations");
+
+            migrationBuilder.DropTable(
                 name: "AddProducts");
 
             migrationBuilder.DropTable(
                 name: "Orders");
 
             migrationBuilder.DropTable(
-                name: "Customers");
+                name: "RepairRequests");
+
+            migrationBuilder.DropTable(
+                name: "Technicians");
 
             migrationBuilder.DropTable(
                 name: "DeliveryDrivers");
 
             migrationBuilder.DropTable(
                 name: "shopowners");
+
+            migrationBuilder.DropTable(
+                name: "Customers");
+
+            migrationBuilder.DropTable(
+                name: "RepairItemCategories");
         }
     }
 }

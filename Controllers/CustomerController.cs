@@ -1291,8 +1291,11 @@ namespace CM_Project.Controllers
                 PropItemId = proposal.PropItemId,
                 ProdName = proposal.ProdName,
                 AmountProposed = proposal.AmountProposed
-                
+
             };
+            return View(vm);
+        }
+
         private int GetCustomerId()
         {
             return HttpContext.Session.GetInt32("UserId") ?? 0;
