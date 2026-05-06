@@ -1,6 +1,8 @@
 ﻿using CM_Project.Models.Documents;
 using Microsoft.EntityFrameworkCore;
 using SkyTech.Models;
+using SkyTech.Models.Repair_Item_Services;
+using SkyTech.Models.Repair_Services;
 
 
 namespace CM_Project.Models
@@ -49,6 +51,16 @@ namespace CM_Project.Models
         public DbSet<ProposalCheckout> ProposalCheckouts { get; set; }
 
 
+        // ── Repair Items Services tables ──────────────────────────────────────
+
+        public DbSet<Repair_Item_Category> RepairItemCategories { get; set; }
+        public DbSet<Repair_Request> RepairRequests { get; set; }
+        public DbSet<Technician> Technicians { get; set; }
+        public DbSet<RepairAssignment> RepairAssignments { get; set; }
+        public DbSet<Quotation> Quotations { get; set; }
+        public DbSet<QuotationItem> QuotationItems { get; set; }
+        public DbSet<Receipt> Receipts { get; set; }
+        public DbSet<RepairTracking> RepairTrackings { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
