@@ -3,9 +3,12 @@ using CM_Project.Models.Documents;
 using CM_Project.Models.forgot;
 using CM_Project.ViewModels;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using SkyTech.Models;
+using SkyTech.Models.Repair_Services;
 using System;
 using System.IO;
 using System.Linq;
@@ -156,6 +159,16 @@ namespace CM_Project.Controllers
                 return RedirectToAction("ShopOwnerDash", "ShopOwner");
             }
 
+            // Technician
+            var technician = db.Technicians
+                .FirstOrDefault(n => n.Email == models.Email && n.Password == models.Password);
+            if (technician != null)
+            {
+                HttpContext.Session.SetInt32("UserId", technician.TechnicianId);
+                HttpContext.Session.SetString("UserType", "Technician");
+                return RedirectToAction("Dashboard", "Technician");
+            }
+
             // Driver
             var driver = db.DeliveryDrivers
                 .FirstOrDefault(n => n.Email == models.Email && n.Password == models.Password);
@@ -179,7 +192,7 @@ namespace CM_Project.Controllers
         {
             if (!ModelState.IsValid) return View(model);
 
-            if (db.Customers.Any(d => d.Email == model.Email) || db.DeliveryDrivers.Any(d => d.Email == model.Email) || db.shopowners.Any(d => d.Email == model.Email))
+            if (db.Customers.Any(d => d.Email == model.Email) || db.DeliveryDrivers.Any(d => d.Email == model.Email) || db.shopowners.Any(d => d.Email == model.Email) || db.Technicians.Any(d => d.Email == model.Email))
             {
                 ModelState.AddModelError("Email", "Email already exists");
                 return View(model);
@@ -206,6 +219,106 @@ namespace CM_Project.Controllers
             TempData["Message"] = "Registration successful";
             return RedirectToAction("LogIn");
         }
+
+        [HttpGet]
+        public async Task<IActionResult> TechnicianReg()
+        {
+            var vm = new TechnicianViewModel
+            {
+                Categories = await db.RepairItemCategories
+                .OrderBy(c => c.CategoryName)
+                    .Select(c => new SelectListItem
+                    {
+                        Value = c.CategoryId.ToString(),
+                        Text = c.CategoryName
+                    })
+                    .ToListAsync()
+            };
+
+            return View(vm);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> TechnicianReg(TechnicianViewModel vm)
+        {
+            if (!ModelState.IsValid)
+            {
+                // Repopulate dropdown before returning
+                vm.Categories = await db.RepairItemCategories
+                    .OrderBy(c => c.CategoryName)
+                    .Select(c => new SelectListItem
+                    {
+                        Value = c.CategoryId.ToString(),
+                        Text = c.CategoryName
+                    })
+                    .ToListAsync();
+
+                return View(vm);
+            }
+
+            //if (!ModelState.IsValid)
+            //{
+            //    // TEMP: see exactly what's failing
+            //    var errors = ModelState
+            //        .Where(x => x.Value.Errors.Count > 0)
+            //        .Select(x => $"{x.Key} (Value: {ModelState[x.Key].RawValue}): {string.Join(", ", x.Value.Errors.Select(e => e.ErrorMessage))}")
+            //        .ToList();
+
+            //    TempData["Message"] = $"CategoryId={vm.CategoryId} | {string.Join(" | ", errors)}";
+
+            //    vm.Categories = await db.RepairItemCategories
+            //        .OrderBy(c => c.CategoryName)
+            //        .Select(c => new SelectListItem
+            //        {
+            //            Value = c.CategoryId.ToString(),
+            //            Text = c.CategoryName
+            //        })
+            //        .ToListAsync();
+
+            //    return View(vm);
+            //}
+
+            // Check email isn't already taken across all user tables
+            if (db.Technicians.Any(t => t.Email == vm.Email) ||
+                db.Customers.Any(c => c.Email == vm.Email) || db.DeliveryDrivers.Any(d => d.Email == vm.Email) || db.shopowners.Any(d => d.Email == vm.Email))
+            {
+                ModelState.AddModelError("Email", "Email already exists");
+
+                vm.Categories = await db.RepairItemCategories
+                    .OrderBy(c => c.CategoryName)
+                    .Select(c => new SelectListItem
+                    {
+                        Value = c.CategoryId.ToString(),
+                        Text = c.CategoryName
+                    })
+                    .ToListAsync();
+
+                return View(vm);
+            }
+
+            var technician = new Technician
+            {
+                TechnicianFirstName = vm.FirstName,
+                TechnicianLastName = vm.LastName,
+                Email = vm.Email,
+                Password = vm.Password,
+                PhoneNumber = vm.PhoneNumber,
+                Address = vm.Address,
+                CategoryId = vm.CategoryId,
+                Status = AvailabilityStatus.Available,
+                UserType = "Technician",
+                RegisteredOn = DateTime.Now
+            };
+
+            db.Technicians.Add(technician);
+            await db.SaveChangesAsync();
+
+            _services.CustomerRegConfirmation(vm.Email, vm.FirstName);
+            TempData["Message"] = "Registration successful";
+            return RedirectToAction("LogIn");
+        }
+
 
         [HttpGet]
         public IActionResult ShopOwnerReg() => View();

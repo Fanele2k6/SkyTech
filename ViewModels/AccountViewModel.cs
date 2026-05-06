@@ -1,5 +1,8 @@
 ﻿using CM_Project.Models;
 using CM_Project.Models.Documents;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -51,6 +54,44 @@ namespace CM_Project.ViewModels
         public string ConfirmPassword { get; set; }
 
     }
+
+
+        public class TechnicianViewModel
+        {
+            [Required, MaxLength(100)] public string FirstName { get; set; }
+            [Required, MaxLength(100)] public string LastName { get; set; }
+
+            [Required, EmailAddress][StringLength(255)] public string Email { get; set; }
+
+
+            //[Required(ErrorMessage = "Please select a specialization")]
+            [Range(1, int.MaxValue, ErrorMessage = "Please select a specialization")]
+            [Display(Name = "Specialization")]
+            public int CategoryId { get; set; }
+
+        // Populated by the controller — not submitted, just for rendering the <select>
+        [BindNever]
+        [ValidateNever]
+        public IEnumerable<SelectListItem> Categories { get; set; }  // ← new
+
+            
+
+            [Required, StringLength(10)] public string PhoneNumber { get; set; }
+            [MaxLength(200)] public string Address { get; set; }
+
+            [Required]
+            [StringLength(100, MinimumLength = 8, ErrorMessage = "Password must be at least 8 characters long")]
+            [DataType(DataType.Password)]
+            public string Password { get; set; }
+
+            [Required]
+            [Compare("Password", ErrorMessage = "Passwords do not match")]
+            [DataType(DataType.Password)]
+            public string ConfirmPassword { get; set; }
+        }
+
+    
+
 
     public class ShopOwnerViewModel
     {

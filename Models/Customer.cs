@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SkyTech.Models.Repair_Item_Services;
+using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -34,5 +35,10 @@ namespace CM_Project.Models
 
         public string UserType { get; set; }
         public DateTime RegisteredOn { get; set; }
+
+
+
+
+        public ICollection<Repair_Request> RepairRequests { get; set; }
     }
 }

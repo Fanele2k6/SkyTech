@@ -6,6 +6,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Identity.Client;
 using SkyTech.Models;
 using SkyTech.ViewModels;
+using SkyTech.Models.Repair_Item_Services;
+using SkyTech.Models.Repair_Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -704,6 +706,51 @@ namespace CM_Project.Controllers
             return View(db.Customers.Where(c => c.CustomerId == currentId).ToList());
         }
 
+        [AuthorizeUser]
+        public IActionResult CustomerDash()
+        {
+            int currentId = HttpContext.Session.GetInt32("UserId")!.Value;
+            DeleteExpiredOrders(currentId);
+
+            // Get active orders count
+            var activeOrders = db.Orders
+                .Where(o => o.CustomerId == currentId && !o.IsPaid)
+                .Count();
+
+            // Get repair requests stats
+            var pendingRepairs = db.RepairRequests
+                .Where(r => r.CustomerId == currentId && r.Status == SkyTech.Models.Repair_Item_Services.RepairStatus.Pending)
+                .Count();
+
+            var inProgressRepairs = db.RepairRequests
+                .Where(r => r.CustomerId == currentId && r.Status == SkyTech.Models.Repair_Item_Services.RepairStatus.InProgress)
+                .Count();
+
+            var completedRepairs = db.RepairRequests
+                .Where(r => r.CustomerId == currentId && r.Status == SkyTech.Models.Repair_Item_Services.RepairStatus.Completed)
+                .Count();
+
+            ViewBag.ActiveOrders = activeOrders;
+            ViewBag.PendingRepairs = pendingRepairs + inProgressRepairs;
+            ViewBag.CompletedRepairs = completedRepairs;
+
+            return View(db.Customers.Where(c => c.CustomerId == currentId).ToList());
+        }
+
+        [AuthorizeUser]
+        public IActionResult CustomerRepairRequests()
+        {
+            int currentId = HttpContext.Session.GetInt32("UserId")!.Value;
+
+            var requests = db.RepairRequests
+                .Where(r => r.CustomerId == currentId)
+                .Include(r => r.Category)
+                .OrderByDescending(r => r.DateCreated)
+                .ToList();
+
+            return View(requests);
+        }
+
 
         [AuthorizeUser]
         [HttpGet]
@@ -756,6 +803,136 @@ namespace CM_Project.Controllers
           : status == CM_Project.Models.OrderStatus.Delivered ? "Delivered"
           : "";
 
+
+        // ── REPAIR REQUEST TRACKING ────────────────────────────────
+
+        [AuthorizeUser]
+        [HttpGet]
+        public IActionResult MyRepairRequests()
+        {
+            var customerId = HttpContext.Session.GetInt32("UserId");
+            if (customerId == null)
+                return RedirectToAction("LogIn", "Authentication");
+
+            var repairs = db.RepairRequests
+                .Where(r => r.CustomerId == customerId)
+                .Include(r => r.Category)
+                .OrderByDescending(r => r.DateCreated)
+                .ToList();
+
+            return View(repairs);
+        }
+
+        [AuthorizeUser]
+        [HttpGet]
+        public IActionResult ViewRepairDetail(int? id)
+        {
+            if (id == null)
+                return NotFound();
+
+            var customerId = HttpContext.Session.GetInt32("UserId");
+            if (customerId == null)
+                return RedirectToAction("LogIn", "Authentication");
+
+            var repair = db.RepairRequests
+                .Where(r => r.RequestId == id && r.CustomerId == customerId)
+                .Include(r => r.Category)
+                .FirstOrDefault();
+
+            if (repair == null)
+                return NotFound();
+
+            var assignment = db.RepairAssignments
+                .Include(a => a.Technician)
+                .FirstOrDefault(a => a.RepairRequestId == id);
+
+            ViewBag.Assignment = assignment;
+
+            var quotations = db.Quotations
+                .Where(q => q.RepairRequestId == id)
+                .Include(q => q.QuotationItems)
+                .Include(q => q.Technician)
+                .ToList();
+
+            ViewBag.Quotations = quotations;
+
+            var trackingHistory = db.RepairTrackings
+                .Where(t => t.RepairRequestId == id)
+                .OrderByDescending(t => t.UpdatedDate)
+                .ToList();
+
+            ViewBag.TrackingHistory = trackingHistory;
+
+            return View(repair);
+        }
+
+        [AuthorizeUser]
+        [HttpPost]
+        public IActionResult ApproveQuotation(int quotationId, int repairId)
+        {
+            var customerId = HttpContext.Session.GetInt32("UserId");
+            if (customerId == null)
+                return RedirectToAction("LogIn", "Authentication");
+
+            var quotation = db.Quotations.Find(quotationId);
+            if (quotation == null)
+                return NotFound();
+
+            var repair = db.RepairRequests
+                .FirstOrDefault(r => r.RequestId == repairId && r.CustomerId == customerId);
+            if (repair == null)
+                return NotFound();
+
+            quotation.Status = QuotationStatus.Approved;
+            repair.Status = RepairStatus.InProgress;
+
+            var tracking = new RepairTracking
+            {
+                RepairRequestId = repairId,
+                Status = RepairStatus.InProgress,
+                UpdatedDate = DateTime.Now,
+                StatusMessage = "Customer approved quotation. Repair work will begin shortly."
+            };
+
+            db.RepairTrackings.Add(tracking);
+            db.SaveChanges();
+
+            return RedirectToAction("ViewRepairDetail", new { id = repairId });
+        }
+
+        [AuthorizeUser]
+        [HttpPost]
+        public IActionResult RejectQuotation(int quotationId, int repairId)
+        {
+            var customerId = HttpContext.Session.GetInt32("UserId");
+            if (customerId == null)
+                return RedirectToAction("LogIn", "Authentication");
+
+            var quotation = db.Quotations.Find(quotationId);
+            if (quotation == null)
+                return NotFound();
+
+            var repair = db.RepairRequests
+                .FirstOrDefault(r => r.RequestId == repairId && r.CustomerId == customerId);
+            if (repair == null)
+                return NotFound();
+
+            quotation.Status = QuotationStatus.Rejected;
+            repair.Status = RepairStatus.Pending;
+
+            var tracking = new RepairTracking
+            {
+                RepairRequestId = repairId,
+                Status = RepairStatus.Pending,
+                UpdatedDate = DateTime.Now,
+                StatusMessage = "Customer rejected quotation. Please submit a revised quotation."
+            };
+
+            db.RepairTrackings.Add(tracking);
+            db.SaveChanges();
+
+            return RedirectToAction("ViewRepairDetail", new { id = repairId });
+        }
 
         [HttpGet]
         public IActionResult GetOrderStatus(int orderId)
@@ -926,5 +1103,121 @@ namespace CM_Project.Controllers
 
             return View(item);
         }
+
+        private int GetCustomerId()
+        {
+            return HttpContext.Session.GetInt32("UserId") ?? 0;
+        }
+
+        private bool IsCustomer()
+        {
+            var userType = HttpContext.Session.GetString("UserType");
+            return userType == "Customer";
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ViewQuotation(int id)
+        {
+            if (!IsCustomer()) return RedirectToAction("LogIn", "Authentication");
+
+            var customerId = GetCustomerId();
+
+            var quotation = await db.Quotations
+                .Include(q => q.QuotationItems)
+                .Include(q => q.Technician)
+                .Include(q => q.RepairRequest)
+                .FirstOrDefaultAsync(q => q.QuotationId == id &&
+                                          q.RepairRequest.CustomerId == customerId);
+
+            if (quotation == null) return NotFound();
+
+            var vm = new QuotationResponseViewModel
+            {
+                QuotationId = quotation.QuotationId,
+                RepairRequestId = quotation.RepairRequestId,
+                ItemName = quotation.RepairRequest.ItemName,
+                IssueDescription = quotation.RepairRequest.IssueDescription,
+                TechnicianName = quotation.Technician?.FullName,
+                TotalCost = quotation.TotalCost,
+                TechnicianNotes = quotation.TechnicianNotes,
+                CreatedDate = quotation.CreatedDate,
+                QuotationItems = quotation.QuotationItems.ToList()
+            };
+
+            return View(vm);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AcceptQuotation(int quotationId)
+        {
+            var quotation = await db.Quotations
+                .Include(q => q.RepairRequest)
+                .FirstOrDefaultAsync(q => q.QuotationId == quotationId);
+
+            if (quotation == null) return NotFound();
+
+            quotation.Status = QuotationStatus.Approved;
+            quotation.RepairRequest.Status = RepairStatus.InProgress;
+
+            db.RepairTrackings.Add(new RepairTracking
+            {
+                RepairRequestId = quotation.RepairRequestId,
+                Status = RepairStatus.InProgress,
+                UpdatedDate = DateTime.Now,
+                StatusMessage = "Customer accepted the quotation. Repair is now active."
+            });
+
+            await db.SaveChangesAsync();
+            TempData["Success"] = "Quotation accepted! Your repair is now active.";
+            return RedirectToAction("MyRepairs");
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RejectQuotation(int quotationId, string rejectionReason)
+        {
+            var quotation = await db.Quotations
+                .Include(q => q.RepairRequest)
+                .Include(q => q.Technician)
+                .FirstOrDefaultAsync(q => q.QuotationId == quotationId);
+
+            if (quotation == null) return NotFound();
+
+            quotation.Status = QuotationStatus.Rejected;
+            quotation.RepairRequest.Status = RepairStatus.Cancelled;
+
+            if (quotation.Technician != null)
+                quotation.Technician.Status = AvailabilityStatus.Available;
+
+            db.RepairTrackings.Add(new RepairTracking
+            {
+                RepairRequestId = quotation.RepairRequestId,
+                Status = RepairStatus.Cancelled,
+                UpdatedDate = DateTime.Now,
+                StatusMessage = $"Customer rejected the quotation. Reason: {rejectionReason ?? "None provided"}"
+            });
+
+            await db.SaveChangesAsync();
+
+            TempData["Message"] = "Quotation rejected. The repair has been cancelled.";
+            return RedirectToAction("MyRepairs");
+        }
+
+        
+    }
+
+    public class QuotationResponseViewModel
+    {
+        public int QuotationId { get; set; }
+        public int RepairRequestId { get; set; }
+        public string ItemName { get; set; }
+        public string IssueDescription { get; set; }
+        public string TechnicianName { get; set; }
+        public decimal TotalCost { get; set; }
+        public string TechnicianNotes { get; set; }
+        public DateTime CreatedDate { get; set; }
+        public List<QuotationItem> QuotationItems { get; set; }
+        public string RejectionReason { get; set; }
     }
 }

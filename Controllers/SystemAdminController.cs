@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Linq;
+using SkyTech.Models.Repair_Item_Services;
+using SkyTech.Models.Repair_Services;
 
 namespace CM_Project.Controllers
 {
@@ -140,6 +142,157 @@ namespace CM_Project.Controllers
                var fileBytes = System.IO.File.ReadAllBytes(fullPath);
                return File(fileBytes, doc.FileType, doc.FileName);
            }
+
+        // ── REPAIR REQUEST MANAGEMENT ──────────────────────────────
+
+        public IActionResult PendingRepairRequests()
+        {
+            var pendingRequests = db.RepairRequests
+                .Where(r => r.Status == RepairStatus.Pending)
+                .Include(r => r.Category)
+                .Include(r => r.Customers)
+                .OrderByDescending(r => r.DateCreated)
+                .ToList();
+            return View(pendingRequests);
+        }
+
+        public IActionResult AllRepairRequests()
+        {
+            var allRequests = db.RepairRequests
+                .Include(r => r.Category)
+                .Include(r => r.Customers)
+                .OrderByDescending(r => r.DateCreated)
+                .ToList();
+            return View(allRequests);
+        }
+
+        public async Task<IActionResult> AssignTechnician(int? id)
+        {
+            if (id == null)
+                return NotFound();
+
+            var repairRequest = await db.RepairRequests
+                .Include(r => r.Category)
+                .Include(r => r.Customers)
+                .FirstOrDefaultAsync(r => r.RequestId == id);
+
+            if (repairRequest == null)
+                return NotFound();
+
+            // Get available technicians that match the category
+            var technicians = await db.Technicians
+                .Where(t => t.CategoryId == repairRequest.CategoryId && 
+                       t.Status == AvailabilityStatus.Available)
+                .ToListAsync();
+
+            ViewData["Technicians"] = technicians;
+            return View(repairRequest);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AssignTechnician(int id, [Bind("TechnicianId,AssignmentNotes")] RepairAssignment assignment)
+        {
+            if (id <= 0)
+                return NotFound();
+
+            var repairRequest = await db.RepairRequests.FindAsync(id);
+            if (repairRequest == null)
+                return NotFound();
+
+
+            ModelState.Remove("Technician");
+            ModelState.Remove("RepairRequest");
+            ModelState.Remove("RepairRequestId");
+            ModelState.Remove("AssignedDate");
+
+
+            var errors = ModelState
+        .Where(x => x.Value.Errors.Count > 0)
+        .Select(x => $"{x.Key}: {string.Join(", ", x.Value.Errors.Select(e => e.ErrorMessage))}")
+        .ToList();
+
+            TempData["Debug"] = string.Join(" | ", errors);
+
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    assignment.RepairRequestId = id;
+                    assignment.AssignedDate = DateTime.Now;
+
+                    db.RepairAssignments.Add(assignment);
+
+                    repairRequest.Status = RepairStatus.Assigned;
+
+                    var technician = await db.Technicians.FindAsync(assignment.TechnicianId);
+                    if (technician != null)
+                    {
+                        technician.Status = AvailabilityStatus.Busy;
+                    }
+
+                    var tracking = new RepairTracking
+                    {
+                        RepairRequestId = id,
+                        Status = RepairStatus.Assigned,
+                        UpdatedDate = DateTime.Now,
+                        StatusMessage = $"Request assigned to technician {technician?.TechnicianFirstName} {technician?.TechnicianLastName}"
+                    };
+                    db.RepairTrackings.Add(tracking);
+
+                    await db.SaveChangesAsync();
+
+                    return RedirectToAction(nameof(PendingRepairRequests));
+                }
+                catch (DbUpdateException ex)
+                {
+                    ModelState.AddModelError("", $"Database error: {ex.InnerException?.Message ?? ex.Message}");
+                    return View();
+                }
+            }
+
+            var technicians = await db.Technicians
+                .Where(t => t.CategoryId == repairRequest.CategoryId)
+                .ToListAsync();
+
+            ViewData["Technicians"] = technicians;
+            return View(repairRequest);
+        }
+
+        public async Task<IActionResult> RepairRequestDetail(int? id)
+        {
+            if (id == null)
+                return NotFound();
+
+            var repairRequest = await db.RepairRequests
+                .Include(r => r.Category)
+                .Include(r => r.Customers)
+                .FirstOrDefaultAsync(r => r.RequestId == id);
+
+            if (repairRequest == null)
+                return NotFound();
+
+            var assignment = await db.RepairAssignments
+                .Include(a => a.Technician)
+                .FirstOrDefaultAsync(a => a.RepairRequestId == id);
+
+            ViewBag.Assignment = assignment;
+
+            var trackingHistory = await db.RepairTrackings
+                .Where(t => t.RepairRequestId == id)
+                .OrderByDescending(t => t.UpdatedDate)
+                .ToListAsync();
+
+            ViewBag.TrackingHistory = trackingHistory;
+
+            var quotation = await db.Quotations
+                .Include(q => q.QuotationItems)
+                .FirstOrDefaultAsync(q => q.RepairRequestId == id);
+
+            ViewBag.Quotation = quotation;
+
+            return View(repairRequest);
+        }
 
         public IActionResult ApproveDriverAppl(int id)
         {
