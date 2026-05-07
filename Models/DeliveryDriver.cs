@@ -6,7 +6,19 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace CM_Project.Models
 {
-    public enum Status { Pending, Approved, Rejected }
+    public enum Status { 
+
+        Pending,   //0
+        Approved,  //1
+        Rejected,   //2
+        Cancelled,   //3
+        CustomerAccepted, //4
+        CustomerDeclined,  //5
+        CollectionScheduled,  //6
+        Item_Collected, //7
+        PaymentMade //8
+
+    }
 
     public class DeliveryDriver
     {

@@ -41,6 +41,15 @@ namespace CM_Project.Models
         //New tables for pickup
         public DbSet<PickupOrder> PickupOrders { get; set; }
         public DbSet<InterBranchTransfer> InterBranchTransfers { get; set; }
+        /// <summary>
+        /// 
+        /// </summary>
+        public DbSet<ProposeItem> ProposeItems { get; set; }
+       
+        public DbSet<ReceiptPic> ReceiptPics { get; set; }
+        public DbSet<ProposedProdPic> ProposedProdPic { get; set; }
+        public DbSet<ProposalCheckout> ProposalCheckouts { get; set; }
+
 
         // ── Repair Items Services tables ──────────────────────────────────────
 
@@ -116,7 +125,29 @@ namespace CM_Project.Models
             .WithMany()
             .HasForeignKey(i => i.DriverId)
             .OnDelete(DeleteBehavior.NoAction);
+
+            // Fix cascade conflict on ProposeItems → Customer
+            modelBuilder.Entity<ProposeItem>()
+                .HasOne(p => p.Customer)
+                .WithMany(c => c.ProposeItems)
+                .HasForeignKey(p => p.CustomerId)
+                .OnDelete(DeleteBehavior.NoAction); // ← fixes the error
+
+            // Fix cascade conflict on ProposalCheckout → ProposeItem
+            modelBuilder.Entity<ProposalCheckout>()
+                .HasOne(c => c.ProposeItem)
+                .WithOne(p => p.Checkout)
+                .HasForeignKey<ProposalCheckout>(c => c.PropItemId)
+                .OnDelete(DeleteBehavior.NoAction);
+
+            // Fix cascade conflict on ProposalCheckout → Customer
+            modelBuilder.Entity<ProposalCheckout>()
+                .HasOne(c => c.Customer)
+                .WithMany()
+                .HasForeignKey(c => c.CustomerId)
+                .OnDelete(DeleteBehavior.NoAction);
         }
+
 
     }
 }
