@@ -34,12 +34,21 @@
                 <i class="fas fa-grid-2"></i><span>Dashboard</span>
             </a>
 
+            <div class="d-nav-label">REPAIR MANAGEMENT</div>
+            <a href="@Url.Action("PendingRepairRequests", "SystemAdmin")" class="d-link">
+                <i class="fas fa-clock"></i><span>Pending Repairs</span>
+            </a>
+            <a href="@Url.Action("AllRepairRequests", "SystemAdmin")" class="d-link">
+                <i class="fas fa-list"></i><span>All Repairs</span>
+            </a>
+
+            <div class="d-nav-label">APPLICATIONS</div>
             <a href="@Url.Action("ViewApplications", "SystemAdmin")" class="d-link">
-                <i class="fas fa-bag-shopping"></i><span>Shop Application</span>
+                <i class="fas fa-building"></i><span>Shop Owners</span>
             </a>
 
             <a href="@Url.Action("ViewDriverApplication", "SystemAdmin")" class="d-link">
-                <i class="fas fa-bag-shopping"></i><span>Driver Aplication</span>
+                <i class="fas fa-truck"></i><span>Drivers</span>
             </a>
 
         </nav>

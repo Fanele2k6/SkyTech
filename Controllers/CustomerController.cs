@@ -1,11 +1,15 @@
 ﻿using CM_Project.Models;
+using CM_Project.Models.Documents;
 using CM_Project.Services;
+using CM_Project.ViewModels;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Identity.Client;
 using SkyTech.Models;
 using SkyTech.ViewModels;
+using SkyTech.Models.Repair_Item_Services;
+using SkyTech.Models.Repair_Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,8 +22,19 @@ namespace CM_Project.Controllers
     {
         private readonly ApplicationDbContext db;
 
-        public CustomerController(ApplicationDbContext context) { db = context; }
+        public CustomerController(ApplicationDbContext context, PayStackTransferService paystackService)
+        {
+            db = context;
+            _paystackService = paystackService;
+        }
+        private readonly PayStackTransferService _paystackService;
 
+        [HttpGet]
+        public async Task<IActionResult> GetZaBanks()
+        {
+            var banks = await _paystackService.GetZaBanks();
+            return Json(banks);
+        }
 
         public IActionResult ProductDetails(int id)
         {
@@ -704,6 +719,51 @@ namespace CM_Project.Controllers
             return View(db.Customers.Where(c => c.CustomerId == currentId).ToList());
         }
 
+        [AuthorizeUser]
+        public IActionResult CustomerDash()
+        {
+            int currentId = HttpContext.Session.GetInt32("UserId")!.Value;
+            DeleteExpiredOrders(currentId);
+
+            // Get active orders count
+            var activeOrders = db.Orders
+                .Where(o => o.CustomerId == currentId && !o.IsPaid)
+                .Count();
+
+            // Get repair requests stats
+            var pendingRepairs = db.RepairRequests
+                .Where(r => r.CustomerId == currentId && r.Status == SkyTech.Models.Repair_Item_Services.RepairStatus.Pending)
+                .Count();
+
+            var inProgressRepairs = db.RepairRequests
+                .Where(r => r.CustomerId == currentId && r.Status == SkyTech.Models.Repair_Item_Services.RepairStatus.InProgress)
+                .Count();
+
+            var completedRepairs = db.RepairRequests
+                .Where(r => r.CustomerId == currentId && r.Status == SkyTech.Models.Repair_Item_Services.RepairStatus.Completed)
+                .Count();
+
+            ViewBag.ActiveOrders = activeOrders;
+            ViewBag.PendingRepairs = pendingRepairs + inProgressRepairs;
+            ViewBag.CompletedRepairs = completedRepairs;
+
+            return View(db.Customers.Where(c => c.CustomerId == currentId).ToList());
+        }
+
+        [AuthorizeUser]
+        public IActionResult CustomerRepairRequests()
+        {
+            int currentId = HttpContext.Session.GetInt32("UserId")!.Value;
+
+            var requests = db.RepairRequests
+                .Where(r => r.CustomerId == currentId)
+                .Include(r => r.Category)
+                .OrderByDescending(r => r.DateCreated)
+                .ToList();
+
+            return View(requests);
+        }
+
 
         [AuthorizeUser]
         [HttpGet]
@@ -756,6 +816,136 @@ namespace CM_Project.Controllers
           : status == CM_Project.Models.OrderStatus.Delivered ? "Delivered"
           : "";
 
+
+        // ── REPAIR REQUEST TRACKING ────────────────────────────────
+
+        [AuthorizeUser]
+        [HttpGet]
+        public IActionResult MyRepairRequests()
+        {
+            var customerId = HttpContext.Session.GetInt32("UserId");
+            if (customerId == null)
+                return RedirectToAction("LogIn", "Authentication");
+
+            var repairs = db.RepairRequests
+                .Where(r => r.CustomerId == customerId)
+                .Include(r => r.Category)
+                .OrderByDescending(r => r.DateCreated)
+                .ToList();
+
+            return View(repairs);
+        }
+
+        [AuthorizeUser]
+        [HttpGet]
+        public IActionResult ViewRepairDetail(int? id)
+        {
+            if (id == null)
+                return NotFound();
+
+            var customerId = HttpContext.Session.GetInt32("UserId");
+            if (customerId == null)
+                return RedirectToAction("LogIn", "Authentication");
+
+            var repair = db.RepairRequests
+                .Where(r => r.RequestId == id && r.CustomerId == customerId)
+                .Include(r => r.Category)
+                .FirstOrDefault();
+
+            if (repair == null)
+                return NotFound();
+
+            var assignment = db.RepairAssignments
+                .Include(a => a.Technician)
+                .FirstOrDefault(a => a.RepairRequestId == id);
+
+            ViewBag.Assignment = assignment;
+
+            var quotations = db.Quotations
+                .Where(q => q.RepairRequestId == id)
+                .Include(q => q.QuotationItems)
+                .Include(q => q.Technician)
+                .ToList();
+
+            ViewBag.Quotations = quotations;
+
+            var trackingHistory = db.RepairTrackings
+                .Where(t => t.RepairRequestId == id)
+                .OrderByDescending(t => t.UpdatedDate)
+                .ToList();
+
+            ViewBag.TrackingHistory = trackingHistory;
+
+            return View(repair);
+        }
+
+        [AuthorizeUser]
+        [HttpPost]
+        public IActionResult ApproveQuotation(int quotationId, int repairId)
+        {
+            var customerId = HttpContext.Session.GetInt32("UserId");
+            if (customerId == null)
+                return RedirectToAction("LogIn", "Authentication");
+
+            var quotation = db.Quotations.Find(quotationId);
+            if (quotation == null)
+                return NotFound();
+
+            var repair = db.RepairRequests
+                .FirstOrDefault(r => r.RequestId == repairId && r.CustomerId == customerId);
+            if (repair == null)
+                return NotFound();
+
+            quotation.Status = QuotationStatus.Approved;
+            repair.Status = RepairStatus.InProgress;
+
+            var tracking = new RepairTracking
+            {
+                RepairRequestId = repairId,
+                Status = RepairStatus.InProgress,
+                UpdatedDate = DateTime.Now,
+                StatusMessage = "Customer approved quotation. Repair work will begin shortly."
+            };
+
+            db.RepairTrackings.Add(tracking);
+            db.SaveChanges();
+
+            return RedirectToAction("ViewRepairDetail", new { id = repairId });
+        }
+
+        [AuthorizeUser]
+        [HttpPost]
+        public IActionResult RejectQuotation(int quotationId, int repairId)
+        {
+            var customerId = HttpContext.Session.GetInt32("UserId");
+            if (customerId == null)
+                return RedirectToAction("LogIn", "Authentication");
+
+            var quotation = db.Quotations.Find(quotationId);
+            if (quotation == null)
+                return NotFound();
+
+            var repair = db.RepairRequests
+                .FirstOrDefault(r => r.RequestId == repairId && r.CustomerId == customerId);
+            if (repair == null)
+                return NotFound();
+
+            quotation.Status = QuotationStatus.Rejected;
+            repair.Status = RepairStatus.Pending;
+
+            var tracking = new RepairTracking
+            {
+                RepairRequestId = repairId,
+                Status = RepairStatus.Pending,
+                UpdatedDate = DateTime.Now,
+                StatusMessage = "Customer rejected quotation. Please submit a revised quotation."
+            };
+
+            db.RepairTrackings.Add(tracking);
+            db.SaveChanges();
+
+            return RedirectToAction("ViewRepairDetail", new { id = repairId });
+        }
 
         [HttpGet]
         public IActionResult GetOrderStatus(int orderId)
@@ -926,5 +1116,361 @@ namespace CM_Project.Controllers
 
             return View(item);
         }
+
+
+        //=====================================Increament 2===============================
+        [AuthorizeUser]
+        public IActionResult ProposeItem() => View();
+
+        [HttpPost]
+        [AuthorizeUser]
+        public async Task<IActionResult> ProposeItem(ProposeItemViewModel vm)
+        {
+            if (!ModelState.IsValid) return View(vm);
+
+            int currentId = HttpContext.Session.GetInt32("UserId").Value;
+
+            var address = db.Customers
+                .Where(c => c.CustomerId == currentId)
+                .Select(c => c.Address)
+                .FirstOrDefault();
+
+            var model = new ProposeItem
+            {
+                CustomerId = currentId,  // ← this line was missing
+                ProdName = vm.ProdName,
+                ProdCategory = vm.ProdCategory,
+                StoreAddress = "",
+                CustomerAddress = address,
+                ProdCondition = vm.ProdCondition,
+                ProdDescription = vm.ProdDescription,
+                ProdStatus = Status.Pending,
+                SavedOn = DateTime.Now
+            };
+
+            // ================= RECEIPT IMAGES =================
+            if (vm.ReceiptPic != null && vm.ReceiptPic.Any())
+            {
+                string receiptFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/uploads/receipts");
+
+                if (!Directory.Exists(receiptFolder))
+                    Directory.CreateDirectory(receiptFolder);
+
+                foreach (var file in vm.ReceiptPic)
+                {
+                    if (file.Length > 0)
+                    {
+                        string fileName = Guid.NewGuid() + Path.GetExtension(file.FileName);
+                        string fullPath = Path.Combine(receiptFolder, fileName);
+
+                        using (var stream = new FileStream(fullPath, FileMode.Create))
+                        {
+                            await file.CopyToAsync(stream);
+                        }
+
+                        model.ReceiptPics.Add(new ReceiptPic
+                        {
+                            CustomerId = currentId,
+                            FileName = fileName,
+                            FilePath = "/uploads/receipts/" + fileName, // ✅ FIXED
+                            FileType = file.ContentType,
+                            SavedOn = DateTime.Now
+                        });
+                    }
+                }
+            }
+
+            // ================= PRODUCT IMAGES =================
+            if (vm.ProposedProdPic != null && vm.ProposedProdPic.Any())
+            {
+                string productFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/uploads/products");
+
+                if (!Directory.Exists(productFolder))
+                    Directory.CreateDirectory(productFolder);
+
+                foreach (var file in vm.ProposedProdPic)
+                {
+                    if (file.Length > 0)
+                    {
+                        string fileName = Guid.NewGuid() + Path.GetExtension(file.FileName);
+                        string fullPath = Path.Combine(productFolder, fileName);
+
+                        using (var stream = new FileStream(fullPath, FileMode.Create))
+                        {
+                            await file.CopyToAsync(stream);
+                        }
+
+                        model.ProposedProdPics.Add(new ProposedProdPic
+                        {
+                            CustomerId = currentId,
+                            FileName = fileName,
+                            FilePath = "/uploads/products/" + fileName, // ✅ FIXED
+                            FileType = file.ContentType,
+                            SavedOn = DateTime.Now
+                        });
+                    }
+                }
+            }
+
+            db.ProposeItems.Add(model);
+            await db.SaveChangesAsync();
+
+            return RedirectToAction("ProposeItem");
+        }
+
+        [AuthorizeUser]
+        public IActionResult MyProposals()
+        {
+            int currentId = HttpContext.Session.GetInt32("UserId").Value;
+
+            var proposals = db.ProposeItems
+                .Include(p => p.ReceiptPics)
+                .Include(p => p.ProposedProdPics)
+                .Where(p => p.CustomerId == currentId && p.ProdStatus == Status.Pending || p.ProdStatus == Status.Approved)
+                .OrderByDescending(p => p.PropItemId)
+                .ToList();
+
+            return View(proposals);
+        }
+        // Customer accepts the shop owner's proposed amount
+        [HttpPost]
+        [AuthorizeUser]
+        public IActionResult CustomerAcceptOffer(int id)
+        {
+            var proposal = db.ProposeItems.Find(id);
+            if (proposal == null) return NotFound();
+
+            proposal.ProdStatus = Status.CustomerAccepted;
+            db.SaveChanges();
+
+            // ← id was not being passed, so ProposalCheckout received id = 0
+            return RedirectToAction("ProposalCheckout", new { id = id });
+        }
+
+        // Customer declines the shop owner's proposed amount
+        [HttpPost]
+        [AuthorizeUser]
+        public IActionResult CustomerDeclineOffer(int id)
+        {
+            var proposal = db.ProposeItems.Find(id);
+            if (proposal == null) return NotFound();
+
+            proposal.ProdStatus = Status.CustomerDeclined;
+            db.SaveChanges();
+
+            return RedirectToAction("MyProposals");
+        }
+
+        // Customer cancels/withdraws their proposal entirely
+        [HttpPost]
+        [AuthorizeUser]
+        public IActionResult CancelProposal(int id)
+        {
+            var proposal = db.ProposeItems
+                .Include(p => p.ReceiptPics)
+                .Include(p => p.ProposedProdPics)
+                .FirstOrDefault(p => p.PropItemId == id);
+
+            if (proposal == null) return NotFound();
+
+            db.ProposeItems.Remove(proposal);
+            db.SaveChanges();
+
+            return RedirectToAction("MyProposals");
+        }
+
+        [AuthorizeUser]
+        [HttpGet]
+        public IActionResult ProposalCheckout(int id)
+        {
+            var proposal = db.ProposeItems.Find(id);
+            if (proposal == null) return NotFound();
+
+            var vm = new ProposalCheckoutViewModel
+            {
+                PropItemId = proposal.PropItemId,
+                ProdName = proposal.ProdName,
+                AmountProposed = proposal.AmountProposed
+
+            };
+            return View(vm);
+        }
+
+        private int GetCustomerId()
+        {
+            return HttpContext.Session.GetInt32("UserId") ?? 0;
+        }
+
+        private bool IsCustomer()
+        {
+            var userType = HttpContext.Session.GetString("UserType");
+            return userType == "Customer";
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> ViewQuotation(int id)
+        {
+            if (!IsCustomer()) return RedirectToAction("LogIn", "Authentication");
+
+            var customerId = GetCustomerId();
+
+            var quotation = await db.Quotations
+                .Include(q => q.QuotationItems)
+                .Include(q => q.Technician)
+                .Include(q => q.RepairRequest)
+                .FirstOrDefaultAsync(q => q.QuotationId == id &&
+                                          q.RepairRequest.CustomerId == customerId);
+
+            if (quotation == null) return NotFound();
+
+            var vm = new QuotationResponseViewModel
+            {
+                QuotationId = quotation.QuotationId,
+                RepairRequestId = quotation.RepairRequestId,
+                ItemName = quotation.RepairRequest.ItemName,
+                IssueDescription = quotation.RepairRequest.IssueDescription,
+                TechnicianName = quotation.Technician?.FullName,
+                TotalCost = quotation.TotalCost,
+                TechnicianNotes = quotation.TechnicianNotes,
+                CreatedDate = quotation.CreatedDate,
+                QuotationItems = quotation.QuotationItems.ToList()
+            };
+
+            return View(vm);
+        }
+
+        [HttpPost]
+        [AuthorizeUser]
+        public IActionResult ProposalCheckout(ProposalCheckoutViewModel vm)
+        {
+            if (!ModelState.IsValid) return View(vm);
+
+            int currentId = HttpContext.Session.GetInt32("UserId").Value;
+
+            var checkout = new ProposalCheckout
+            {
+                PropItemId = vm.PropItemId,
+                CustomerId = currentId,
+                SelectDelivery = vm.SelectDelivery,
+                PhoneNumber = vm.PhoneNumber,
+                BankCode = vm.BankCode,
+                Address = vm.Address,
+                BankName = vm.BankName,
+                AccountHolderName = vm.AccountHolderName,
+                AccountNumber = vm.AccountNumber,
+                BranchCode = vm.BranchCode,
+                AccountType = vm.AccountType,
+                SubmittedOn = DateTime.Now
+            };
+
+            db.ProposalCheckouts.Add(checkout);
+
+            // ── Update status on the ProposeItem ──────────────────────
+            var propItem = db.ProposeItems
+                             .FirstOrDefault(p => p.PropItemId == vm.PropItemId);
+
+            if (propItem != null)
+                propItem.ProdStatus = Status.CustomerAccepted;
+            // ─────────────────────────────────────────────────────────
+
+            db.SaveChanges();
+
+            return RedirectToAction("MyProposals");
+        }
+
+        //db.ProposalCheckouts.Add(checkout);
+        //    db.SaveChanges();
+
+        //    return RedirectToAction("MyProposals");
+        //}
+
+        // Also update the redirect inside CustomerAcceptOffer
+        [HttpPost]
+        [AuthorizeUser]
+        public IActionResult AcceptProposalOffer(int id)
+        {
+            var proposal = db.ProposeItems.Find(id);
+            if (proposal == null) return NotFound();
+
+            proposal.ProdStatus = Status.CustomerAccepted;
+            db.SaveChanges();
+
+            return RedirectToAction("ProposalCheckout", new { id = id }); // ← updated
+        }
+
+
+
+
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AcceptQuotation(int quotationId)
+        {
+            var quotation = await db.Quotations
+                .Include(q => q.RepairRequest)
+                .FirstOrDefaultAsync(q => q.QuotationId == quotationId);
+
+            if (quotation == null) return NotFound();
+
+            quotation.Status = QuotationStatus.Approved;
+            quotation.RepairRequest.Status = RepairStatus.InProgress;
+
+            db.RepairTrackings.Add(new RepairTracking
+            {
+                RepairRequestId = quotation.RepairRequestId,
+                Status = RepairStatus.InProgress,
+                UpdatedDate = DateTime.Now,
+                StatusMessage = "Customer accepted the quotation. Repair is now active."
+            });
+
+            await db.SaveChangesAsync();
+            TempData["Success"] = "Quotation accepted! Your repair is now active.";
+            return RedirectToAction("MyRepairs");
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RejectQuotation(int quotationId, string rejectionReason)
+        {
+            var quotation = await db.Quotations
+                .Include(q => q.RepairRequest)
+                .Include(q => q.Technician)
+                .FirstOrDefaultAsync(q => q.QuotationId == quotationId);
+
+            if (quotation == null) return NotFound();
+
+            quotation.Status = QuotationStatus.Rejected;
+            quotation.RepairRequest.Status = RepairStatus.Cancelled;
+
+            if (quotation.Technician != null)
+                quotation.Technician.Status = AvailabilityStatus.Available;
+
+            db.RepairTrackings.Add(new RepairTracking
+            {
+                RepairRequestId = quotation.RepairRequestId,
+                Status = RepairStatus.Cancelled,
+                UpdatedDate = DateTime.Now,
+                StatusMessage = $"Customer rejected the quotation. Reason: {rejectionReason ?? "None provided"}"
+            });
+
+            await db.SaveChangesAsync();
+
+            TempData["Message"] = "Quotation rejected. The repair has been cancelled.";
+            return RedirectToAction("MyRepairs");
+        }
+
+        
+    }
+
+    public class QuotationResponseViewModel
+    {
+        public int QuotationId { get; set; }
+        public int RepairRequestId { get; set; }
+        public string ItemName { get; set; }
+        public string IssueDescription { get; set; }
+        public string TechnicianName { get; set; }
+        public decimal TotalCost { get; set; }
+        public string TechnicianNotes { get; set; }
+        public DateTime CreatedDate { get; set; }
+        public List<QuotationItem> QuotationItems { get; set; }
+        public string RejectionReason { get; set; }
     }
 }

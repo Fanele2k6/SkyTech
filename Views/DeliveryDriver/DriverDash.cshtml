@@ -55,6 +55,9 @@
             <a href="@Url.Action("MyTasks", "DeliveryDriver")" class="d-link">
                 <i class="fas fa-bag-shopping"></i><span>Returned Order Items</span>
             </a>
+            <a href="@Url.Action("ProposalCollections", "DeliveryDriver")" class="d-link">
+                <i class="fas fa-bag-shopping"></i><span>Collect Proposed Items</span>
+            </a>
 
             <div class="d-nav-label" style="margin-top:1rem">ACCOUNT</div>
             <a href="@Url.Action("DriverProfile", "DeliveryDriver")" class="d-link @(ViewBag.ActivePage == "Profile" ? "active" : "")">

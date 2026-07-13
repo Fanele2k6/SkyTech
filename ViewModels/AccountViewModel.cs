@@ -1,5 +1,9 @@
 ﻿using CM_Project.Models;
 using CM_Project.Models.Documents;
+using SkyTech.Models;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -51,6 +55,44 @@ namespace CM_Project.ViewModels
         public string ConfirmPassword { get; set; }
 
     }
+
+
+        public class TechnicianViewModel
+        {
+            [Required, MaxLength(100)] public string FirstName { get; set; }
+            [Required, MaxLength(100)] public string LastName { get; set; }
+
+            [Required, EmailAddress][StringLength(255)] public string Email { get; set; }
+
+
+            //[Required(ErrorMessage = "Please select a specialization")]
+            [Range(1, int.MaxValue, ErrorMessage = "Please select a specialization")]
+            [Display(Name = "Specialization")]
+            public int CategoryId { get; set; }
+
+        // Populated by the controller — not submitted, just for rendering the <select>
+        [BindNever]
+        [ValidateNever]
+        public IEnumerable<SelectListItem> Categories { get; set; }  // ← new
+
+            
+
+            [Required, StringLength(10)] public string PhoneNumber { get; set; }
+            [MaxLength(200)] public string Address { get; set; }
+
+            [Required]
+            [StringLength(100, MinimumLength = 8, ErrorMessage = "Password must be at least 8 characters long")]
+            [DataType(DataType.Password)]
+            public string Password { get; set; }
+
+            [Required]
+            [Compare("Password", ErrorMessage = "Passwords do not match")]
+            [DataType(DataType.Password)]
+            public string ConfirmPassword { get; set; }
+        }
+
+    
+
 
     public class ShopOwnerViewModel
     {
@@ -163,5 +205,62 @@ namespace CM_Project.ViewModels
       public IFormFile ProductPicture { get; set; }
 
   
+    }
+
+
+    public class ProposeItemViewModel()
+    {
+        [Required]
+        public string ProdName { get; set; }
+
+        [Required]
+        public SelectCategory ProdCategory { get; set; }
+
+        [Required]
+        public SelectCondition ProdCondition { get; set; }
+
+        [Required]
+        [StringLength(500)]
+        public string ProdDescription { get; set; }
+        public virtual ICollection<ReceiptPic> ReceiptPics { get; set; } = new List<ReceiptPic>();
+        public virtual ICollection<ProposedProdPic> ProposedProdPics { get; set; } = new List<ProposedProdPic>();
+
+        // File uploads
+        public List<IFormFile> ReceiptPic { get; set; }
+        public List<IFormFile> ProposedProdPic { get; set; }
+    }
+
+    public class ProposalCheckoutViewModel
+    {
+        public int PropItemId { get; set; }
+        public string ProdName { get; set; }        // read-only display
+        public double AmountProposed { get; set; }  // read-only display
+
+        [Required(ErrorMessage = "Phone number is required")]
+        [Phone(ErrorMessage = "Enter a valid phone number")]
+        public string PhoneNumber { get; set; }
+
+        [Required(ErrorMessage = "Street address is required")]
+        public string Address { get; set; }
+
+        [Required(ErrorMessage = "Please select a delivery option")]
+        public Delivery SelectDelivery { get; set; }  // ← add this
+
+        [Required(ErrorMessage = "Bank name is required")]
+        public string BankName { get; set; }
+
+        [Required]
+        public string BankCode { get; set; }   // ← ADD THIS
+
+        [Required(ErrorMessage = "Account holder name is required")]
+        public string AccountHolderName { get; set; }
+
+        [Required(ErrorMessage = "Account number is required")]
+        public string AccountNumber { get; set; }
+
+        [Required(ErrorMessage = "Branch code is required")]
+        public string BranchCode { get; set; }
+
+        public AccountType AccountType { get; set; }
     }
 }
