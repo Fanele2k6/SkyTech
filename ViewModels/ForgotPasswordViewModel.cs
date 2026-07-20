@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Web;
 
-namespace CM_Project.Models.forgot
+namespace SkyTech.Models.Auth
 {
     public class ForgotPasswordViewModel
     {

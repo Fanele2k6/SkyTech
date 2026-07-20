@@ -1,7 +1,7 @@
 ﻿using System;
 using System.ComponentModel.DataAnnotations;
 
-namespace CM_Project.Models
+namespace SkyTech.Models
 {
     public class SystemAdmin
     {

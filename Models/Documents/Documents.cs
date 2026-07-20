@@ -6,7 +6,7 @@ using System.Linq;
 using System.Web;
 
 
-namespace CM_Project.Models.Documents
+namespace SkyTech.Models.Documents
 {
 
     //-----------------------------SHOP OWNER DOCS-----------------------------

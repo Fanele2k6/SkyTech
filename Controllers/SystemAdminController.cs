@@ -1,4 +1,4 @@
-﻿using CM_Project.Models;
+﻿using SkyTech.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -6,7 +6,7 @@ using System.Linq;
 using SkyTech.Models.Repair_Item_Services;
 using SkyTech.Models.Repair_Services;
 
-namespace CM_Project.Controllers
+namespace SkyTech.Controllers
 {
     [AuthorizeUser]
     public class SystemAdminController : Controller

@@ -4,7 +4,7 @@ using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace CM_Project.Models
+namespace SkyTech.Models
 {
     public class Customer
     {

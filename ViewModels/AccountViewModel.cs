@@ -1,6 +1,5 @@
-﻿using CM_Project.Models;
-using CM_Project.Models.Documents;
-using SkyTech.Models;
+﻿using SkyTech.Models;
+using SkyTech.Models.Documents;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
@@ -12,7 +11,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Web;
 
-namespace CM_Project.ViewModels
+namespace SkyTech.ViewModels
 {
     public class DriverTasksViewModel
     {

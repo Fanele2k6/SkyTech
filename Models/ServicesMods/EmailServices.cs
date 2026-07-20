@@ -2,7 +2,7 @@
 using System.Net;
 using System.Net.Mail;
 
-namespace CM_Project.Models
+namespace SkyTech.Models
 {
     public class EmailServices
     {

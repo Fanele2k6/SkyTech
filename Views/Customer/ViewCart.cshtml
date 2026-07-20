@@ -1,4 +1,4 @@
-﻿@model List<CM_Project.Models.CartItem>
+﻿@model List<SkyTech.Models.CartItem>
 
 @{
     Layout = "~/Views/Shared/_MinimalLayout.cshtml";
@@ -345,7 +345,7 @@
                     <select name="selectedPickupBranchId" id="pickupBranch">
                         <option value="">-- Choose a branch --</option>
                         @{
-                            var branches = ViewBag.AvailableBranches as List<CM_Project.Models.ShopOwner>;
+                            var branches = ViewBag.AvailableBranches as List<SkyTech.Models.ShopOwner>;
                             if (branches != null)
                             {
                                 foreach (var branch in branches)

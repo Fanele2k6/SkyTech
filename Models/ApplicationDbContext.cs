@@ -1,11 +1,11 @@
-﻿using CM_Project.Models.Documents;
+﻿using SkyTech.Models.Documents;
 using Microsoft.EntityFrameworkCore;
 using SkyTech.Models;
 using SkyTech.Models.Repair_Item_Services;
 using SkyTech.Models.Repair_Services;
 
 
-namespace CM_Project.Models
+namespace SkyTech.Models
 {
     public class ApplicationDbContext : DbContext
     {
@@ -61,6 +61,9 @@ namespace CM_Project.Models
         public DbSet<QuotationItem> QuotationItems { get; set; }
         public DbSet<Receipt> Receipts { get; set; }
         public DbSet<RepairTracking> RepairTrackings { get; set; }
+
+        //--------POST TABLE----
+        public DbSet<JobPost> JobPosts { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

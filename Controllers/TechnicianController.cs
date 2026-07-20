@@ -5,10 +5,10 @@ using System.Threading.Tasks;
 using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using CM_Project.Models;
+using SkyTech.Models;
 using SkyTech.Models.Repair_Item_Services;
 using SkyTech.Models.Repair_Services;
-using CM_Project.Services;
+using SkyTech.Services;
 
 namespace SkyTech.Controllers
 {

@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 
-namespace CM_Project.Models
+namespace SkyTech.Models
 {
     // Core uses IActionFilter instead of System.Web.Mvc.ActionFilterAttribute
     public class AuthorizeUserAttribute : ActionFilterAttribute

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace CM_Project.Models
+namespace SkyTech.Models
 {
     public enum OrderStatus { Pending, Assigned, OutForDelivery, Delivered }
     public enum DeliveryType { HomeDelivery, InStorePickup }

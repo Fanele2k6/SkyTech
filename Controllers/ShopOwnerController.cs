@@ -1,11 +1,10 @@
-﻿using CM_Project.Models;
-using CM_Project.Models.Documents;
-using CM_Project.Services;
-using CM_Project.ViewModels;
+﻿using SkyTech.Models;
+using SkyTech.Models.Documents;
+using SkyTech.Services;
+using SkyTech.ViewModels;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using SkyTech.Models;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -14,7 +13,7 @@ using System.Linq;
 using System.Net.NetworkInformation;
 using System.Security.Cryptography.Xml;
 
-namespace CM_Project.Controllers
+namespace SkyTech.Controllers
 {
     [AuthorizeUser]
     public class ShopOwnerController : Controller
@@ -1023,6 +1022,46 @@ namespace CM_Project.Controllers
             return RedirectToAction("AcceptedProposals");
         }
 
+        public IActionResult JobCenter()
+        {
+            return View("ManagingJobs/JobCenter");
+        }
 
+        public IActionResult ComposeJob()
+        {
+            return View("Managingjobs/ComposeJob");
+        }
+
+        [ValidateAntiForgeryToken]
+        [HttpPost]
+        public async Task<IActionResult> ComposeJob(JobPost model)
+        {
+            int currentId = HttpContext.Session.GetInt32("UserId")!.Value;
+
+            if (!ModelState.IsValid)
+            {
+                var errors = ModelState.Values
+                    .SelectMany(v => v.Errors)
+                    .Select(e => e.ErrorMessage);
+
+                return Content(string.Join("\n", errors));
+            }
+            //if (!ModelState.IsValid)
+            //{
+            //    return View("ManagingJobs/ComposeJob", model);
+            //    //return View(model);
+            //}
+
+            model.OwnerId = currentId;
+            model.PostStatus = CurrentPostStatus.Published;
+            model.CreatedAt = DateTime.Now;
+            model.UpdatedAt = DateTime.Now;
+
+            db.Add(model);
+            await db.SaveChangesAsync();
+            TempData["successful"] = "Job Posted successfully";
+            return RedirectToAction("JobCenter");
+           
+        }
     }
 }

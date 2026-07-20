@@ -1,5 +1,5 @@
-﻿@model IEnumerable<CM_Project.Models.AddProduct>
-@using CM_Project.Models
+﻿@model IEnumerable<SkyTech.Models.AddProduct>
+@using SkyTech.Models
 @{
     ViewBag.Title = "SkyTech • Shop";
     Layout = "~/Views/Shared/_MinimalLayout.cshtml";
@@ -182,7 +182,7 @@
             </div>
         </div>
 
-        @if (ViewBag.PopularPicks == null || !((IEnumerable<CM_Project.Models.AddProduct>)ViewBag.PopularPicks).Any())
+        @if (ViewBag.PopularPicks == null || !((IEnumerable<SkyTech.Models.AddProduct>)ViewBag.PopularPicks).Any())
         {
             <div class="cart-empty" style="margin: 1rem 0 2rem;">
                 <i class="fas fa-fire"></i>
@@ -196,7 +196,7 @@
                 @{
                     int cardIdx = 0;
                 }
-                @foreach (CM_Project.Models.AddProduct item in ViewBag.PopularPicks)
+                @foreach (SkyTech.Models.AddProduct item in ViewBag.PopularPicks)
                 {
                     bool inStock = item.ProdQuantity > 0;
                     <div class="p-card" style="animation-delay:@(cardIdx * 60)ms">
@@ -276,7 +276,7 @@
             </div>
         </div>
 
-        @if (ViewBag.Groceries == null || !((IEnumerable<CM_Project.Models.AddProduct>)ViewBag.Groceries).Any())
+        @if (ViewBag.Groceries == null || !((IEnumerable<SkyTech.Models.AddProduct>)ViewBag.Groceries).Any())
         {
             <div class="cart-empty" style="margin: 1rem 0 2rem;">
                 <i class="fas fa-blender-phone"></i>
@@ -290,7 +290,7 @@
                 @{
                     int cardIdx = 0;
                 }
-                @foreach (CM_Project.Models.AddProduct item in ViewBag.Groceries)
+                @foreach (SkyTech.Models.AddProduct item in ViewBag.Groceries)
                 {
                     bool inStock = item.ProdQuantity > 0;
                     <div class="p-card" style="animation-delay:@(cardIdx * 60)ms">

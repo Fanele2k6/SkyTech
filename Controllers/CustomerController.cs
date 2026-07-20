@@ -1,21 +1,19 @@
-﻿using CM_Project.Models;
-using CM_Project.Models.Documents;
-using CM_Project.Services;
-using CM_Project.ViewModels;
+﻿using SkyTech.Models;
+using SkyTech.Models.Documents;
+using SkyTech.Services;
+using SkyTech.ViewModels;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Identity.Client;
-using SkyTech.Models;
-using SkyTech.ViewModels;
 using SkyTech.Models.Repair_Item_Services;
 using SkyTech.Models.Repair_Services;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using static CM_Project.Models.Order;
+using static SkyTech.Models.Order;
 
-namespace CM_Project.Controllers
+namespace SkyTech.Controllers
 {
     // [AuthorizeUser]
     public class CustomerController : Controller
@@ -809,11 +807,11 @@ namespace CM_Project.Controllers
         }
 
 
-        private string GetStatusMessage(CM_Project.Models.OrderStatus status) =>
-            status == CM_Project.Models.OrderStatus.Pending ? "Pending"
-          : status == CM_Project.Models.OrderStatus.Assigned ? "Driver Assigned"
-          : status == CM_Project.Models.OrderStatus.OutForDelivery ? "Out For Delivery"
-          : status == CM_Project.Models.OrderStatus.Delivered ? "Delivered"
+        private string GetStatusMessage(SkyTech.Models.OrderStatus status) =>
+            status == SkyTech.Models.OrderStatus.Pending ? "Pending"
+          : status == SkyTech.Models.OrderStatus.Assigned ? "Driver Assigned"
+          : status == SkyTech.Models.OrderStatus.OutForDelivery ? "Out For Delivery"
+          : status == SkyTech.Models.OrderStatus.Delivered ? "Delivered"
           : "";
 
 
@@ -953,10 +951,10 @@ namespace CM_Project.Controllers
             var order = db.Orders.FirstOrDefault(o => o.OrderId == orderId);
             if (order == null) return NotFound();
 
-            int step = order.Status == CM_Project.Models.OrderStatus.Pending ? 0
-                     : order.Status == CM_Project.Models.OrderStatus.Assigned ? 1
-                     : order.Status == CM_Project.Models.OrderStatus.OutForDelivery ? 2
-                     : order.Status == CM_Project.Models.OrderStatus.Delivered ? 3 : 0;
+            int step = order.Status == SkyTech.Models.OrderStatus.Pending ? 0
+                     : order.Status == SkyTech.Models.OrderStatus.Assigned ? 1
+                     : order.Status == SkyTech.Models.OrderStatus.OutForDelivery ? 2
+                     : order.Status == SkyTech.Models.OrderStatus.Delivered ? 3 : 0;
 
             return Json(new { currentStep = step });
         }
@@ -976,7 +974,7 @@ namespace CM_Project.Controllers
             if (order == null)
                 return Json(new { success = false, reason = "Order not found" });
 
-            if (order.Status != CM_Project.Models.OrderStatus.Delivered)
+            if (order.Status != SkyTech.Models.OrderStatus.Delivered)
                 return Json(new { success = false, reason = "Order not delivered yet" });
 
             order.IsArchived = true;
@@ -1111,7 +1109,7 @@ namespace CM_Project.Controllers
             if (item == null)
             {
                 ViewBag.Message = "Return not found or does not belong to you.";
-                return View((CM_Project.Models.OrderItem)null);
+                return View((SkyTech.Models.OrderItem)null);
             }
 
             return View(item);

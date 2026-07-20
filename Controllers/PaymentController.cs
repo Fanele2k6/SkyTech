@@ -1,13 +1,13 @@
-﻿using CM_Project.Models;
+﻿using SkyTech.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
-using CM_Project.Services;
+using SkyTech.Services;
 
-namespace CM_Project.Controllers
+namespace SkyTech.Controllers
 {
     [AuthorizeUser]
     public class PaymentController : Controller

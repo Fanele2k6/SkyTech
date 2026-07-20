@@ -1,4 +1,4 @@
-﻿using CM_Project.Models;
+﻿using SkyTech.Models;
 using Newtonsoft.Json;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -6,7 +6,7 @@ using System.Text;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
-namespace CM_Project.Services
+namespace SkyTech.Services
 {
     public class PayStackService
     {
