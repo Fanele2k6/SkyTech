@@ -1,0 +1,73 @@
+﻿@model SkyTech.Models.JobPost
+
+@{
+    ViewData["Title"] = "Compose a Job Post (AI-Assisted)";
+    Layout = "~/Views/Shared/_MinimalLayout.cshtml";
+}
+
+<div class="form-container">
+
+    <form asp-controller="ShopOwner" asp-action="GenerateJobDraft" method="Post">
+
+        <div class="form-group">
+            @* <label asp-for="JobTitle">Job Title</label> *@
+            @* <input asp-for="JobTitle" type="text" placeholder="" /> *@
+            <input type="hidden" name="roleId" value="@ViewBag.RoleId" />
+            <p>Job Title: <strong>@ViewBag.JobTitle</strong></p>
+            <span asp-validation-for="JobTitle"></span>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="Department">Select Department</label>
+            <select asp-for="Department"
+                    asp-items="Html.GetEnumSelectList<SkyTech.Models.SelectDepartment>()">
+                <option value="">--Select Department--</option>
+            </select>
+            <span asp-validation-for="Department"></span>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="Location">Work Location</label>
+            <select asp-for="Location"
+                    asp-items="Html.GetEnumSelectList<SkyTech.Models.SelectLocation>()">
+                <option value="">--Select Work Location--</option>
+            </select>
+            <span asp-validation-for="Location"></span>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="EmploymentType">Employment Type</label>
+            <select asp-for="EmploymentType"
+                    asp-items="Html.GetEnumSelectList<SkyTech.Models.SelectEmploymentType>()">
+                <option value="">--Select Employment Type</option>
+            </select>
+            <span asp-validation-for="EmploymentType"></span>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="SalaryMin">Minimum Salary</label>
+            <input asp-for="SalaryMin" type="number" placeholder="Value in Rands" />
+            <span asp-validation-for="SalaryMin"></span>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="SalaryMax">Maximum Salary</label>
+            <input asp-for="SalaryMax" type="number" placeholder="Value in Rands" />
+            <span asp-validation-for="SalaryMax"></span>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="ClosingDate">Closing Date</label>
+            <input asp-for="ClosingDate" type="date" />
+            <span asp-validation-for="ClosingDate"></span>
+        </div>
+
+        <div class="btn-submit">
+            <button type="submit">
+                Generate Draft with AI
+            </button>
+        </div>
+
+    </form>
+
+</div>

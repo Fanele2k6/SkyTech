@@ -1,6 +1,7 @@
-﻿using SkyTech.Models.Documents;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using SkyTech.Models;
+using SkyTech.Models.Documents;
+using SkyTech.Models.JobPostServices;
 using SkyTech.Models.Repair_Item_Services;
 using SkyTech.Models.Repair_Services;
 
@@ -64,7 +65,8 @@ namespace SkyTech.Models
 
         //--------POST TABLE----
         public DbSet<JobPost> JobPosts { get; set; }
-
+        public DbSet<JobRoleKnowledge> JobRoleKnowledges { get; set; }
+        public DbSet<ApplicationForm> ApplicationForms { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

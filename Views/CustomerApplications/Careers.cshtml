@@ -1,0 +1,62 @@
+﻿ @model IEnumerable<SkyTech.Models.JobPost>
+
+
+@foreach(var job in Model)
+{
+
+    <div class="post-wrapper" style="margin:10px">
+
+        <div class="post-section">
+            <label>Job Title</label>
+            <p>@job.JobTitle</p>
+        </div>
+
+        <div class="post-wrapper">
+            <label>Department</label>
+            <p>@job.Department</p>
+        </div>
+
+        <div class="post-wrapper">
+            <label>Location</label>
+            <p>@job.Location</p>
+        </div>
+        <div class="post-wrapper">
+            <label>Employment Type</label>
+            <p>@job.EmploymentType</p>
+        </div>
+        <div class="post-wrapper">
+            <label>Minimum Salary</label>
+            <p>@job.SalaryMin</p>
+        </div>
+        <div class="post-wrapper">
+            <label>Maximum Salary</label>
+            <p>@job.SalaryMax</p>
+        </div>
+        <div class="post-wrapper">
+            <label>Responsibilities</label>
+            <p>@job.Responsibilities</p>
+        </div>
+        <div class="post-wrapper">
+            <label>Required Certifications</label>
+            <p>@job.RequiredCerts</p>
+        </div>
+        <div class="post-wrapper">
+            <label>Required Skills And Experience</label>
+            <p>@job.RequiredSkillsAndXP</p>
+        </div>
+        <div class="post-wrapper">
+            <label>Closing Date</label>
+            <p>@job.ClosingDate</p>
+        </div>
+
+        <div class="post-wrapper">
+            <label>Posted At:</label>
+            <p>@job.CreatedAt</p>
+        </div>
+
+        <a asp-controller="CustomerApplications" asp-action="StartApplication" asp-route-postId="@job.PostId"
+           class="btn-primary">
+            Apply
+        </a>
+    </div>
+}

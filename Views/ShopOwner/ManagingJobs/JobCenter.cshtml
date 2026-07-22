@@ -1,7 +1,6 @@
 ﻿@using SkyTech.Models
 @{
     ViewData["Title"] = "Job Center";
-
 }
 
 <h1>Job center</h1>
@@ -9,9 +8,16 @@
 <div class="wrapper">
 
     <main class="">
-
         <div class="action-left">
-            <a href="@Url.Action("ComposeJob", "ShopOwner")" class="btn-primary"> <i class="fas fa-plus-circle"></i>Post New Job </a>
+            <a href="@Url.Action("ComposeJob", "ShopOwner")" class="btn-primary">
+                <i class="fas fa-plus-circle"></i>Post New Job
+            </a>
+            <a href="@Url.Action("SelectJobRole", "ShopOwner")" class="btn-primary">
+                <i class="fas fa-robot"></i>Post New Job (AI-Assisted)
+            </a>
+            <a href="@Url.Action("Index", "JobRoleKnowledge")" class="btn-primary">
+                <i class="fas fa-book"></i>Manage Job Role Information
+            </a>
         </div>
 
     </main>

@@ -20,6 +20,7 @@ namespace SkyTech.Controllers
     {
         private readonly ApplicationDbContext db;
 
+
         public CustomerController(ApplicationDbContext context, PayStackTransferService paystackService)
         {
             db = context;
@@ -1455,7 +1456,8 @@ namespace SkyTech.Controllers
             return RedirectToAction("MyRepairs");
         }
 
-        
+      
+
     }
 
     public class QuotationResponseViewModel
@@ -1471,4 +1473,8 @@ namespace SkyTech.Controllers
         public List<QuotationItem> QuotationItems { get; set; }
         public string RejectionReason { get; set; }
     }
+
+   
 }
+  
+            
