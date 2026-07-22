@@ -1,4 +1,4 @@
-﻿using CM_Project.Models;
+﻿using SkyTech.Models;
 using System.Collections.Generic;
 
 namespace SkyTech.ViewModels

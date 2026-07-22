@@ -1,0 +1,60 @@
+﻿@model SkyTech.Models.JobPost
+
+@{
+    ViewData["Title"] = "Review Job Draft";
+    Layout = "~/Views/Shared/_MinimalLayout.cshtml";
+}
+
+@if (TempData["aiError"] != null)
+{
+    <p>@TempData["aiError"]</p>
+}
+
+<div class="form-container">
+
+    <h2>@Model.JobTitle</h2>
+    <p>@Model.Department.ToString() — @Model.Location.ToString() — @Model.EmploymentType.ToString()</p>
+
+    <form asp-controller="ShopOwner" asp-action="PublishJobDraft" method="Post">
+
+        <input type="hidden" asp-for="PostId" />
+        <input type="hidden" asp-for="JobTitle" />
+        <input type="hidden" asp-for="Department" />
+        <input type="hidden" asp-for="Location" />
+        <input type="hidden" asp-for="EmploymentType" />
+        <input type="hidden" asp-for="SalaryMin" />
+        <input type="hidden" asp-for="SalaryMax" />
+        <input type="hidden" asp-for="ClosingDate" />
+
+        <div class="form-group">
+            <label asp-for="Responsibilities">Responsibilities</label>
+            <textarea asp-for="Responsibilities" rows="5"></textarea>
+            <span asp-validation-for="Responsibilities"></span>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="RequiredCerts">Required Certifications</label>
+            <textarea asp-for="RequiredCerts" rows="7"></textarea>
+            <span asp-validation-for="RequiredCerts"></span>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="RequiredSkillsAndXP">Required Skills and Experience</label>
+            <textarea asp-for="RequiredSkillsAndXP" rows="7"></textarea>
+            <span asp-validation-for="RequiredSkillsAndXP"></span>
+        </div>
+
+        <div class="btn-submit">
+            <button type="submit">Publish</button>
+        </div>
+
+    </form>
+
+    <form asp-controller="ShopOwner" asp-action="RegenerateJobDraft" method="Post">
+        <input type="hidden" name="id" value="@Model.PostId" />
+        <div class="btn-submit">
+            <button type="submit">Regenerate with AI</button>
+        </div>
+    </form>
+
+</div>

@@ -1,0 +1,21 @@
+﻿@{
+    ViewData["Title"] = "Select Job Role";
+}
+
+<div class="form-container">
+    <form asp-controller="ShopOwner" asp-action="SelectJobRole" method="post">
+
+        <div class="form-group">
+            <label>Select Job Title</label>
+            <select name="roleId" asp-items="ViewBag.Roles">
+                <option value="">--Select Role--</option>
+            </select>
+        </div>
+
+        <div class="btn-submit">
+            <button type="submit" name="mode" value="manual">Create Manually</button>
+            <button type="submit" name="mode" value="ai">Generate with AI</button>
+        </div>
+
+    </form>
+</div>

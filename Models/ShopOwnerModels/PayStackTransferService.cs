@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 
-namespace CM_Project.Services
+namespace SkyTech.Services
 {
     public class PayStackTransferService
     {

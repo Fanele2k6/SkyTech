@@ -1,20 +1,19 @@
-﻿using CM_Project.Models;
-using CM_Project.Models.Documents;
-using CM_Project.Models.forgot;
-using CM_Project.ViewModels;
+﻿using SkyTech.Models;
+using SkyTech.Models.Documents;
+using SkyTech.ViewModels;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using SkyTech.Models;
+using SkyTech.Models.Auth;
 using SkyTech.Models.Repair_Services;
 using System;
 using System.IO;
 using System.Linq;
 using System.Net.NetworkInformation;
 
-namespace CM_Project.Controllers
+namespace SkyTech.Controllers
 {
     public class AuthenticationController : Controller
     {

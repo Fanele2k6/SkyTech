@@ -1,7 +1,9 @@
-using CM_Project.Models;
-using CM_Project.Services;
 using Microsoft.EntityFrameworkCore;
+using SkyTech.JobPostServices;
+using SkyTech.Models;
+using SkyTech.Models.JobPostServices;
 using SkyTech.Models.Repair_Item_Services;
+using SkyTech.Services;
 using System.Globalization;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -37,7 +39,9 @@ builder.Services.AddSession(options =>
 
 // Your Services class (email + DI)
 builder.Services.AddScoped<EmailServices>();
-
+builder.Services.AddHttpClient<IAIJobPostDraftService, OpenRouterJobPostDraftService>();
+builder.Services.AddHttpClient<ICvExtractionService, OpenRouterCvExtractionService>();
+//builder.Services.AddHttpClient<IAIJobPostDraftService, GeminiJobPostDraftService>();
 builder.Services.AddScoped<PayStackService>();
 
 var app = builder.Build();
@@ -78,7 +82,7 @@ app.UseAuthorization();
 //route config for core
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Authentication}/{action=Home}/{id?}"); // starts on the shopping page
+    pattern: "{controller=Customer}/{action=ShoppingPage}/{id?}"); // starts on the shopping page
 
 app.Run();
 

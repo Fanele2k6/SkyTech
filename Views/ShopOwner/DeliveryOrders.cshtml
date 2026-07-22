@@ -1,6 +1,5 @@
-﻿@using CM_Project.Models
-@using SkyTech.Models
-@model IEnumerable<CM_Project.Models.Order>
+﻿@using SkyTech.Models
+@model IEnumerable<SkyTech.Models.Order>
 @{
     ViewBag.Title = "Delivery Orders";
     Layout = "~/Views/Shared/_MinimalLayout.cshtml";
@@ -8,7 +7,7 @@
     bool restricted = ViewBag.ApplicationStatus == ApplicationStat.Pending
                   || ViewBag.ApplicationStatus == ApplicationStat.Rejected;
     var transfersOut = ViewBag.TransfersOut as IEnumerable<InterBranchTransfer> ?? new List<InterBranchTransfer>();
-    var drivers = ViewBag.AvailableDrivers as IEnumerable<CM_Project.Models.DeliveryDriver> ?? new List<CM_Project.Models.DeliveryDriver>();
+    var drivers = ViewBag.AvailableDrivers as IEnumerable<SkyTech.Models.DeliveryDriver> ?? new List<SkyTech.Models.DeliveryDriver>();
     int total = Model.Count();
     int pending = Model.Count(o => o.Status == OrderStatus.Pending);
     int delivered = Model.Count(o => o.Status == OrderStatus.Delivered);

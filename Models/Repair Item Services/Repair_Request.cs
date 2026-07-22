@@ -1,5 +1,5 @@
-﻿using CM_Project.Models;
-using CM_Project.Models.Documents;
+﻿using SkyTech.Models;
+using SkyTech.Models.Documents;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
