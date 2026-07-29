@@ -1,0 +1,162 @@
+﻿@using SkyTech.Models.JobPostServices.By_TRENCH
+@using static SkyTech.Models.JobPostServices.By_TRENCH.Enums.StaffAnalysisEnums
+@model JobVacancyRecommendation
+
+@{
+    ViewData["Title"] = "Review System Recommendation";
+}
+
+<div class="container mt-5">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2>@Model.SuggestedJobTitle</h2>
+            <small class="text-muted">System Recommended • @Model.Department.Name</small>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="@Url.Action("SystemRecommendedPosts")" class="btn btn-secondary">← Back</a>
+        </div>
+    </div>
+
+    @if (TempData["success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (TempData["error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="row">
+        <div class="col-md-8">
+            <form method="post" asp-action="EditRecommendation">
+                <input type="hidden" name="id" value="@Model.Id" />
+                @Html.AntiForgeryToken()
+
+                <div class="card mb-4">
+                    <div class="card-header bg-light">
+                        <h5>Vacancy Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label"><strong>Vacancy Type</strong></label>
+                                <p class="form-control-plaintext">
+                                    @if (Model.VacancyType == VacancyType.Permanent)
+                                    {
+                                        <span class="badge bg-danger">Permanent Position</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-warning">Temporary Leave Cover</span>
+                                    }
+                                </p>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label"><strong>Headcount Needed</strong></label>
+                                <p class="form-control-plaintext"><strong>@Model.RecommendedHeadcount position(s)</strong></p>
+                            </div>
+                        </div>
+
+                        @if (Model.VacancyType == VacancyType.TemporaryLeaveCover)
+                        {
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label"><strong>Contract Start</strong></label>
+                                    <p class="form-control-plaintext">@Model.ContractStartDate?.ToString("MMM dd, yyyy")</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label"><strong>Contract End</strong></label>
+                                    <p class="form-control-plaintext">@Model.ContractEndDate?.ToString("MMM dd, yyyy") (~@Model.ContractDurationDays days)</p>
+                                </div>
+                            </div>
+                        }
+
+                        <div class="mb-3">
+                            <label class="form-label"><strong>Department</strong></label>
+                            <p class="form-control-plaintext">@Model.Department.Name</p>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label"><strong>Position</strong></label>
+                            <p class="form-control-plaintext">@Model.Position.Title</p>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label"><strong>Generated</strong></label>
+                            <p class="form-control-plaintext">@Model.GeneratedAt.ToString("MMM dd, yyyy HH:mm")</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card mb-4">
+                    <div class="card-header bg-light">
+                        <h5>Job Post Details (AI-Generated - Edit as needed)</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label">Job Title</label>
+                            <input type="text" name="SuggestedJobTitle" class="form-control" value="@Model.SuggestedJobTitle" required />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Responsibilities</label>
+                            <textarea name="SuggestedResponsibilities" class="form-control" rows="5" required>@Model.SuggestedResponsibilities</textarea>
+                            <small class="text-muted">Edit the AI-generated content if needed</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Required Certifications</label>
+                            <textarea name="SuggestedRequiredCerts" class="form-control" rows="3">@Model.SuggestedRequiredCerts</textarea>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Required Skills & Experience</label>
+                            <textarea name="SuggestedRequiredSkillsAndXP" class="form-control" rows="5" required>@Model.SuggestedRequiredSkillsAndXP</textarea>
+                        </div>
+
+                        <button type="submit" class="btn btn-warning">
+                            <i class="fas fa-save"></i> Save Changes
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card border-success">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-check-circle"></i> Actions</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post" asp-action="PublishRecommendation">
+                        <input type="hidden" name="id" value="@Model.Id" />
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-success btn-lg w-100 mb-3" onclick="return confirm('Publish this job posting?')">
+                            <i class="fas fa-upload"></i> Publish Job Post
+                        </button>
+                    </form>
+
+                    <form method="post" asp-action="DeleteRecommendation">
+                        <input type="hidden" name="id" value="@Model.Id" />
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn btn-outline-danger btn-lg w-100" onclick="return confirm('Delete this recommendation? This cannot be undone.')">
+                            <i class="fas fa-trash"></i> Delete
+                        </button>
+                    </form>
+
+                    <div class="alert alert-info mt-3" role="alert">
+                        <i class="fas fa-lightbulb"></i>
+                        <strong>Tip:</strong> Review and edit the AI-generated content before publishing. Make sure the job title, responsibilities, and requirements match your needs.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

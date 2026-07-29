@@ -1,0 +1,64 @@
+﻿@using SkyTech.Models.JobPostServices
+@model JobRoleKnowledge
+
+@{
+    ViewData["Title"] = "Edit Role";
+}
+
+<div class="form-container">
+    <h2>Edit Job Role</h2>
+
+    <form asp-controller="JobRoleKnowledge" asp-action="Edit" method="post">
+        @Html.AntiForgeryToken()
+
+        <input type="hidden" asp-for="RoleId" />
+
+        <div class="form-group">
+            <label asp-for="PositionId">Position (Optional)</label>
+            <select asp-for="PositionId" asp-items="ViewBag.Positions" class="form-control">
+                <option value="">-- Select a Position (Optional) --</option>
+            </select>
+            <small class="text-muted">Link this role to a position, or leave blank</small>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="JobTitle"></label>
+            <input asp-for="JobTitle" type="text" />
+            <span asp-validation-for="JobTitle"></span>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="CompanyResponsibilities"></label>
+            <textarea asp-for="CompanyResponsibilities" rows="5" placeholder="One responsibility per line"></textarea>
+            <span asp-validation-for="CompanyResponsibilities"></span>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="RequiredSkills"></label>
+            <textarea asp-for="RequiredSkills" rows="4" placeholder="One skill per line"></textarea>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="RequiredExperience"></label>
+            <textarea asp-for="RequiredExperience" rows="3" placeholder="One item per line"></textarea>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="RequiredQualifications"></label>
+            <textarea asp-for="RequiredQualifications" rows="3" placeholder="One item per line"></textarea>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="OtherCompanyInformation"></label>
+            <textarea asp-for="OtherCompanyInformation" rows="3"></textarea>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="IsActive"></label>
+            <input asp-for="IsActive" type="checkbox" />
+        </div>
+
+        <button type="submit">Update Role</button>
+        <a href="@Url.Action("Index")">Cancel</a>
+    </form>
+</div>

@@ -1,0 +1,84 @@
+﻿@using SkyTech.Models.JobPostServices.By_TRENCH
+@model IEnumerable<StaffingAnalysisSchedule>
+
+@{
+    ViewData["Title"] = "Staffing Analysis Schedules";
+}
+
+<div class="container mt-5">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2>Analysis Schedules</h2>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="@Url.Action("CreateSchedule")" class="btn btn-primary">+ New Schedule</a>
+        </div>
+    </div>
+
+    @if (TempData["success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info">No schedules configured yet. <a href="@Url.Action("CreateSchedule")">Create one</a></div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Frequency</th>
+                        <th>Time of Day</th>
+                        <th>Last Run</th>
+                        <th>Next Run</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var schedule in Model)
+                    {
+                        <tr>
+                            <td>@schedule.Frequency</td>
+                            <td>@schedule.TimeOfDay.ToString(@"hh\:mm")</td>
+                            <td>@(schedule.LastRunAt?.ToString("MMM dd, yyyy HH:mm") ?? "Never")</td>
+                            <td>@(schedule.NextRunAt?.ToString("MMM dd, yyyy HH:mm") ?? "TBD")</td>
+                            <td>
+                                @if (schedule.IsActive)
+                                {
+                                    <span class="badge bg-success">Active</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">Inactive</span>
+                                }
+                            </td>
+                            <td>
+                                <form method="post" action="@Url.Action("RunNow")" style="display:inline;">
+                                    @Html.AntiForgeryToken()
+                                    <input type="hidden" name="scheduleId" value="@schedule.Id" />
+                                    <button type="submit" class="btn btn-sm btn-info">Run Now</button>
+                                </form>
+                                <a href="@Url.Action("RunHistory", new { scheduleId = schedule.Id })" class="btn btn-sm btn-secondary">History</a>
+                                @if (schedule.IsActive)
+                                {
+                                    <form method="post" action="@Url.Action("DeactivateSchedule")" style="display:inline;">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@schedule.Id" />
+                                        <button type="submit" class="btn btn-sm btn-warning" onclick="return confirm('Deactivate this schedule?')">Disable</button>
+                                    </form>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

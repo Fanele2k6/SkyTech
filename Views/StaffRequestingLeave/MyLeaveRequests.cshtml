@@ -1,0 +1,90 @@
+﻿@using SkyTech.Models.JobPostServices.By_TRENCH
+@using static SkyTech.Models.JobPostServices.By_TRENCH.Enums.StaffAnalysisEnums
+@model IEnumerable<LeaveRequest>
+
+@{
+    ViewData["Title"] = "My Leave Requests";
+}
+
+<div class="container mt-5">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2>My Leave Requests</h2>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="@Url.Action("RequestLeave")" class="btn btn-primary">
+                <i class="fas fa-plus-circle"></i> New Leave Request
+            </a>
+        </div>
+    </div>
+
+    @if (TempData["success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle"></i> You haven't submitted any leave requests yet.
+            <a href="@Url.Action("RequestLeave")">Submit your first request</a>
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Leave Type</th>
+                        <th>From</th>
+                        <th>To</th>
+                        <th>Days</th>
+                        <th>Reason</th>
+                        <th>Status</th>
+                        <th>Applied</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var leave in Model)
+                    {
+                        int days = (int)(leave.EndDate - leave.StartDate).TotalDays + 1;
+                        <tr>
+                            <td>@leave.LeaveType.Name</td>
+                            <td>@leave.StartDate.ToString("MMM dd, yyyy")</td>
+                            <td>@leave.EndDate.ToString("MMM dd, yyyy")</td>
+                            <td><strong>@days</strong></td>
+                            <td>@leave.Reason</td>
+                            <td>
+                                @if (leave.Status == LeaveStatus.Pending)
+                                {
+                                    <span class="badge bg-warning text-dark">⏳ Pending</span>
+                                }
+                                else if (leave.Status == LeaveStatus.Approved)
+                                {
+                                    <span class="badge bg-success">✓ Approved</span>
+                                    <br />
+                                    <small class="text-muted">by @leave.ApprovedByStaff?.FirstName</small>
+                                }
+                                else if (leave.Status == LeaveStatus.Rejected)
+                                {
+                                    <span class="badge bg-danger">✕ Rejected</span>
+                                    <br />
+                                    <small class="text-muted">by @leave.ApprovedByStaff?.FirstName</small>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">@leave.Status</span>
+                                }
+                            </td>
+                            <td>@leave.AppliedOn.ToString("MMM dd, yyyy")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

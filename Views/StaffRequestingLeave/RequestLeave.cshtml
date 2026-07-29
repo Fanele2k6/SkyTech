@@ -1,0 +1,70 @@
+﻿@using SkyTech.Models.JobPostServices.By_TRENCH
+@model LeaveRequest
+
+@{
+    ViewData["Title"] = "Request Leave";
+}
+
+<div class="container mt-5" style="max-width: 600px;">
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0">Request Leave</h4>
+        </div>
+        <div class="card-body">
+            @if (ViewBag.LeaveTypes == null || ViewBag.LeaveTypes.Count == 0)
+            {
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle"></i> No leave types available. Please contact HR.
+                </div>
+            }
+            else
+            {
+                <form method="post" asp-action="RequestLeave">
+                    @Html.AntiForgeryToken()
+
+                    <div class="mb-3">
+                        <label class="form-label">Leave Type <span class="text-danger">*</span></label>
+                        <select name="LeaveTypeId" class="form-select" required>
+                            <option value="">-- Select Leave Type --</option>
+                            @foreach (var leaveType in ViewBag.LeaveTypes)
+                            {
+                                <option value="@leaveType.Id">@leaveType.Name (@leaveType.MaxDaysPerYear days)</option>
+                            }
+                        </select>
+                        @Html.ValidationMessageFor(m => m.LeaveTypeId, "", new { @class = "text-danger" })
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Start Date <span class="text-danger">*</span></label>
+                                <input type="date" name="StartDate" class="form-control" required />
+                                @Html.ValidationMessageFor(m => m.StartDate, "", new { @class = "text-danger" })
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">End Date <span class="text-danger">*</span></label>
+                                <input type="date" name="EndDate" class="form-control" required />
+                                @Html.ValidationMessageFor(m => m.EndDate, "", new { @class = "text-danger" })
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Reason <span class="text-danger">*</span></label>
+                        <textarea name="Reason" class="form-control" rows="4" placeholder="Brief reason for your leave request..." required></textarea>
+                        @Html.ValidationMessageFor(m => m.Reason, "", new { @class = "text-danger" })
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="fas fa-paper-plane"></i> Submit Leave Request
+                        </button>
+                        <a href="@Url.Action("MyLeaveRequests")" class="btn btn-secondary">Cancel</a>
+                    </div>
+                </form>
+            }
+        </div>
+    </div>
+</div>

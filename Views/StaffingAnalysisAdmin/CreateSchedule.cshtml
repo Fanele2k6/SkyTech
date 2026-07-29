@@ -1,0 +1,42 @@
+﻿@using SkyTech.Models.JobPostServices.By_TRENCH
+@model StaffingAnalysisSchedule
+
+@{
+    ViewData["Title"] = "Create Analysis Schedule";
+}
+
+<div class="container mt-5" style="max-width: 600px;">
+    <h2 class="mb-4">Create New Analysis Schedule</h2>
+
+    <form method="post" asp-action="CreateSchedule">
+        <div class="mb-3">
+            <label class="form-label">Frequency</label>
+            <select name="Frequency" class="form-select" required>
+                <option value="">-- Select Frequency --</option>
+                <option value="0">Daily</option>
+                <option value="1">Weekly (Monday)</option>
+                <option value="2">Monthly (1st of month)</option>
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Time of Day</label>
+            <input type="time" name="TimeOfDay" class="form-control" required />
+            <small class="text-muted">The analysis will run at this time</small>
+        </div>
+
+        <div class="mb-3">
+            <div class="form-check">
+                <input type="checkbox" name="IsActive" class="form-check-input" value="true" checked />
+                <label class="form-check-label">
+                    Activate immediately
+                </label>
+            </div>
+        </div>
+
+        <div class="d-grid gap-2">
+            <button type="submit" class="btn btn-primary btn-lg">Create Schedule</button>
+            <a href="@Url.Action("Schedules")" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>

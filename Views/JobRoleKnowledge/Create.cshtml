@@ -1,0 +1,58 @@
+﻿@model SkyTech.Models.JobPostServices.JobRoleKnowledge
+@{
+    ViewData["Title"] = "Add Job Role";
+}
+
+<div class="form-container">
+    <form asp-controller="JobRoleKnowledge" asp-action="Create" method="post">
+
+        
+        <div class="form-group">
+            <label asp-for="PositionId">Position (Optional)</label>
+            <select asp-for="PositionId" asp-items="ViewBag.Positions" class="form-control">
+                <option value="">-- Select a Position --</option>
+            </select>
+            <small class="text-muted">Link this role spec to an existing position</small>
+        </div>
+
+
+        <div class="form-group">
+            <label asp-for="JobTitle"></label>
+            <input asp-for="JobTitle" type="text" />
+            <span asp-validation-for="JobTitle"></span>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="CompanyResponsibilities"></label>
+            <textarea asp-for="CompanyResponsibilities" rows="5" placeholder="One responsibility per line"></textarea>
+            <span asp-validation-for="CompanyResponsibilities"></span>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="RequiredSkills"></label>
+            <textarea asp-for="RequiredSkills" rows="4" placeholder="One skill per line"></textarea>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="RequiredExperience"></label>
+            <textarea asp-for="RequiredExperience" rows="3" placeholder="One item per line"></textarea>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="RequiredQualifications"></label>
+            <textarea asp-for="RequiredQualifications" rows="3" placeholder="One item per line"></textarea>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="OtherCompanyInformation"></label>
+            <textarea asp-for="OtherCompanyInformation" rows="3"></textarea>
+        </div>
+
+        <div class="form-group">
+            <label asp-for="IsActive"></label>
+            <input asp-for="IsActive" type="checkbox" checked="checked" />
+        </div>
+
+        <button type="submit">Save Role</button>
+    </form>
+</div>

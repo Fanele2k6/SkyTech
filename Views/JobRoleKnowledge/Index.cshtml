@@ -1,0 +1,30 @@
+﻿@model List<SkyTech.Models.JobPostServices.JobRoleKnowledge>
+@{
+    ViewData["Title"] = "Job Role Knowledge Base";
+}
+
+<h1>Job Role Knowledge Base</h1>
+
+<a href="@Url.Action("Create", "JobRoleKnowledge")">Add New Role</a>
+
+<table>
+    <thead>
+        <tr>
+            <th>Job Title</th>
+            <th>Active</th>
+            <th>Last Updated</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var role in Model)
+        {
+            <tr>
+                <td>@role.JobTitle</td>
+                <td>@(role.IsActive ? "Yes" : "No")</td>
+                <td>@role.UpdatedAt.ToShortDateString()</td>
+                <td><a href="@Url.Action("Edit", "JobRoleKnowledge", new { id = role.RoleId })">Edit</a></td>
+            </tr>
+        }
+    </tbody>
+</table>

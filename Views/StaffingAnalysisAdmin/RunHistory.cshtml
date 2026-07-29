@@ -1,0 +1,81 @@
+﻿@using SkyTech.Models.JobPostServices.By_TRENCH
+@using static SkyTech.Models.JobPostServices.By_TRENCH.Enums.StaffAnalysisEnums
+@model IEnumerable<StaffingAnalysisRun>
+
+@{
+    ViewData["Title"] = "Analysis Run History";
+}
+
+<div class="container mt-5">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2>Analysis Run History</h2>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="@Url.Action("Schedules")" class="btn btn-secondary">← Back to Schedules</a>
+        </div>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info">No runs yet for this schedule.</div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Started</th>
+                        <th>Completed</th>
+                        <th>Status</th>
+                        <th>Departments</th>
+                        <th>Understaffed</th>
+                        <th>Recommendations</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var run in Model)
+                    {
+                        <tr>
+                            <td>@run.StartedAt.ToString("MMM dd, yyyy HH:mm")</td>
+                            <td>@(run.CompletedAt?.ToString("MMM dd, yyyy HH:mm") ?? "In Progress")</td>
+                            <td>
+                                @if (run.Status == AnalysisRunStatus.Completed)
+                                {
+                                    <span class="badge bg-success">Completed</span>
+                                }
+                                else if (run.Status == AnalysisRunStatus.Running)
+                                {
+                                    <span class="badge bg-warning">Running</span>
+                                }
+                                else if (run.Status == AnalysisRunStatus.Failed)
+                                {
+                                    <span class="badge bg-danger">Failed</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">Pending</span>
+                                }
+                            </td>
+                            <td>@run.DepartmentsAnalyzed</td>
+                            <td>@run.UnderstaffedPositionsFound</td>
+                            <td><strong>@run.RecommendationsGenerated</strong></td>
+                            <td>
+                                @if (run.RecommendationsGenerated > 0)
+                                {
+                                    <a href="@Url.Action("Recommendations", new { runId = run.Id })" class="btn btn-sm btn-info">View</a>
+                                }
+                                @if (run.Status == AnalysisRunStatus.Failed)
+                                {
+                                    <small class="text-danger d-block">@run.ErrorMessage</small>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

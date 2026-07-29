@@ -1,0 +1,89 @@
+﻿@using SkyTech.Models.JobPostServices.By_TRENCH
+@using static SkyTech.Models.JobPostServices.By_TRENCH.Enums.StaffAnalysisEnums
+@model IEnumerable<JobVacancyRecommendation>
+
+@{
+    ViewData["Title"] = "Job Vacancy Recommendations";
+}
+
+<div class="container mt-5">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2>Job Vacancy Recommendations</h2>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="@Url.Action("RunHistory")" class="btn btn-secondary">← Back</a>
+        </div>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info">No recommendations from this analysis run.</div>
+    }
+    else
+    {
+        <div class="row">
+            @foreach (var rec in Model)
+            {
+                <div class="col-md-6 mb-4">
+                    <div class="card h-100">
+                        <div class="card-header">
+                            <h5 class="mb-0">@rec.SuggestedJobTitle</h5>
+                            <small class="text-muted">@rec.Department.Name</small>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3">
+                                @if (rec.VacancyType == VacancyType.Permanent)
+                                {
+                                    <span class="badge bg-danger">Permanent</span>
+                                    <p><strong>Headcount Needed:</strong> @rec.RecommendedHeadcount</p>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-warning">Temporary Leave Cover</span>
+                                    <p><strong>Contract Duration:</strong> @rec.ContractDurationDays days</p>
+                                    <p><strong>From:</strong> @rec.ContractStartDate?.ToString("MMM dd, yyyy")</p>
+                                    <p><strong>To:</strong> @rec.ContractEndDate?.ToString("MMM dd, yyyy")</p>
+                                }
+                            </div>
+
+                            <div class="mb-3">
+                                <strong>Responsibilities:</strong>
+                                <p style="font-size: 0.9em; max-height: 100px; overflow-y: auto;">@rec.SuggestedResponsibilities</p>
+                            </div>
+
+                            <div class="mb-3">
+                                <strong>Required Certifications:</strong>
+                                <p style="font-size: 0.9em;">@rec.SuggestedRequiredCerts</p>
+                            </div>
+
+                            <div class="mb-3">
+                                <strong>Required Skills & Experience:</strong>
+                                <p style="font-size: 0.9em;">@rec.SuggestedRequiredSkillsAndXP</p>
+                            </div>
+
+                            <div>
+                                <strong>Status:</strong>
+                                @if (rec.Status == RecommendationStatus.Draft)
+                                {
+                                    <span class="badge bg-secondary">Draft</span>
+                                }
+                                else if (rec.Status == RecommendationStatus.Published)
+                                {
+                                    <span class="badge bg-success">Published</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-primary">@rec.Status</span>
+                                }
+                            </div>
+                        </div>
+                        <div class="card-footer bg-light">
+                            <small class="text-muted">Generated: @rec.GeneratedAt.ToString("MMM dd, yyyy HH:mm")</small>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
