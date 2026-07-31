@@ -27,6 +27,8 @@ namespace SkyTech.Controllers
         [HttpGet]
         public async Task<IActionResult> StartApplication(int postId)
         {
+            int? customerId = HttpContext.Session.GetInt32("CustomerId");
+
             var job = await db.JobPosts.FindAsync(postId);
             if (job == null)
                 return NotFound();
@@ -37,6 +39,8 @@ namespace SkyTech.Controllers
         [HttpPost]
         public async Task<IActionResult> UploadCv(int postId, IFormFile cvFile)
         {
+            int? customerId = HttpContext.Session.GetInt32("CustomerId");
+
             var job = await db.JobPosts.FindAsync(postId);
             if (job == null) return NotFound();
 
@@ -94,12 +98,16 @@ namespace SkyTech.Controllers
                 PostId = postId,
                 FirstName = extracted.FirstName,
                 LastName = extracted.LastName,
+                PhoneNumber = extracted.PhoneNumber,
                 IDNumber = extracted.IDNumber,
                 Email = extracted.Email,
                 Location = extracted.Location,
                 Experience = extracted.Experience,
                 Skills = extracted.Skills,
+                Certificates = extracted.Certificates,
                 Links = extracted.Links
+              
+                
             };
 
             return View("ReviewApplication", applicationForm);
@@ -115,9 +123,10 @@ namespace SkyTech.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> SubmitApplication(ApplicationForm model)
         {
-            int? customerId = HttpContext.Session.GetInt32("CustomerId");
-            if (customerId == null)
-                return RedirectToAction("Login", "Authentication");
+
+            int? currentId = HttpContext.Session.GetInt32("UserId");
+
+          
 
             if (!ModelState.IsValid)
             {
@@ -130,13 +139,32 @@ namespace SkyTech.Controllers
             if (job == null)
                 return NotFound();
 
-            model.CustomerId = customerId.Value;
+            model.CustomerId = currentId.Value;
+            model.JobTitle = job.JobTitle;
+            model.Department = job.Department;
+            model.EmploymentType = job.EmploymentType;
+            model.SalaryMin = job.SalaryMin;
+            model.SalaryMax = job.SalaryMax;
+            model.JobStat = JobApplicationStat.Pending;
+            
+            
 
-            db.ApplicationForms.Add(model);
+            db.ApplicationForms.Add(model);  //C# will autom
             await db.SaveChangesAsync();
 
             TempData["successful"] = "Your application has been submitted successfully";
-            return RedirectToAction("JobPosts", "CustomerApplications"); // or wherever your listing view lives
+            return RedirectToAction("ViewAppliations", "CustomerApplications"); // or wherever your listing view lives
+        }
+
+        public async Task<IActionResult> ViewAppliations()
+        {
+            int? currentId = HttpContext.Session.GetInt32("UserId");
+
+            var Applications = await db.ApplicationForms
+                .Where(p => p.CustomerId == currentId)
+                .ToListAsync();
+
+            return View(Applications);
         }
     }
 }

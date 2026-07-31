@@ -2,11 +2,13 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
+using SkyTech.Models.JobPostServices;
+using SkyTech.Models.SkytechWorkers;
 
 namespace SkyTech.Models
 {
     public enum SelectLocation { Cape_Town, Durban, Johannesburg }
-    public enum SelectDepartment { Sales_floor, Cash_Desk, Technician, Management }
+    public enum SelectDepartment { Sales_floor, Cash_Desk, Technical, Operation }
 
     public enum SelectEmploymentType { FullTime, Part_Time, }
     public enum CurrentPostStatus { Draft, Published, Deleted }
@@ -17,13 +19,13 @@ namespace SkyTech.Models
         
         [Key]
         public int PostId { get; set; }
-        [ForeignKey(nameof(Owner))]
-        public int OwnerId {  get; set; }
+        [ForeignKey(nameof(Hrs))]
+        public int HRId {  get; set; }
 
         [ValidateNever]
-        public virtual ShopOwner Owner { get; set; }
+        public virtual HR Hrs  { get; set; }
 
-        [Required(ErrorMessage = "Job title is required")]
+        //[Required(ErrorMessage = "Job title is required")]
         public string JobTitle { get; set; }
 
         public SelectDepartment Department { get; set; }
@@ -59,5 +61,7 @@ namespace SkyTech.Models
 
         public DateTime CreatedAt { get; set; } = DateTime.Now;
         public DateTime UpdatedAt { get; set; } = DateTime.Now;
+        [ValidateNever]
+        public ICollection <ApplicationForm> ApplicationForms { get; set; }
     }
 }

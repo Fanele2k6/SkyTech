@@ -118,26 +118,6 @@ namespace SkyTech.Controllers
                 return RedirectToAction("ShoppingPage", "Customer");
             }
 
-            //if (cus != null)
-            //{
-            //    HttpContext.Session.SetInt32("UserId", cus.CustomerId);
-            //    HttpContext.Session.SetString("UserType", "Customer");
-
-            //    // If they came from cart send them back there
-            //    if (TempData["ReturnToCart"] != null)
-            //        return RedirectToAction("ViewCart", "Customer");
-
-            //    return RedirectToAction("ShoppingPage", "Customer");
-            //}
-            //if (cus != null)
-            //{
-            //    HttpContext.Session.SetInt32("UserId", cus.CustomerId);
-            //    HttpContext.Session.SetString("UserType", "Customer");
-            //    return RedirectToAction("ShoppingPage", "Customer");
-            //}
-
-
-
             // SystemAdmin
             var systemAdmin = db.SystemAdmins
                 .FirstOrDefault(d => d.Email == models.Email && d.Password == models.Password);
@@ -150,12 +130,15 @@ namespace SkyTech.Controllers
 
             // Staff
             var staff = db.Staffs
-                .FirstOrDefault(n => n.Email == models.Email && n.Password == models.Password);
+                .Include(s => s.Positions)
+                .ThenInclude(p => p.Departments)
+                .Include(s => s.Branches)
+                .FirstOrDefault(s => s.Email == models.Email && s.Password == models.Password);
             if (staff != null)
             {
                 HttpContext.Session.SetInt32("UserId", staff.StaffId);
                 HttpContext.Session.SetString("UserType", "Staff");
-                return RedirectToAction("ShopOwnerDash", "ShopOwner");
+                return RedirectToAction("StaffDash", "StaffRoster");
             }
 
             // Technician
@@ -178,8 +161,21 @@ namespace SkyTech.Controllers
                 return RedirectToAction("DriverDash", "DeliveryDriver");
             }
 
+            //HR
+            var hr = db.HRs
+                .FirstOrDefault(n => n.Email == models.Email && n.Password == models.Password);
+            if (hr != null)
+            {
+                HttpContext.Session.SetInt32("UserId", hr.HRId);
+                HttpContext.Session.SetString("UserType", "HR");
+                return RedirectToAction("HRDash", "HR");
+            }
+
             ModelState.AddModelError("", "Invalid email or password");
             return View(models);
+
+           
+           
         }
 
         [HttpGet]

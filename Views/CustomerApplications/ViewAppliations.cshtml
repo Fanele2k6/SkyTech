@@ -1,0 +1,54 @@
+﻿@model IEnumerable<SkyTech.Models.JobPostServices.ApplicationForm>
+
+
+@foreach(var list in Model)
+{
+    <div class="form-group">
+        <label>First Name</label>
+        <p>@list.FirstName</p>
+    </div>
+
+    <div class="form-group">
+        <label>Job Tiltle</label>
+        <p >@list.JobTitle</p>
+    </div>
+    <div class="form-group">
+        <label>Department</label>
+        <p >@list.Department</p>
+    </div>
+
+    <div class="form-group">
+        <label >Job Location</label>
+        <p >@list.Location</p>
+    </div>
+
+    <div class="form-group">
+        <label></label>
+        <p>@list.EmploymentType</p>
+    </div>
+
+    <div class="form-group">
+        <label></label>
+        <p>@list.AppliedAt</p>
+    </div>
+
+    <div class="form-group">
+        <label></label>
+        <p>@list.JobStat</p>
+    </div>
+
+    <div class="form-group">
+        <label></label>
+        <p>@list.SalaryMin</p>
+    </div>
+
+    <div class="form-group">
+        <label></label>
+        <p>@list.SalaryMax</p>
+    </div>
+    <div class="form-group">
+        <label>Has internet Access</label>
+        <p>@list.HasInternertAccess</p>
+    </div>
+
+}

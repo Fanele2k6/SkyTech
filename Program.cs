@@ -3,6 +3,7 @@ using SkyTech.JobPostServices;
 using SkyTech.Models;
 using SkyTech.Models.JobPostServices;
 using SkyTech.Models.Repair_Item_Services;
+//using SkyTech.Models.ServicesMods;
 using SkyTech.Services;
 using System.Globalization;
 
@@ -18,14 +19,17 @@ builder.Services.AddControllersWithViews();
 //this is a way of pulling the connection string in json file
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");  //this "DefaultConnection" must match with the one in json file connection string
 
+//builder.Services.AddDbContext<ApplicationDbContext>(options =>
+//    options.UseSqlServer(connectionString));
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(connectionString));
+    options.UseSqlServer(connectionString, sql => sql.CommandTimeout(120)));
 
 
 // Session
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession();
 builder.Services.AddScoped<PayStackTransferService>();
+
 
 
 // I moved this from the bottom to up heereeeeeeeeeeeeeee
@@ -41,8 +45,8 @@ builder.Services.AddSession(options =>
 builder.Services.AddScoped<EmailServices>();
 builder.Services.AddHttpClient<IAIJobPostDraftService, OpenRouterJobPostDraftService>();
 builder.Services.AddHttpClient<ICvExtractionService, OpenRouterCvExtractionService>();
-//builder.Services.AddHttpClient<IAIJobPostDraftService, GeminiJobPostDraftService>();
 builder.Services.AddScoped<PayStackService>();
+builder.Services.AddScoped<IRosterSchedulingService, RosterSchedulingService>();
 
 var app = builder.Build();
 

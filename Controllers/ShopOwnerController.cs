@@ -26,20 +26,20 @@ namespace SkyTech.Controllers
 
         //paying customer their money
         private readonly PayStackTransferService _transfer;
-        private readonly IAIJobPostDraftService _aiService;
+        //private readonly IAIJobPostDraftService _aiService;
 
         //public ShopOwnerController()
         //{
         //    //this.db = db;
         //}
 
-        public ShopOwnerController(ApplicationDbContext context, EmailServices services, IWebHostEnvironment webHostEnvironment, PayStackTransferService transfer, IAIJobPostDraftService aiService)
+        public ShopOwnerController(ApplicationDbContext context, EmailServices services, IWebHostEnvironment webHostEnvironment, PayStackTransferService transfer /*IAIJobPostDraftService aiService*/)
         {
             //this.db = db;
 
             db = context;
             _transfer = transfer;
-            _aiService = aiService;
+            //_aiService = aiService;
             _services = services;
             _webHostEnvironment = webHostEnvironment;
         }
@@ -283,7 +283,7 @@ namespace SkyTech.Controllers
                 PhoneNumber = model.PhoneNumber,
                 Password = model.Password,
                 UserType = "Staff",
-                RegisteredOn = DateTime.Now
+                DateEmployed = DateTime.Now
             });
             db.SaveChanges();
 
@@ -292,11 +292,11 @@ namespace SkyTech.Controllers
             return RedirectToAction("ShopOwnerDash");
         }
 
-        public IActionResult StaffMembers()
-        {
-            int currentId = HttpContext.Session.GetInt32("UserId").Value;
-            return View(db.Staffs.Where(p => p.OwnerId == currentId).ToList());
-        }
+        //public IActionResult StaffMembers()
+        //{
+        //    int currentId = HttpContext.Session.GetInt32("UserId").Value;
+        //    return View(db.  Staffs.Where(p => p.OwnerId == currentId).ToList());
+        //}
 
         public IActionResult ManageDeliveriesPage() => View();
 
@@ -866,16 +866,6 @@ namespace SkyTech.Controllers
             return RedirectToAction("AcceptedProposals");
         }
 
-        // ── Add these to ShopOwnerController ──────────────────────────────────────────
-        // Also inject PayStackTransferService via constructor:
-        //
-        //   private readonly PayStackTransferService _transfer;
-        //   public ShopOwnerController(ApplicationDbContext context, PayStackTransferService transfer)
-        //   { db = context; _transfer = transfer; }
-        //
-        // Register in Program.cs:
-        //   builder.Services.AddScoped<PayStackTransferService>();
-
         // ── GET: show payment confirmation page ───────────────────────────────────────
         [HttpGet]
         public IActionResult MakePayment(int id)
@@ -904,100 +894,6 @@ namespace SkyTech.Controllers
             return View(proposal);
         }
 
-        // ── POST: process the PayStack transfer ───────────────────────────────────────
-        //[HttpPost]
-        //[ValidateAntiForgeryToken]
-        //[ActionName("MakePayment")]  // ← tells ASP.NET this is still "MakePayment"
-
-        //public async Task<IActionResult> MakeTranferPayment(int propItemId)
-        //{
-        //    try
-        //    {
-        //        int currentId = HttpContext.Session.GetInt32("UserId")!.Value;
-
-        //        var proposal = db.ProposeItems
-        //            .Include(p => p.Customer)
-        //            .Include(p => p.Checkout)
-        //            .FirstOrDefault(p => p.PropItemId == propItemId);
-
-        //        if (proposal == null) return NotFound();
-
-        //        var checkout = proposal.Checkout;
-
-        //        if (checkout == null)
-        //        {
-        //            TempData["Error"] = "Customer banking details are missing.";
-        //            return RedirectToAction("AcceptedProposals");
-        //        }
-        //        // ── 1. Resolve bank code ──────────────────────────────────────────────────
-        //        // Try branch code first (e.g. "051001"), fall back to bank name
-        //        //string bankCode = await _transfer.ResolveBankCode(checkout.BranchCode)
-        //        //               ?? await _transfer.ResolveBankCode(checkout.BankName);
-
-        //        // ── 1. Bank code now comes straight from the database — no lookup needed ──
-        //        string bankCode = checkout.BankCode;
-
-        //        if (string.IsNullOrEmpty(bankCode))
-        //        {
-        //            TempData["Error"] = "Bank code is missing. Customer may need to re-submit their details.";
-        //            return RedirectToAction("MakePayment", new { id = propItemId });
-        //        }
-
-        //        // ── 2. Create transfer recipient ──────────────────────────────────────────
-        //        var recipient = await _transfer.CreateRecipient(
-        //            name: checkout.AccountHolderName,
-        //            accountNumber: checkout.AccountNumber,
-        //            bankCode: bankCode
-        //        );
-
-        //        //// ── 2. Create transfer recipient ──────────────────────────────────────────
-        //        //var recipient = await _transfer.CreateRecipient(
-        //        //    name: checkout.AccountHolderName,
-        //        //    accountNumber: checkout.AccountNumber,
-        //        //    bankCode: bankCode
-        //        //);
-
-        //        if (!recipient.Success)
-        //        {
-        //            TempData["Error"] = "Could not create payment recipient: " + recipient.Message;
-        //            return RedirectToAction("MakePayment", new { id = propItemId });
-        //        }
-
-        //        // ── 3. Initiate the transfer ──────────────────────────────────────────────
-        //        string reference = $"PROP-{propItemId}-{DateTime.Now.Ticks}";
-        //        string reason = $"Payment for item: {proposal.ProdName}";
-
-        //        var transfer = await _transfer.InitiateTransfer(
-        //            recipientCode: recipient.RecipientCode,
-        //            amountRand: proposal.AmountProposed,
-        //            reason: reason,
-        //            reference: reference
-        //        );
-
-        //        if (!transfer.Success)
-        //        {
-        //            TempData["Error"] = "Transfer failed: " + transfer.Message;
-        //            return RedirectToAction("MakePayment", new { id = propItemId });
-        //        }
-
-        //        // ── 4. Mark proposal as paid ──────────────────────────────────────────────
-        //        proposal.ProdStatus = Status.PaymentMade;
-        //        db.SaveChanges();
-
-        //        TempData["Success"] = $"Payment of R {proposal.AmountProposed:N2} sent to {checkout.AccountHolderName}.";
-        //        TempData["TransferCode"] = transfer.TransferCode;
-        //        TempData["Reference"] = reference;
-
-        //        return RedirectToAction("AcceptedProposals");
-
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        // Temporarily show the full error
-        //        TempData["Error"] = "Exception: " + ex.Message + " | " + ex.InnerException?.Message;
-        //        return RedirectToAction("MakePayment", new { id = propItemId });
-        //    }
-        //}
 
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -1030,47 +926,47 @@ namespace SkyTech.Controllers
             return RedirectToAction("AcceptedProposals");
         }
 
-        public IActionResult JobCenter()
-        {
-            return View("ManagingJobs/JobCenter");
-        }
+        //public IActionResult JobCenter()
+        //{
+        //    return View("ManagingJobs/JobCenter");
+        //}
 
-        public IActionResult ComposeJob()
-        {
-            return View("Managingjobs/ComposeJob");
-        }
+        //public IActionResult ComposeJob()
+        //{
+        //    return View("Managingjobs/ComposeJob");
+        //}
 
-        [ValidateAntiForgeryToken]
-        [HttpPost]
-        public async Task<IActionResult> ComposeJob(JobPost model)
-        {
-            int currentId = HttpContext.Session.GetInt32("UserId")!.Value;
-            //validation
-            if (!ModelState.IsValid)
-            {
-                var errors = ModelState.Values
-                    .SelectMany(v => v.Errors)
-                    .Select(e => e.ErrorMessage);
+        //[ValidateAntiForgeryToken]
+        //[HttpPost]
+        //public async Task<IActionResult> ComposeJob(JobPost model)
+        //{
+        //    int currentId = HttpContext.Session.GetInt32("UserId")!.Value;
+        //    //validation
+        //    if (!ModelState.IsValid)
+        //    {
+        //        var errors = ModelState.Values
+        //            .SelectMany(v => v.Errors)
+        //            .Select(e => e.ErrorMessage);
 
-                return Content(string.Join("\n", errors));
-            }
-            //if (!ModelState.IsValid)
-            //{
-            //    return View("ManagingJobs/ComposeJob", model);
-            //    //return View(model);
-            //}
+        //        return Content(string.Join("\n", errors));
+        //    }
+        //    //if (!ModelState.IsValid)
+        //    //{
+        //    //    return View("ManagingJobs/ComposeJob", model);
+        //    //    //return View(model);
+        //    //}
 
-            model.OwnerId = currentId;
-            model.PostStatus = CurrentPostStatus.Published;
-            model.CreatedAt = DateTime.Now;
-            model.UpdatedAt = DateTime.Now;
+        //    model.OwnerId = currentId;
+        //    model.PostStatus = CurrentPostStatus.Published;
+        //    model.CreatedAt = DateTime.Now;
+        //    model.UpdatedAt = DateTime.Now;
 
-            db.Add(model);
-            await db.SaveChangesAsync();
-            TempData["successful"] = "Job Posted successfully";
-            return RedirectToAction("JobCenter");
+        //    db.Add(model);
+        //    await db.SaveChangesAsync();
+        //    TempData["successful"] = "Job Posted successfully";
+        //    return RedirectToAction("JobCenter");
            
-        }
+        //}
 
 
         // ---------- AI-ASSISTED POST ----------
@@ -1081,145 +977,146 @@ namespace SkyTech.Controllers
         //    return View("ManagingJobs/ComposeJobAI");
         //}
        
+        //================================================================================================
+        //public async Task<IActionResult> ComposeJobAI(int roleId)
+        //{
+        //    var role = await db.JobRoleKnowledges.FindAsync(roleId);
+        //    if (role == null) return NotFound();
 
-        public async Task<IActionResult> ComposeJobAI(int roleId)
-        {
-            var role = await db.JobRoleKnowledges.FindAsync(roleId);
-            if (role == null) return NotFound();
-
-            ViewBag.RoleId = role.RoleId;
-            ViewBag.JobTitle = role.JobTitle;
-            return View("ManagingJobs/ComposeJobAI");
-        }
+        //    ViewBag.RoleId = role.RoleId;
+        //    ViewBag.JobTitle = role.JobTitle;
+        //    return View("ManagingJobs/ComposeJobAI");
+        //}
 
   
-        [ValidateAntiForgeryToken]
-        [HttpPost]
-        public async Task<IActionResult> GenerateJobDraft(int roleId, JobPost model)
-        {
-            int currentId = HttpContext.Session.GetInt32("UserId")!.Value;
-            var role = await db.JobRoleKnowledges.FindAsync(roleId);
-            if (role == null) return NotFound();
+        //[ValidateAntiForgeryToken]
+        //[HttpPost]
+        //public async Task<IActionResult> GenerateJobDraft(int roleId, JobPost model)
+        //{
+        //    int currentId = HttpContext.Session.GetInt32("UserId")!.Value;
+        //    var role = await db.JobRoleKnowledges.FindAsync(roleId);
+        //    if (role == null) return NotFound();
 
-            JobPostDraftResult draft;
-            try
-            {
-                draft = await _aiService.GenerateDraftFromRoleAsync(role);
-            }
-            catch
-            {
-                draft = new JobPostDraftResult
-                {
-                    Responsibilities = role.CompanyResponsibilities,
-                    RequiredCerts = role.RequiredQualifications,
-                    RequiredSkillsAndXP = role.RequiredSkills + "\n" + role.RequiredExperience
-                };
-                TempData["aiError"] = "AI formatting failed — showing the raw approved information instead.";
-            }
+        //    JobPostDraftResult draft;
+        //    try
+        //    {
+        //        draft = await _aiService.GenerateDraftFromRoleAsync(role);
+        //    }
+        //    catch
+        //    {
+        //        draft = new JobPostDraftResult
+        //        {
+        //            Responsibilities = role.CompanyResponsibilities,
+        //            RequiredCerts = role.RequiredQualifications,
+        //            RequiredSkillsAndXP = role.RequiredSkills + "\n" + role.RequiredExperience
+        //        };
+        //        TempData["aiError"] = "AI formatting failed — showing the raw approved information instead.";
+        //    }
 
-            model.OwnerId = currentId;
-            model.JobTitle = role.JobTitle;
-            model.Responsibilities = draft.Responsibilities;
-            model.RequiredCerts = draft.RequiredCerts;
-            model.RequiredSkillsAndXP = draft.RequiredSkillsAndXP;
-            model.PostStatus = CurrentPostStatus.Draft;
-            model.CreatedAt = DateTime.Now;
-            model.UpdatedAt = DateTime.Now;
+        //    model.OwnerId = currentId;
+        //    model.JobTitle = role.JobTitle;
+        //    model.Responsibilities = draft.Responsibilities;
+        //    model.RequiredCerts = draft.RequiredCerts;
+        //    model.RequiredSkillsAndXP = draft.RequiredSkillsAndXP;
+        //    model.PostStatus = CurrentPostStatus.Draft;
+        //    model.CreatedAt = DateTime.Now;
+        //    model.UpdatedAt = DateTime.Now;
 
-            db.Add(model);
-            await db.SaveChangesAsync();
-            return RedirectToAction("ReviewJobDraft", new { id = model.PostId });
-        }
-        // Step 3: owner reviews/edits the AI draft
-        [HttpGet]
-        public async Task<IActionResult> ReviewJobDraft(int id)
-        {
-            var post = await db.JobPosts.FindAsync(id);
-            if (post == null) return NotFound();
-            return View("ManagingJobs/ReviewJobDraft", post);
-        }
+        //    db.Add(model);
+        //    await db.SaveChangesAsync();
+        //    return RedirectToAction("ReviewJobDraft", new { id = model.PostId });
+        //}
 
-        // Step 4a: owner edits text then clicks Publish
-        [ValidateAntiForgeryToken]
-        [HttpPost]
-        public async Task<IActionResult> PublishJobDraft(JobPost model)
-        {
-            var post = await db.JobPosts.FindAsync(model.PostId);
-            if (post == null) return NotFound();
+        //// Step 3: owner reviews/edits the AI draft
+        //[HttpGet]
+        //public async Task<IActionResult> ReviewJobDraft(int id)
+        //{
+        //    var post = await db.JobPosts.FindAsync(id);
+        //    if (post == null) return NotFound();
+        //    return View("ManagingJobs/ReviewJobDraft", post);
+        //}
 
-            post.Responsibilities = model.Responsibilities;
-            post.RequiredCerts = model.RequiredCerts;
-            post.RequiredSkillsAndXP = model.RequiredSkillsAndXP;
-            post.PostStatus = CurrentPostStatus.Published;
-            post.UpdatedAt = DateTime.Now;
+        //// Step 4a: owner edits text then clicks Publish
+        //[ValidateAntiForgeryToken]
+        //[HttpPost]
+        //public async Task<IActionResult> PublishJobDraft(JobPost model)
+        //{
+        //    var post = await db.JobPosts.FindAsync(model.PostId);
+        //    if (post == null) return NotFound();
 
-            await db.SaveChangesAsync();
-            TempData["successful"] = "Job Posted successfully";
-            return RedirectToAction("JobCenter");
-        }
+        //    post.Responsibilities = model.Responsibilities;
+        //    post.RequiredCerts = model.RequiredCerts;
+        //    post.RequiredSkillsAndXP = model.RequiredSkillsAndXP;
+        //    post.PostStatus = CurrentPostStatus.Published;
+        //    post.UpdatedAt = DateTime.Now;
+
+        //    await db.SaveChangesAsync();
+        //    TempData["successful"] = "Job Posted successfully";
+        //    return RedirectToAction("JobCenter");
+        //}
 
         // Step 4b: owner isn't happy with the draft, asks AI to try again
-        [ValidateAntiForgeryToken]
-        [HttpPost]
-        public async Task<IActionResult> RegenerateJobDraft(int id)
-        {
-            var post = await db.JobPosts.FindAsync(id);
-            if (post == null) return NotFound();
+        //[ValidateAntiForgeryToken]
+        //[HttpPost]
+        //public async Task<IActionResult> RegenerateJobDraft(int id)
+        //{
+        //    var post = await db.JobPosts.FindAsync(id);
+        //    if (post == null) return NotFound();
 
-            var draft = await _aiService.GenerateDraftAsync(new JobPostDraftRequest
-            {
-                JobTitle = post.JobTitle,
-                Department = post.Department.ToString(),
-                Location = post.Location.ToString(),
-                EmploymentType = post.EmploymentType.ToString(),
-                SalaryMin = post.SalaryMin,
-                SalaryMax = post.SalaryMax
-            });
+        //    var draft = await _aiService.GenerateDraftAsync(new JobPostDraftRequest
+        //    {
+        //        JobTitle = post.JobTitle,
+        //        Department = post.Department.ToString(),
+        //        Location = post.Location.ToString(),
+        //        EmploymentType = post.EmploymentType.ToString(),
+        //        SalaryMin = post.SalaryMin,
+        //        SalaryMax = post.SalaryMax
+        //    });
 
-            post.Responsibilities = draft.Responsibilities;
-            post.RequiredCerts = draft.RequiredCerts;
-            post.RequiredSkillsAndXP = draft.RequiredSkillsAndXP;
-            post.UpdatedAt = DateTime.Now;
+        //    post.Responsibilities = draft.Responsibilities;
+        //    post.RequiredCerts = draft.RequiredCerts;
+        //    post.RequiredSkillsAndXP = draft.RequiredSkillsAndXP;
+        //    post.UpdatedAt = DateTime.Now;
 
-            await db.SaveChangesAsync();
-            return RedirectToAction("ReviewJobDraft", new { id });
-        }
+        //    await db.SaveChangesAsync();
+        //    return RedirectToAction("ReviewJobDraft", new { id });
+        //}
 
         // GET: dropdown of active roles
-        public IActionResult SelectJobRole()
-        {
-            var roles = db.JobRoleKnowledges
-                .Where(r => r.IsActive)
-                .OrderBy(r => r.JobTitle)
-                .ToList();
+        //public IActionResult SelectJobRole()
+        //{
+        //    var roles = db.JobRoleKnowledges
+        //        .Where(r => r.IsActive)
+        //        .OrderBy(r => r.JobTitle)
+        //        .ToList();
 
-            ViewBag.Roles = new SelectList(roles, "RoleId", "JobTitle");
-            return View("ManagingJobs/SelectJobRole");
-        }
+        //    ViewBag.Roles = new SelectList(roles, "RoleId", "JobTitle");
+        //    return View("ManagingJobs/SelectJobRole");
+        //}
 
         // POST: owner picked a role and a mode (manual or AI)
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> SelectJobRole(int roleId, string mode)
-        {
-            var role = await db.JobRoleKnowledges.FindAsync(roleId);
-            if (role == null) return NotFound();
+        //[HttpPost]
+        //[ValidateAntiForgeryToken]
+        //public async Task<IActionResult> SelectJobRole(int roleId, string mode)
+        //{
+        //    var role = await db.JobRoleKnowledges.FindAsync(roleId);
+        //    if (role == null) return NotFound();
 
-            if (mode == "manual")
-            {
-                // prefill the existing manual ComposeJob form with approved info
-                var seeded = new JobPost
-                {
-                    JobTitle = role.JobTitle,
-                    Responsibilities = role.CompanyResponsibilities,
-                    RequiredCerts = role.RequiredQualifications,
-                    RequiredSkillsAndXP = role.RequiredSkills + "\n" + role.RequiredExperience
-                };
-                return View("ManagingJobs/ComposeJob", seeded);
-            }
+        //    if (mode == "manual")
+        //    {
+        //        // prefill the existing manual ComposeJob form with approved info
+        //        var seeded = new JobPost
+        //        {
+        //            JobTitle = role.JobTitle,
+        //            Responsibilities = role.CompanyResponsibilities,
+        //            RequiredCerts = role.RequiredQualifications,
+        //            RequiredSkillsAndXP = role.RequiredSkills + "\n" + role.RequiredExperience
+        //        };
+        //        return View("ManagingJobs/ComposeJob", seeded);
+        //    }
 
-            // AI mode — go collect the remaining seed fields (location, salary, etc.)
-            return RedirectToAction("ComposeJobAI", new { roleId = role.RoleId });
-        }
+        //    // AI mode — go collect the remaining seed fields (location, salary, etc.)
+        //    return RedirectToAction("ComposeJobAI", new { roleId = role.RoleId });
+        //}
     }
 }

@@ -15,7 +15,7 @@ using static SkyTech.Models.Order;
 
 namespace SkyTech.Controllers
 {
-    // [AuthorizeUser]
+     [AuthorizeUser]
     public class CustomerController : Controller
     {
         private readonly ApplicationDbContext db;

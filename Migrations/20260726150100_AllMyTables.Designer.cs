@@ -12,8 +12,8 @@ using SkyTech.Models;
 namespace SkyTech.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260628125803_Init")]
-    partial class Init
+    [Migration("20260726150100_AllMyTables")]
+    partial class AllMyTables
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -547,6 +547,203 @@ namespace SkyTech.Migrations
                     b.HasIndex("TargetBranchId");
 
                     b.ToTable("InterBranchTransfers");
+                });
+
+            modelBuilder.Entity("SkyTech.Models.JobPost", b =>
+                {
+                    b.Property<int>("PostId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("PostId"));
+
+                    b.Property<DateTime>("ClosingDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Department")
+                        .HasColumnType("int");
+
+                    b.Property<int>("EmploymentType")
+                        .HasColumnType("int");
+
+                    b.Property<int>("HRId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("JobTitle")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Location")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PostStatus")
+                        .HasColumnType("int");
+
+                    b.Property<string>("RequiredCerts")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("RequiredSkillsAndXP")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Responsibilities")
+                        .IsRequired()
+                        .HasMaxLength(3000)
+                        .HasColumnType("nvarchar(3000)");
+
+                    b.Property<double?>("SalaryMax")
+                        .HasColumnType("float");
+
+                    b.Property<double?>("SalaryMin")
+                        .HasColumnType("float");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("PostId");
+
+                    b.HasIndex("HRId");
+
+                    b.ToTable("JobPosts");
+                });
+
+            modelBuilder.Entity("SkyTech.Models.JobPostServices.ApplicationForm", b =>
+                {
+                    b.Property<int>("ApplicationId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ApplicationId"));
+
+                    b.Property<DateTime>("AppliedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Certificates")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("CustomerId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Department")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("EmploymentType")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Experience")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("FirstName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("HasInternertAccess")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("IDNumber")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("JobStat")
+                        .HasColumnType("int");
+
+                    b.Property<string>("JobTitle")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("LastName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Links")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Location")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PhoneNumber")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("PostId")
+                        .HasColumnType("int");
+
+                    b.Property<double?>("SalaryMax")
+                        .HasColumnType("float");
+
+                    b.Property<double?>("SalaryMin")
+                        .HasColumnType("float");
+
+                    b.Property<string>("Skills")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("ApplicationId");
+
+                    b.HasIndex("CustomerId");
+
+                    b.HasIndex("PostId");
+
+                    b.ToTable("ApplicationForms");
+                });
+
+            modelBuilder.Entity("SkyTech.Models.JobPostServices.JobRoleKnowledge", b =>
+                {
+                    b.Property<int>("RoleId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("RoleId"));
+
+                    b.Property<string>("CompanyResponsibilities")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("JobTitle")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<string>("OtherCompanyInformation")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("RequiredExperience")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("RequiredQualifications")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("RequiredSkills")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("RoleId");
+
+                    b.ToTable("JobRoleKnowledges");
                 });
 
             modelBuilder.Entity("SkyTech.Models.Order", b =>
@@ -1184,6 +1381,476 @@ namespace SkyTech.Migrations
                     b.ToTable("shopowners");
                 });
 
+            modelBuilder.Entity("SkyTech.Models.SkytechWorkers.Branch", b =>
+                {
+                    b.Property<int>("BranchId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("BranchId"));
+
+                    b.Property<string>("BranchLocation")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("BranchName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("BranchId");
+
+                    b.ToTable("Branches");
+                });
+
+            modelBuilder.Entity("SkyTech.Models.SkytechWorkers.Certification", b =>
+                {
+                    b.Property<int>("CertificationId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("CertificationId"));
+
+                    b.Property<string>("CertificationName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.HasKey("CertificationId");
+
+                    b.ToTable("Certifications");
+                });
+
+            modelBuilder.Entity("SkyTech.Models.SkytechWorkers.Department", b =>
+                {
+                    b.Property<int>("DepartmentId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("DepartmentId"));
+
+                    b.Property<string>("DepartmentName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("DepartmentId");
+
+                    b.ToTable("Departments");
+                });
+
+            modelBuilder.Entity("SkyTech.Models.SkytechWorkers.HR", b =>
+                {
+                    b.Property<int>("HRId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("HRId"));
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Firstname")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("LastName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Password")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("UserType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("HRId");
+
+                    b.ToTable("HRs");
+                });
+
+            modelBuilder.Entity("SkyTech.Models.SkytechWorkers.HRNotification", b =>
+                {
+                    b.Property<int>("NotificationId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("NotificationId"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsRead")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("RosterShiftId")
+                        .HasColumnType("int");
+
+                    b.HasKey("NotificationId");
+
+                    b.HasIndex("RosterShiftId");
+
+                    b.ToTable("HRNotifications");
+                });
+
+            modelBuilder.Entity("SkyTech.Models.SkytechWorkers.Role", b =>
+                {
+                    b.Property<int>("RoleId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("RoleId"));
+
+                    b.Property<string>("RoleName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("RoleId");
+
+                    b.ToTable("Roles");
+                });
+
+            modelBuilder.Entity("SkyTech.Models.SkytechWorkers.Roster", b =>
+                {
+                    b.Property<int>("RosterId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("RosterId"));
+
+                    b.Property<int>("BranchId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("WeekStartDate")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("RosterId");
+
+                    b.HasIndex("BranchId");
+
+                    b.ToTable("Rosters");
+                });
+
+            modelBuilder.Entity("SkyTech.Models.SkytechWorkers.RosterShift", b =>
+                {
+                    b.Property<int>("RosterShiftId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("RosterShiftId"));
+
+                    b.Property<TimeSpan>("EndTime")
+                        .HasColumnType("time");
+
+                    b.Property<int>("RosterId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("ShiftDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<TimeSpan>("StartTime")
+                        .HasColumnType("time");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.HasKey("RosterShiftId");
+
+                    b.HasIndex("RosterId");
+
+                    b.ToTable("RosterShifts");
+                });
+
+            modelBuilder.Entity("SkyTech.Models.SkytechWorkers.ShiftCandidate", b =>
+                {
+                    b.Property<int>("ShiftCandidateId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ShiftCandidateId"));
+
+                    b.Property<DateTime?>("OfferedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("RankOrder")
+                        .HasColumnType("int");
+
+                    b.Property<double>("RankScore")
+                        .HasColumnType("float");
+
+                    b.Property<DateTime?>("RespondedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("ShiftRequirementId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("StaffId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.HasKey("ShiftCandidateId");
+
+                    b.HasIndex("ShiftRequirementId");
+
+                    b.HasIndex("StaffId");
+
+                    b.ToTable("ShiftCandidates");
+                });
+
+            modelBuilder.Entity("SkyTech.Models.SkytechWorkers.ShiftRequirement", b =>
+                {
+                    b.Property<int>("ShiftRequirementId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ShiftRequirementId"));
+
+                    b.Property<int>("FilledCount")
+                        .HasColumnType("int");
+
+                    b.Property<int>("NumberOfStaffNeeded")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PositionId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("RequiredCertificationIds")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("RequiredSkillIds")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("RosterShiftId")
+                        .HasColumnType("int");
+
+                    b.HasKey("ShiftRequirementId");
+
+                    b.HasIndex("PositionId");
+
+                    b.HasIndex("RosterShiftId");
+
+                    b.ToTable("ShiftRequirements");
+                });
+
+            modelBuilder.Entity("SkyTech.Models.SkytechWorkers.ShiftTemplate", b =>
+                {
+                    b.Property<int>("ShiftTemplateId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ShiftTemplateId"));
+
+                    b.Property<int>("ActiveDays")
+                        .HasColumnType("int");
+
+                    b.Property<int>("BranchId")
+                        .HasColumnType("int");
+
+                    b.Property<TimeSpan>("EndTime")
+                        .HasColumnType("time");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("NumberOfStaffNeeded")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PositionId")
+                        .HasColumnType("int");
+
+                    b.Property<TimeSpan>("StartTime")
+                        .HasColumnType("time");
+
+                    b.HasKey("ShiftTemplateId");
+
+                    b.HasIndex("BranchId");
+
+                    b.HasIndex("PositionId");
+
+                    b.ToTable("ShiftTemplates");
+                });
+
+            modelBuilder.Entity("SkyTech.Models.SkytechWorkers.Skill", b =>
+                {
+                    b.Property<int>("SkillId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("SkillId"));
+
+                    b.Property<string>("SkillName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("SkillId");
+
+                    b.ToTable("Skills");
+                });
+
+            modelBuilder.Entity("SkyTech.Models.SkytechWorkers.StaffAvailabilitySlot", b =>
+                {
+                    b.Property<int>("AvailabilitySlotId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("AvailabilitySlotId"));
+
+                    b.Property<int>("DayOfWeek")
+                        .HasColumnType("int");
+
+                    b.Property<TimeSpan>("EndTime")
+                        .HasColumnType("time");
+
+                    b.Property<int>("StaffId")
+                        .HasColumnType("int");
+
+                    b.Property<TimeSpan>("StartTime")
+                        .HasColumnType("time");
+
+                    b.HasKey("AvailabilitySlotId");
+
+                    b.HasIndex("StaffId");
+
+                    b.ToTable("StaffAvailabilitySlots");
+                });
+
+            modelBuilder.Entity("SkyTech.Models.SkytechWorkers.StaffCertification", b =>
+                {
+                    b.Property<int>("StaffCertificationId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("StaffCertificationId"));
+
+                    b.Property<int>("CertificationId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("ExpiryDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("StaffId")
+                        .HasColumnType("int");
+
+                    b.HasKey("StaffCertificationId");
+
+                    b.HasIndex("CertificationId");
+
+                    b.HasIndex("StaffId");
+
+                    b.ToTable("StaffCertifications");
+                });
+
+            modelBuilder.Entity("SkyTech.Models.SkytechWorkers.StaffExperience", b =>
+                {
+                    b.Property<int>("StaffExperienceId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("StaffExperienceId"));
+
+                    b.Property<int>("MonthsExperience")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PositionId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("StaffId")
+                        .HasColumnType("int");
+
+                    b.HasKey("StaffExperienceId");
+
+                    b.HasIndex("PositionId");
+
+                    b.HasIndex("StaffId");
+
+                    b.ToTable("StaffExperiences");
+                });
+
+            modelBuilder.Entity("SkyTech.Models.SkytechWorkers.StaffLeave", b =>
+                {
+                    b.Property<int>("LeaveId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("LeaveId"));
+
+                    b.Property<DateTime>("EndDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("StaffId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("StartDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.HasKey("LeaveId");
+
+                    b.HasIndex("StaffId");
+
+                    b.ToTable("StaffLeaves");
+                });
+
+            modelBuilder.Entity("SkyTech.Models.SkytechWorkers.StaffPosition", b =>
+                {
+                    b.Property<int>("PositionId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("PositionId"));
+
+                    b.Property<int>("DepartmentId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("PositionName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("PositionId");
+
+                    b.HasIndex("DepartmentId");
+
+                    b.ToTable("StaffPositions");
+                });
+
+            modelBuilder.Entity("SkyTech.Models.SkytechWorkers.StaffSkill", b =>
+                {
+                    b.Property<int>("StaffSkillId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("StaffSkillId"));
+
+                    b.Property<int>("SkillId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("StaffId")
+                        .HasColumnType("int");
+
+                    b.HasKey("StaffSkillId");
+
+                    b.HasIndex("SkillId");
+
+                    b.HasIndex("StaffId");
+
+                    b.ToTable("StaffSkills");
+                });
+
             modelBuilder.Entity("SkyTech.Models.Staff", b =>
                 {
                     b.Property<int>("StaffId")
@@ -1192,15 +1859,27 @@ namespace SkyTech.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("StaffId"));
 
+                    b.Property<int>("BranchId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("DateEmployed")
+                        .HasColumnType("datetime2");
+
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<int>("EmploymentType")
+                        .HasColumnType("int");
+
                     b.Property<string>("FirstName")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
+
+                    b.Property<double>("HourlyRate")
+                        .HasColumnType("float");
 
                     b.Property<string>("LastName")
                         .IsRequired()
@@ -1219,8 +1898,14 @@ namespace SkyTech.Migrations
                         .HasMaxLength(10)
                         .HasColumnType("nvarchar(10)");
 
-                    b.Property<DateTime>("RegisteredOn")
-                        .HasColumnType("datetime2");
+                    b.Property<int>("PositionId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("RoleId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("StaffAvailability")
+                        .HasColumnType("int");
 
                     b.Property<string>("UserType")
                         .IsRequired()
@@ -1228,7 +1913,13 @@ namespace SkyTech.Migrations
 
                     b.HasKey("StaffId");
 
+                    b.HasIndex("BranchId");
+
                     b.HasIndex("OwnerId");
+
+                    b.HasIndex("PositionId");
+
+                    b.HasIndex("RoleId");
 
                     b.ToTable("Staffs");
                 });
@@ -1434,6 +2125,36 @@ namespace SkyTech.Migrations
                     b.Navigation("SourceBranch");
 
                     b.Navigation("TargetBranch");
+                });
+
+            modelBuilder.Entity("SkyTech.Models.JobPost", b =>
+                {
+                    b.HasOne("SkyTech.Models.SkytechWorkers.HR", "Hrs")
+                        .WithMany()
+                        .HasForeignKey("HRId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Hrs");
+                });
+
+            modelBuilder.Entity("SkyTech.Models.JobPostServices.ApplicationForm", b =>
+                {
+                    b.HasOne("SkyTech.Models.Customer", "Customers")
+                        .WithMany()
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("SkyTech.Models.JobPost", "Post")
+                        .WithMany("ApplicationForms")
+                        .HasForeignKey("PostId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Customers");
+
+                    b.Navigation("Post");
                 });
 
             modelBuilder.Entity("SkyTech.Models.Order", b =>
@@ -1648,15 +2369,219 @@ namespace SkyTech.Migrations
                     b.Navigation("Category");
                 });
 
+            modelBuilder.Entity("SkyTech.Models.SkytechWorkers.HRNotification", b =>
+                {
+                    b.HasOne("SkyTech.Models.SkytechWorkers.RosterShift", "RosterShift")
+                        .WithMany()
+                        .HasForeignKey("RosterShiftId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("RosterShift");
+                });
+
+            modelBuilder.Entity("SkyTech.Models.SkytechWorkers.Roster", b =>
+                {
+                    b.HasOne("SkyTech.Models.SkytechWorkers.Branch", "Branch")
+                        .WithMany()
+                        .HasForeignKey("BranchId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Branch");
+                });
+
+            modelBuilder.Entity("SkyTech.Models.SkytechWorkers.RosterShift", b =>
+                {
+                    b.HasOne("SkyTech.Models.SkytechWorkers.Roster", "Roster")
+                        .WithMany("RosterShifts")
+                        .HasForeignKey("RosterId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Roster");
+                });
+
+            modelBuilder.Entity("SkyTech.Models.SkytechWorkers.ShiftCandidate", b =>
+                {
+                    b.HasOne("SkyTech.Models.SkytechWorkers.ShiftRequirement", "ShiftRequirement")
+                        .WithMany("ShiftCandidates")
+                        .HasForeignKey("ShiftRequirementId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("SkyTech.Models.Staff", "Staff")
+                        .WithMany()
+                        .HasForeignKey("StaffId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("ShiftRequirement");
+
+                    b.Navigation("Staff");
+                });
+
+            modelBuilder.Entity("SkyTech.Models.SkytechWorkers.ShiftRequirement", b =>
+                {
+                    b.HasOne("SkyTech.Models.SkytechWorkers.StaffPosition", "Position")
+                        .WithMany()
+                        .HasForeignKey("PositionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("SkyTech.Models.SkytechWorkers.RosterShift", "RosterShift")
+                        .WithMany("ShiftRequirements")
+                        .HasForeignKey("RosterShiftId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Position");
+
+                    b.Navigation("RosterShift");
+                });
+
+            modelBuilder.Entity("SkyTech.Models.SkytechWorkers.ShiftTemplate", b =>
+                {
+                    b.HasOne("SkyTech.Models.SkytechWorkers.Branch", "Branch")
+                        .WithMany()
+                        .HasForeignKey("BranchId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("SkyTech.Models.SkytechWorkers.StaffPosition", "Position")
+                        .WithMany()
+                        .HasForeignKey("PositionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Branch");
+
+                    b.Navigation("Position");
+                });
+
+            modelBuilder.Entity("SkyTech.Models.SkytechWorkers.StaffAvailabilitySlot", b =>
+                {
+                    b.HasOne("SkyTech.Models.Staff", "Staff")
+                        .WithMany()
+                        .HasForeignKey("StaffId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Staff");
+                });
+
+            modelBuilder.Entity("SkyTech.Models.SkytechWorkers.StaffCertification", b =>
+                {
+                    b.HasOne("SkyTech.Models.SkytechWorkers.Certification", "Certification")
+                        .WithMany("StaffCertifications")
+                        .HasForeignKey("CertificationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("SkyTech.Models.Staff", "Staff")
+                        .WithMany()
+                        .HasForeignKey("StaffId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Certification");
+
+                    b.Navigation("Staff");
+                });
+
+            modelBuilder.Entity("SkyTech.Models.SkytechWorkers.StaffExperience", b =>
+                {
+                    b.HasOne("SkyTech.Models.SkytechWorkers.StaffPosition", "Position")
+                        .WithMany()
+                        .HasForeignKey("PositionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("SkyTech.Models.Staff", "Staff")
+                        .WithMany()
+                        .HasForeignKey("StaffId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Position");
+
+                    b.Navigation("Staff");
+                });
+
+            modelBuilder.Entity("SkyTech.Models.SkytechWorkers.StaffLeave", b =>
+                {
+                    b.HasOne("SkyTech.Models.Staff", "Staff")
+                        .WithMany()
+                        .HasForeignKey("StaffId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Staff");
+                });
+
+            modelBuilder.Entity("SkyTech.Models.SkytechWorkers.StaffPosition", b =>
+                {
+                    b.HasOne("SkyTech.Models.SkytechWorkers.Department", "Departments")
+                        .WithMany("StaffPositions")
+                        .HasForeignKey("DepartmentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Departments");
+                });
+
+            modelBuilder.Entity("SkyTech.Models.SkytechWorkers.StaffSkill", b =>
+                {
+                    b.HasOne("SkyTech.Models.SkytechWorkers.Skill", "Skill")
+                        .WithMany("StaffSkills")
+                        .HasForeignKey("SkillId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("SkyTech.Models.Staff", "Staff")
+                        .WithMany("StaffSkills")
+                        .HasForeignKey("StaffId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Skill");
+
+                    b.Navigation("Staff");
+                });
+
             modelBuilder.Entity("SkyTech.Models.Staff", b =>
                 {
+                    b.HasOne("SkyTech.Models.SkytechWorkers.Branch", "Branches")
+                        .WithMany("Staffs")
+                        .HasForeignKey("BranchId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("SkyTech.Models.ShopOwner", "Owner")
                         .WithMany()
                         .HasForeignKey("OwnerId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("SkyTech.Models.SkytechWorkers.StaffPosition", "Positions")
+                        .WithMany("Staffs")
+                        .HasForeignKey("PositionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("SkyTech.Models.SkytechWorkers.Role", "Roles")
+                        .WithMany("staffs")
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Branches");
+
                     b.Navigation("Owner");
+
+                    b.Navigation("Positions");
+
+                    b.Navigation("Roles");
                 });
 
             modelBuilder.Entity("SkyTech.Models.AddProduct", b =>
@@ -1683,6 +2608,11 @@ namespace SkyTech.Migrations
                     b.Navigation("DriverIdentityBooks");
 
                     b.Navigation("DriversLicences");
+                });
+
+            modelBuilder.Entity("SkyTech.Models.JobPost", b =>
+                {
+                    b.Navigation("ApplicationForms");
                 });
 
             modelBuilder.Entity("SkyTech.Models.Order", b =>
@@ -1717,6 +2647,56 @@ namespace SkyTech.Migrations
                     b.Navigation("BussRegCertificates");
 
                     b.Navigation("OwnerIdentityBooks");
+                });
+
+            modelBuilder.Entity("SkyTech.Models.SkytechWorkers.Branch", b =>
+                {
+                    b.Navigation("Staffs");
+                });
+
+            modelBuilder.Entity("SkyTech.Models.SkytechWorkers.Certification", b =>
+                {
+                    b.Navigation("StaffCertifications");
+                });
+
+            modelBuilder.Entity("SkyTech.Models.SkytechWorkers.Department", b =>
+                {
+                    b.Navigation("StaffPositions");
+                });
+
+            modelBuilder.Entity("SkyTech.Models.SkytechWorkers.Role", b =>
+                {
+                    b.Navigation("staffs");
+                });
+
+            modelBuilder.Entity("SkyTech.Models.SkytechWorkers.Roster", b =>
+                {
+                    b.Navigation("RosterShifts");
+                });
+
+            modelBuilder.Entity("SkyTech.Models.SkytechWorkers.RosterShift", b =>
+                {
+                    b.Navigation("ShiftRequirements");
+                });
+
+            modelBuilder.Entity("SkyTech.Models.SkytechWorkers.ShiftRequirement", b =>
+                {
+                    b.Navigation("ShiftCandidates");
+                });
+
+            modelBuilder.Entity("SkyTech.Models.SkytechWorkers.Skill", b =>
+                {
+                    b.Navigation("StaffSkills");
+                });
+
+            modelBuilder.Entity("SkyTech.Models.SkytechWorkers.StaffPosition", b =>
+                {
+                    b.Navigation("Staffs");
+                });
+
+            modelBuilder.Entity("SkyTech.Models.Staff", b =>
+                {
+                    b.Navigation("StaffSkills");
                 });
 #pragma warning restore 612, 618
         }

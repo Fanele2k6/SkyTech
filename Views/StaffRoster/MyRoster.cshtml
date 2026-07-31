@@ -1,0 +1,65 @@
+﻿@model List<SkyTech.Models.SkytechWorkers.RosterShift>
+@{ ViewData["Title"] = "My Roster"; }
+
+<style>
+    .my-row {
+        background-color: #fff3b0;
+        font-weight: bold;
+    }
+</style>
+
+<h1>My Roster</h1>
+
+@if (ViewBag.NoRoster == true)
+{
+    <p>No published roster is available yet for your branch.</p>
+}
+else
+{
+    <h3>@ViewBag.PositionName — @ViewBag.BranchName — Week of @(((DateTime)ViewBag.WeekStartDate).ToShortDateString())</h3>
+
+    
+        var weekStartDate = (DateTime)ViewBag.WeekStartDate;
+        var weekDates = Enumerable.Range(0, 7).Select(i => weekStartDate.AddDays(i)).ToList();
+        int currentStaffId = (int)ViewBag.CurrentStaffId;
+
+        var byStaff = Model
+            .GroupBy(s => s.Staff)
+            .OrderBy(g => g.Key.FirstName);
+    
+
+    <table border="1" cellpadding="6">
+        <thead>
+            <tr>
+                <th>Employee Name</th>
+                @foreach (var date in weekDates)
+                {
+                    <th>@date.ToString("dddd")<br />@date.ToString("dd MMM")</th>
+                }
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var staffGroup in byStaff)
+            {
+                bool isMe = staffGroup.Key.StaffId == currentStaffId;
+                <tr class="@(isMe ? "my-row" : "")">
+                    <td>@staffGroup.Key.FirstName @staffGroup.Key.LastName @(isMe ? "(You)" : "")</td>
+                    @foreach (var date in weekDates)
+                    {
+                        var shiftThatDay = staffGroup.FirstOrDefault(s => s.WorkDate.Date == date.Date);
+                        <td>
+                            @if (shiftThatDay != null)
+                            {
+                                @($"{shiftThatDay.StartTime} - {shiftThatDay.EndTime}")
+                            }
+                            else
+                            {
+                                @: —
+                            }
+                        </td>
+                    }
+                </tr>
+            }
+        </tbody>
+    </table>
+}
