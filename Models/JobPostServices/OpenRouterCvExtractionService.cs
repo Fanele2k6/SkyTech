@@ -36,10 +36,12 @@ Return ONLY valid JSON, no markdown fences, with these exact keys:
 {{
   ""firstName"": """",
   ""lastName"": """",
+  ""phoneNumber"": """",
   ""idNumber"": """",
   ""email"": """",
   ""location"": """",
   ""experience"": """",
+  ""certificates"": """",
   ""skills"": """",
   ""links"": """"
 }}";

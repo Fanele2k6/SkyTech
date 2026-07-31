@@ -1,16 +1,42 @@
-﻿using System;
+﻿using DocumentFormat.OpenXml.Drawing;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
+using SkyTech.Models.SkytechWorkers;
+using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace SkyTech.Models
 {
+    public enum IsTheStaffMemberAvailable
+    {
+        OnLeave, Active, Suspended, Terminated
+    }
     public class Staff
     {
+        //=====PKs and FKs======
         [Key]
         public int StaffId { get; set; }
 
+        [ForeignKey(nameof(Owner))]
         public int OwnerId { get; set; }
+        [ValidateNever]
         public virtual ShopOwner Owner { get; set; }
+
+        [ForeignKey(nameof(Positions))]
+        public int PositionId { get; set; }
+        [ValidateNever]
+        public virtual StaffPosition Positions { get; set; }
+
+        [ForeignKey(nameof(Branches))]
+        public int BranchId { get; set; }
+        [ValidateNever]
+        public virtual Branch Branches { get; set; }
+
+        [ForeignKey(nameof(Roles))]
+        public int RoleId { get; set; }
+        [ValidateNever]
+        public virtual Role Roles { get; set; }
+
 
         [Required, MaxLength(100)] public string FirstName { get; set; }
         [Required, MaxLength(100)] public string LastName { get; set; }
@@ -20,6 +46,10 @@ namespace SkyTech.Models
 
         [Required, MaxLength(10), Phone]
         public string PhoneNumber { get; set; }
+
+        public double HourlyRate { get; set; } //added
+
+        public IsTheStaffMemberAvailable StaffAvailability { get; set; }
 
         [Required(ErrorMessage = "Password is required")]
         [RegularExpression(@".{8,}")]
@@ -33,6 +63,8 @@ namespace SkyTech.Models
         public string ConfirmPassword { get; set; }
 
         public string UserType { get; set; }
-        public DateTime RegisteredOn { get; set; }
+        public DateTime DateEmployed { get; set; }
+
+        public SelectEmploymentType EmploymentType { get; set; }
     }
 }

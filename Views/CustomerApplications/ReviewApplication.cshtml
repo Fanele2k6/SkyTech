@@ -35,6 +35,11 @@
             <input asp-for="IDNumber" type="text" />
             <span asp-validation-for="IDNumber"></span>
         </div>
+        <div class="form-group">
+            <label asp-for="PhoneNumber">Phone Number</label>
+            <input asp-for="PhoneNumber" type="text" />
+            <span asp-validation-for="PhoneNumber"></span>
+        </div>
 
         <div class="form-group">
             <label asp-for="Email">Email</label>
@@ -59,11 +64,22 @@
             <textarea asp-for="Skills" rows="4"></textarea>
             <span asp-validation-for="Skills"></span>
         </div>
+        <div class="form-group">
+            <label asp-for="Certificates">Certificates</label>
+            <textarea asp-for="Certificates" rows="4"></textarea>
+            <span asp-validation-for="Certificates"></span>
+        </div>
 
         <div class="form-group">
             <label asp-for="Links">Links (LinkedIn, portfolio, etc.)</label>
             <input asp-for="Links" type="text" />
             <span asp-validation-for="Links"></span>
+        </div>
+
+        <div class="from-group">
+            <label asp-for="HasInternertAccess" class="form-group">Do you have internert access</label>
+            <input asp-for="HasInternertAccess" type="checkbox" />
+            <span asp-validation-for="HasInternertAccess"></span>
         </div>
 
         <div class="btn-submit">

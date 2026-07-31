@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Configuration;
+using SkyTech.Models.JobPostServices;
 using System.Net;
 using System.Net.Mail;
 
@@ -112,6 +113,33 @@ namespace SkyTech.Models
                 "Thank you for applying to SkyTech. " +
                 "Unfortunately your application has been rejected.\n" +
                 "Please check your documents and ensure they are valid before trying again.\n\n" +
+                "SkyTech Team");
+
+        //======================MANAGE JOB APPLICATIONS=====================
+        public void RejectJobApplication(string toEmail, string firstName) =>
+            Send(toEmail,
+                "SkyTech - Application Outcome",
+                $"Dear {firstName},\n\n" +
+                "Thank you for applying to SkyTech. " +
+                "After carefully reviewing your application,unfortunately your application has been rejected.\n" +
+                ".\n\n" +
+                "SkyTech Team");
+        public void OnlineInterview(string toEmail, string firstName) =>
+            Send(toEmail,
+                "SkyTech - Application Outcome",
+                $"Dear {firstName},\n\n" +
+                "Thank you for applying to SkyTech. " +
+                "After carefully reviewing your application,unfortunately your application has been rejected.\n" +
+                ".\n\n" +
+                "SkyTech Team");
+        public void PhysicalInterview(string toEmail, string firstName) =>
+            Send(toEmail,
+                "SkyTech - Application Outcome",
+                $"Dear {firstName},\n\n" +
+                "Thank you for applying to SkyTech. " +
+                "After carefully reviewing your application, your application has been accepted.\n" +
+                "Please chech your account for more information on your upcoming interview for this position"+
+                ".\n\n" +
                 "SkyTech Team");
     }
 }

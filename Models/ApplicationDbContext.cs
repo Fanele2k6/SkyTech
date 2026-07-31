@@ -4,6 +4,7 @@ using SkyTech.Models.Documents;
 using SkyTech.Models.JobPostServices;
 using SkyTech.Models.Repair_Item_Services;
 using SkyTech.Models.Repair_Services;
+using SkyTech.Models.SkytechWorkers;
 
 
 namespace SkyTech.Models
@@ -67,6 +68,18 @@ namespace SkyTech.Models
         public DbSet<JobPost> JobPosts { get; set; }
         public DbSet<JobRoleKnowledge> JobRoleKnowledges { get; set; }
         public DbSet<ApplicationForm> ApplicationForms { get; set; }
+        public DbSet<Department> Departments { get; set; }
+        public DbSet<Branch> Branches { get; set; }
+        public DbSet<StaffPosition> StaffPositions { get; set; }
+        public DbSet<Role> Roles { get; set; }
+        public DbSet<HR> HRs { get; set; }
+
+        //========ROSTER TABLES=====
+        public DbSet<Roster> Rosters { get; set; }
+        public DbSet<RosterShift> RosterShifts { get; set; }
+        public DbSet<StaffRotationOrder> StaffRotationOrders { get; set; }
+
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -151,6 +164,34 @@ namespace SkyTech.Models
                 .WithMany()
                 .HasForeignKey(c => c.CustomerId)
                 .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<RosterShift>()
+                .HasOne(rs => rs.Staff).WithMany()
+                .HasForeignKey(rs => rs.StaffId).OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<RosterShift>()
+                .HasOne(rs => rs.Position).WithMany()
+                .HasForeignKey(rs => rs.PositionId).OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<RosterShift>()
+                .HasOne(rs => rs.Branch).WithMany()
+                .HasForeignKey(rs => rs.BranchId).OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Roster>()
+                .HasOne(r => r.Branch).WithMany()
+                .HasForeignKey(r => r.BranchId).OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<StaffRotationOrder>()
+                .HasOne(o => o.Staff).WithMany()
+                .HasForeignKey(o => o.StaffId).OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<StaffRotationOrder>()
+                .HasOne(o => o.Branch).WithMany()
+                .HasForeignKey(o => o.BranchId).OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<StaffRotationOrder>()
+                .HasOne(o => o.Position).WithMany()
+                .HasForeignKey(o => o.PositionId).OnDelete(DeleteBehavior.Restrict);
         }
 
 

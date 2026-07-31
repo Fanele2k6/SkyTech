@@ -1,0 +1,111 @@
+﻿@model SkyTech.Models.SkytechWorkers.Roster
+@{
+    ViewData["Title"] = "Roster Details";
+}
+
+@if (TempData["successful"] != null)
+{
+    <p>@TempData["successful"]</p>
+}
+
+<h1>@Model.Branch.BranchName — Week of @Model.WeekStartDate.ToShortDateString()</h1>
+<p>Status: @Model.Status</p>
+
+@if (Model.Status == SkyTech.Models.SkytechWorkers.RosterStatus.Draft)
+{
+    <form asp-controller="Roster" asp-action="PublishRoster" method="post">
+        <input type="hidden" name="rosterId" value="@Model.RosterId" />
+        <button type="submit">Publish Roster</button>
+    </form>
+}
+
+@{
+    // Build the 7 dates for this week, Monday through Sunday, once
+    var weekDates = Enumerable.Range(0, 7)
+        .Select(i => Model.WeekStartDate.AddDays(i))
+        .ToList();
+
+    // Group all shifts by Position, then within each position, by Staff member
+    var byPosition = Model.RosterShifts
+        .GroupBy(s => s.Position)
+        .OrderBy(g => g.Key.PositionName);
+}
+
+@foreach (var positionGroup in byPosition)
+{
+    <h2>@positionGroup.Key.PositionName</h2>
+
+    var byStaff = positionGroup
+        .GroupBy(s => s.Staff)
+        .OrderBy(g => g.Key.FirstName);
+
+    <table border="1" cellpadding="6">
+        <thead>
+            <tr>
+                <th>Employee Name</th>
+                @foreach (var date in weekDates)
+                {
+                    <th>@date.ToString("dddd")<br />@date.ToString("dd MMM")</th>
+                }
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var staffGroup in byStaff)
+            {
+                <tr>
+                    <td>@staffGroup.Key.FirstName @staffGroup.Key.LastName</td>
+                    @foreach (var date in weekDates)
+                    {
+                        var shiftThatDay = staffGroup.FirstOrDefault(s => s.WorkDate.Date == date.Date);
+                        <td>
+                            @if (shiftThatDay != null)
+                            {
+                                @($"{shiftThatDay.StartTime} - {shiftThatDay.EndTime}")
+                            }
+                            else
+                            {
+                                @: —
+                            }
+                        </td>
+                    }
+                </tr>
+            }
+        </tbody>
+    </table>
+    <br />
+}
+
+
+
+@* @model SkyTech.Models.SkytechWorkers.Roster
+@{
+    ViewData["Title"] = "Roster Details";
+}
+
+@if (TempData["successful"] != null)
+{
+    <p>@TempData["successful"]</p>
+}
+
+<h1>@Model.Branch.BranchName — Week of @Model.WeekStartDate.ToShortDateString()</h1>
+<p>Status: @Model.Status</p>
+
+@foreach (var day in Model.RosterShifts.GroupBy(s => s.WorkDate).OrderBy(g => g.Key))
+{
+    <h3>@day.Key.ToString("dddd, dd MMM yyyy")</h3>
+    <table>
+        <thead>
+            <tr><th>Staff</th><th>Position</th><th>Time</th></tr>
+        </thead>
+        <tbody>
+            @foreach (var shift in day)
+            {
+                <tr>
+                    <td>@shift.Staff.FirstName @shift.Staff.LastName</td>
+                    <td>@shift.Position.PositionName</td>
+                    <td>@shift.StartTime - @shift.EndTime</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+} *@

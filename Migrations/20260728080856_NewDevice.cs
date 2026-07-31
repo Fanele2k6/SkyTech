@@ -5,7 +5,7 @@
 namespace SkyTech.Migrations
 {
     /// <inheritdoc />
-    public partial class AIPosts : Migration
+    public partial class NewDevice : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

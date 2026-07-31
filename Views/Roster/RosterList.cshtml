@@ -1,0 +1,28 @@
+﻿@model List<SkyTech.Models.SkytechWorkers.Roster>
+@{
+    ViewData["Title"] = "All Rosters";
+}
+
+<h1>All Rosters</h1>
+<a href="@Url.Action("GenerateWeekly", "Roster")">Generate New Roster</a>
+
+<table>
+    <thead>
+        <tr><th>Branch</th><th>Week Starting</th><th>Status</th><th></th></tr>
+    </thead>
+    <tbody>
+        @foreach (var roster in Model)
+        {
+            <tr>
+                <td>@roster.Branch.BranchName</td>
+                <td>@roster.WeekStartDate.ToShortDateString()</td>
+                <td>@roster.Status</td>
+                <td>
+                    <a href="@Url.Action("RosterDetails", "Roster", new { rosterId = roster.RosterId })">
+                        View
+                    </a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
