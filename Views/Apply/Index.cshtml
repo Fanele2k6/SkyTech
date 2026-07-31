@@ -1,0 +1,29 @@
+﻿@using Microsoft.AspNetCore.Mvc.Rendering
+
+@{
+    ViewData["Title"] = "Apply";
+}
+
+<h2>Apply for a Job</h2>
+
+<form asp-action="Apply" method="post">
+
+    <div class="mb-3">
+
+        <label>Select Job</label>
+
+        <select name="jobId"
+                asp-items="ViewBag.Jobs"
+                class="form-control">
+
+            <option value="">-- Select Job --</option>
+
+        </select>
+
+    </div>
+
+    <button class="btn btn-primary">
+        Apply
+    </button>
+
+</form>

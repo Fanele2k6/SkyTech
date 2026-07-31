@@ -1,0 +1,57 @@
+﻿@model RecruitmentSystem.ViewModels.CreateAssessmentViewModel
+
+@{
+    ViewData["Title"] = "Edit Assessment";
+}
+
+<h2>Edit Assessment</h2>
+
+<div class="alert alert-warning">
+    You are editing a draft assessment. Applicants cannot access it until it is published.
+</div>
+
+<form asp-action="EditAssessment" method="post">
+
+    <input type="hidden" name="id" value="@ViewContext.RouteData.Values["id"]" />
+
+    <div class="mb-3">
+        <label class="form-label">Assessment Title</label>
+        <input asp-for="Title" class="form-control" />
+        <span asp-validation-for="Title" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Pass Mark (%)</label>
+        <input asp-for="PassMark"
+               type="number"
+               min="1"
+               max="100"
+               class="form-control" />
+
+        <span asp-validation-for="PassMark"
+              class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label class="form-label">Time Limit (minutes)</label>
+        <input asp-for="TimeLimit"
+               type="number"
+               min="1"
+               max="180"
+               class="form-control" />
+
+        <span asp-validation-for="TimeLimit"
+              class="text-danger"></span>
+    </div>
+
+    <button type="submit" class="btn btn-success">
+        Save Changes
+    </button>
+
+    <a asp-action="ManageAssessment"
+       asp-route-id="@ViewContext.RouteData.Values["id"]"
+       class="btn btn-secondary">
+        Cancel
+    </a>
+
+</form>

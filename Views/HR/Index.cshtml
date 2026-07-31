@@ -1,0 +1,310 @@
+﻿@model List<RecruitmentSystem.ViewModels.HRReviewViewModel>
+
+@{
+    ViewData["Title"] = "HR Dashboard";
+}
+
+<h2 class="mb-3">HR Dashboard</h2>
+
+<div class="mb-3">
+    <a asp-action="CreateJob"
+       class="btn btn-primary">
+        Add Vacancy
+    </a>
+
+   
+    <a asp-action="CreateAssessment"
+       class="btn btn-warning">
+        Create Quiz
+    </a>
+    <a asp-action="ManageAssessments"
+       class="btn btn-info mb-3">
+        Manage Assessments
+    </a>
+   
+
+</div>
+
+@if (TempData["Message"] != null)
+{
+    <div class="alert alert-success">
+        @TempData["Message"]
+    </div>
+}
+
+<!-- SEARCH AND FILTERS -->
+
+<div class="card mb-4">
+    <div class="card-body">
+
+        
+        <h5 class="card-title">Search & Filter Applicants</h5>
+
+        <form asp-action="Index" method="get">
+
+            <div class="row">
+
+                <!-- Search -->
+                <div class="col-md-4 mb-2">
+                    <label class="form-label">
+                        Search Applicant
+                    </label>
+
+                    <input type="text"
+                           name="search"
+                           value="@ViewBag.Search"
+                           class="form-control"
+                           placeholder="Name or email..." />
+                </div>
+
+                <!-- Job Filter -->
+                <div class="col-md-3 mb-2">
+                    <label class="form-label">
+                        Vacancy
+                    </label>
+
+                    <select name="jobId"
+                            class="form-select">
+
+                        <option value="">All Vacancies</option>
+
+                        @foreach (var job in ViewBag.Jobs)
+                        {
+                            if (ViewBag.JobId != null &&
+                                (int)ViewBag.JobId == job.JobId)
+                            {
+                                <option value="@job.JobId" selected>
+                                    @job.JobTitle
+                                </option>
+                            }
+                            else
+                            {
+                                <option value="@job.JobId">
+                                    @job.JobTitle
+                                </option>
+                            }
+                        }
+
+                    </select>
+                </div>
+
+                <!-- Status Filter -->
+                <div class="col-md-3 mb-2">
+                    <label class="form-label">
+                        Recruitment Status
+                    </label>
+
+                    <select name="status"
+                            class="form-select">
+
+                        <option value="All">
+                            All Statuses
+                        </option>
+
+                        @foreach (var status in ViewBag.Statuses)
+                        {
+                            if (ViewBag.Status == status)
+                            {
+                                <option value="@status" selected>
+                                    @status
+                                </option>
+                            }
+                            else
+                            {
+                                <option value="@status">
+                                    @status
+                                </option>
+                            }
+                        }
+
+                    </select>
+                </div>
+
+                <!-- Buttons -->
+                <div class="col-md-2 mb-2 d-flex align-items-end">
+
+                    <button type="submit"
+                            class="btn btn-success me-2">
+                        Search
+                    </button>
+
+                    <a asp-action="Index"
+                       class="btn btn-secondary">
+                        Clear
+                    </a>
+
+                </div>
+
+            </div>
+
+        </form>
+
+    </div>
+    
+
+</div>
+
+<!-- APPLICANT COUNT -->
+
+<div class="mb-3">
+    <strong>
+        Applicants Found: @Model.Count
+    </strong>
+</div>
+
+<!-- APPLICANT TABLE -->
+
+<div class="table-responsive">
+
+    
+    <table class="table table-bordered table-hover">
+
+        <thead>
+            <tr>
+                <th>Applicant</th>
+                <th>Email</th>
+                <th>Job</th>
+                <th>Score</th>
+                <th>Result</th>
+                <th>Status</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+
+        <tbody>
+
+            @if (!Model.Any())
+            {
+                <tr>
+                    <td colspan="7"
+                        class="text-center text-muted">
+                        No applicants found matching your search/filter.
+                    </td>
+                </tr>
+            }
+            else
+            {
+                @foreach (var applicant in Model)
+                {
+                    <tr>
+
+                        <td>
+                            @applicant.ApplicantName
+                        </td>
+
+                        <td>
+                            @applicant.Email
+                        </td>
+
+                        <td>
+                            @applicant.JobTitle
+                        </td>
+
+                        <!-- SCORE -->
+                        <td>
+                            @if (applicant.RecruitmentStatus == "Passed Test" ||
+                                 applicant.RecruitmentStatus == "Failed Test")
+                            {
+                                @applicant.Score
+                            }
+                            else
+                            {
+                                <span>-</span>
+                            }
+                        </td>
+
+                        <!-- RESULT -->
+                        <td>
+                            @if (applicant.RecruitmentStatus == "Passed Test")
+                            {
+                                <span class="text-success fw-bold">
+                                    PASS
+                                </span>
+                            }
+                            else if (applicant.RecruitmentStatus == "Failed Test")
+                            {
+                                <span class="text-danger fw-bold">
+                                    FAIL
+                                </span>
+                            }
+                            else if (applicant.HasPublishedAssessment &&
+                                     applicant.RecruitmentStatus == "Shortlisted")
+                            {
+                                <span class="text-warning">
+                                    Waiting Assessment
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="text-secondary">
+                                    Not Written
+                                </span>
+                            }
+                        </td>
+
+                        <!-- STATUS -->
+                        <td>
+                            @applicant.RecruitmentStatus
+                        </td>
+
+                        <!-- ACTION -->
+                        <td>
+
+                            @if (applicant.RecruitmentStatus == "Applied")
+                            {
+                                <a asp-action="Shortlist"
+                                   asp-route-id="@applicant.ApplicationId"
+                                   class="btn btn-success btn-sm">
+                                    Shortlist
+                                </a>
+
+                                <a asp-action="Reject"
+                                   asp-route-id="@applicant.ApplicationId"
+                                   class="btn btn-danger btn-sm">
+                                    Reject
+                                </a>
+                            }
+                            else if (applicant.RecruitmentStatus == "Shortlisted")
+                            {
+                                @if (applicant.HasPublishedAssessment)
+                                {
+                                    <span class="text-warning">
+                                        Waiting for Assessment
+                                    </span>
+                                }
+                                else
+                                {
+                                    <a asp-action="Confirm"
+                                       asp-route-id="@applicant.ApplicationId"
+                                       class="btn btn-primary btn-sm">
+                                        Invite Interview
+                                    </a>
+                                }
+                            }
+                            else if (applicant.RecruitmentStatus == "Passed Test")
+                            {
+                                <a asp-action="Confirm"
+                                   asp-route-id="@applicant.ApplicationId"
+                                   class="btn btn-primary btn-sm">
+                                    Invite Interview
+                                </a>
+                            }
+                            else
+                            {
+                                <span class="text-muted">
+                                    No Action
+                                </span>
+                            }
+
+                        </td>
+
+                    </tr>
+                }
+            }
+
+        </tbody>
+
+    </table>
+    
+
+</div>

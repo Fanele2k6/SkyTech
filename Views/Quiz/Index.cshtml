@@ -1,0 +1,166 @@
+﻿@model RecruitmentSystem.ViewModels.QuizViewModel
+
+@{
+    ViewData["Title"] = "Recruitment Test";
+}
+
+<h2>Recruitment Test</h2>
+
+<div class="alert alert-warning text-center">
+    <h4>
+        ⏰ Time Remaining:
+        <span id="timer"></span>
+    </h4>
+</div>
+
+<form id="quizForm" asp-action="SubmitTest" method="post">
+
+    @for (int i = 0; i < Model.Questions.Count; i++)
+    {
+        <div style="margin-bottom:30px;">
+
+            <h4>Question @(i + 1)</h4>
+
+            <p>@Model.Questions[i].QuestionText</p>
+
+            <input type="hidden" asp-for="Questions[i].QuestionId" />
+            <input type="hidden" asp-for="Questions[i].QuestionText" />
+
+            <div>
+                <input asp-for="Questions[i].SelectedAnswer"
+                       type="radio"
+                       value="A" />
+                @Model.Questions[i].OptionA
+            </div>
+
+            <div>
+                <input asp-for="Questions[i].SelectedAnswer"
+                       type="radio"
+                       value="B" />
+                @Model.Questions[i].OptionB
+            </div>
+
+            <div>
+                <input asp-for="Questions[i].SelectedAnswer"
+                       type="radio"
+                       value="C" />
+                @Model.Questions[i].OptionC
+            </div>
+
+            <div>
+                <input asp-for="Questions[i].SelectedAnswer"
+                       type="radio"
+                       value="D" />
+                @Model.Questions[i].OptionD
+            </div>
+
+        </div>
+    }
+
+    <button id="submitBtn"
+            type="submit"
+            class="btn btn-success">
+        Submit Test
+    </button>
+
+</form>
+
+<script>
+
+    let totalSeconds = @ViewBag.TimeLimit * 60;
+
+    const timer = document.getElementById("timer");
+    const quizForm = document.getElementById("quizForm");
+    const submitBtn = document.getElementById("submitBtn");
+
+    let countdown;
+
+    function updateTimer() {
+
+        let minutes = Math.floor(totalSeconds / 60);
+        let seconds = totalSeconds % 60;
+
+        // Display timer
+        timer.innerHTML =
+            String(minutes).padStart(2, '0') + ":" +
+            String(seconds).padStart(2, '0');
+
+
+        // GREEN
+        // More than 5 minutes remaining
+        if (totalSeconds > 300) {
+
+            timer.style.color = "green";
+            timer.style.fontWeight = "bold";
+            timer.style.opacity = "1";
+        }
+
+
+        // ORANGE
+        // 5 minutes or less
+        else if (totalSeconds > 60) {
+
+            timer.style.color = "orange";
+            timer.style.fontWeight = "bold";
+            timer.style.opacity = "1";
+        }
+
+
+        // RED + BLINKING
+        // Last minute
+        else if (totalSeconds > 0) {
+
+            timer.style.color = "red";
+            timer.style.fontWeight = "bold";
+
+            // Make timer blink
+            if (Math.floor(totalSeconds / 2) % 2 === 0) {
+                timer.style.opacity = "1";
+            }
+            else {
+                timer.style.opacity = "0.3";
+            }
+        }
+
+
+        // TIME IS UP
+        else {
+
+            clearInterval(countdown);
+
+            timer.innerHTML = "00:00";
+
+            timer.style.color = "red";
+            timer.style.opacity = "1";
+
+            alert("Time is up! Your assessment will now be submitted.");
+
+            quizForm.submit();
+
+            return;
+        }
+
+        totalSeconds--;
+    }
+
+
+    // Start timer
+    updateTimer();
+
+
+    // Update every second
+    countdown = setInterval(updateTimer, 1000);
+
+
+    // Prevent double submission
+    quizForm.addEventListener("submit", function() {
+
+        clearInterval(countdown);
+
+        submitBtn.disabled = true;
+
+        submitBtn.innerText = "Submitting...";
+
+    });
+
+</script>

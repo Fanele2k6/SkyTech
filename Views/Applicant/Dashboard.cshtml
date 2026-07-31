@@ -1,0 +1,69 @@
+﻿@model RecruitmentSystem.ViewModels.ApplicantDashboardViewModel
+
+@{
+    ViewData["Title"] = "Applicant Dashboard";
+}
+
+<h2>Applicant Dashboard</h2>
+
+<hr />
+
+<h3>Welcome @Model.FullName</h3>
+
+<p>
+    <strong>Job Applied:</strong>
+    @Model.JobTitle
+</p>
+
+<p>
+    <strong>Recruitment Status:</strong>
+    @Model.RecruitmentStatus
+</p>
+
+@if (Model.CanWriteTest)
+{
+    <a asp-controller="Quiz"
+       asp-action="Index"
+       class="btn btn-primary">
+        Attempt Assessment
+    </a>
+}
+else if (Model.RecruitmentStatus == "Applied")
+{
+    <p class="alert alert-warning">
+        ⏳ Your application has been received and is awaiting HR review.
+    </p>
+}
+else if (Model.RecruitmentStatus == "Rejected")
+{
+    <p class="alert alert-danger">
+        ❌ Unfortunately, your application was not shortlisted.
+    </p>
+}
+else if (Model.RecruitmentStatus == "Shortlisted")
+{
+    <p class="text-info">
+        📋 Congratulations! You have been shortlisted.
+        The assessment has not been published yet.
+    </p>
+}
+else if (Model.RecruitmentStatus == "Passed Test")
+{
+    <p class="text-success">
+        ✔ Congratulations! You passed the assessment.
+        HR will contact you regarding the next stage.
+    </p>
+}
+else if (Model.RecruitmentStatus == "Failed Test")
+{
+    <p class="text-danger">
+        ❌ You completed the assessment but did not achieve the required pass mark.
+    </p>
+}
+else if (Model.RecruitmentStatus == "Interview Invited")
+{
+    <div class="alert alert-success">
+        🎉 Congratulations! You have been invited for an interview.
+        Please check your email for further details.
+    </div>
+}

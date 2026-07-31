@@ -1,0 +1,93 @@
+﻿@model List<RecruitmentSystem.ViewModels.AssessmentListViewModel>
+
+@{
+    ViewData["Title"] = "Manage Assessments";
+}
+
+<h2>Manage Assessments</h2>
+
+<hr />
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info">
+        No assessments have been created yet.
+    </div>
+}
+else
+{
+    <table class="table table-bordered">
+
+        <thead>
+            <tr>
+                <th>Vacancy</th>
+                <th>Assessment</th>
+                <th>Questions</th>
+                <th>Pass Mark</th>
+                <th>Time Limit</th>
+                <th>Status</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+
+        <tbody>
+
+            @foreach (var assessment in Model)
+            {
+                <tr>
+
+                    <td>
+                        @assessment.JobTitle
+                    </td>
+
+                    <td>
+                        @assessment.AssessmentTitle
+                    </td>
+
+                    <td>
+                        @assessment.QuestionCount
+                    </td>
+
+                    <td>
+                        @assessment.PassMark%
+                    </td>
+
+                    <td>
+                        @assessment.TimeLimit minutes
+                    </td>
+
+                    <td>
+                        @if (assessment.IsPublished)
+                        {
+                            <span class="badge bg-success">
+                                Published
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-warning text-dark">
+                                Draft
+                            </span>
+                        }
+                    </td>
+
+                    <td>
+                        <a asp-action="ManageAssessment"
+                           asp-route-id="@assessment.AssessmentId"
+                           class="btn btn-primary btn-sm">
+                            Manage
+                        </a>
+                    </td>
+
+                </tr>
+            }
+
+        </tbody>
+
+    </table>
+}
+
+<a asp-action="CreateAssessment"
+   class="btn btn-warning">
+    + Create New Assessment
+</a>

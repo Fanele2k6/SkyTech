@@ -1,0 +1,135 @@
+﻿@model RecruitmentSystem.ViewModels.AddQuestionViewModel
+
+@{
+    ViewData["Title"] = "Add Questions";
+}
+
+<h2>@Model.AssessmentTitle</h2>
+
+<form asp-action="AddQuestion" method="post">
+
+    <input asp-for="AssessmentId" type="hidden" />
+
+    <div class="mb-3">
+        <label>Question</label>
+        <textarea asp-for="QuestionText"
+                  class="form-control"></textarea>
+    </div>
+
+    <div class="mb-3">
+        <label>Option A</label>
+        <input asp-for="OptionA"
+               class="form-control" />
+    </div>
+
+    <div class="mb-3">
+        <label>Option B</label>
+        <input asp-for="OptionB"
+               class="form-control" />
+    </div>
+
+    <div class="mb-3">
+        <label>Option C</label>
+        <input asp-for="OptionC"
+               class="form-control" />
+    </div>
+
+    <div class="mb-3">
+        <label>Option D</label>
+        <input asp-for="OptionD"
+               class="form-control" />
+    </div>
+
+    <div class="mb-3">
+
+        <label>Correct Answer</label>
+
+        <select asp-for="CorrectAnswer"
+                class="form-control">
+
+            <option value="A">A</option>
+            <option value="B">B</option>
+            <option value="C">C</option>
+            <option value="D">D</option>
+
+        </select>
+
+    </div>
+
+    <button type="submit" class="btn btn-success">
+        Save Question
+    </button>
+
+</form>
+
+<hr />
+
+<h4>Questions Added</h4>
+
+@if (!Model.ExistingQuestions.Any())
+{
+    <p>No questions added yet.</p>
+}
+else
+{
+    <table class="table table-bordered">
+
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Question</th>
+                <th>Correct</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+
+        <tbody>
+
+            @{
+                int number = 1;
+            }
+
+            @foreach (var q in Model.ExistingQuestions)
+            {
+                <tr>
+
+                    <td>@number</td>
+
+                    <td>@q.QuestionText</td>
+
+                    <td>@q.CorrectAnswer</td>
+
+                    <td>
+
+                        <a asp-action="EditQuestion"
+                           asp-route-id="@q.QuestionId"
+                           class="btn btn-sm btn-warning">
+                            Edit
+                        </a>
+
+                        <a asp-action="DeleteQuestion"
+                           asp-route-id="@q.QuestionId"
+                           class="btn btn-sm btn-danger"
+                           onclick="return confirm('Are you sure you want to delete this question?');">
+                            Delete
+                        </a>
+
+                    </td>
+
+                </tr>
+
+                number++;
+            }
+
+        </tbody>
+
+    </table>
+}
+
+<br />
+
+<a asp-action="PublishAssessment"
+   asp-route-id="@Model.AssessmentId"
+   class="btn btn-primary">
+    Publish Quiz
+</a>

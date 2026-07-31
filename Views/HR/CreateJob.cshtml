@@ -1,0 +1,41 @@
+﻿@model RecruitmentSystem.Models.Job
+
+@{
+    ViewData["Title"] = "Add Vacancy";
+}
+
+<h2>Add Vacancy</h2>
+@if (TempData["Message"] != null)
+{
+    <div class="alert alert-success">
+        @TempData["Message"]
+    </div>
+}
+
+<form asp-action="CreateJob" method="post">
+
+    <div class="mb-3">
+        <label>Job Title</label>
+        <input asp-for="JobTitle" class="form-control" />
+    </div>
+
+
+    <div class="mb-3">
+        <label>Job Description</label>
+        <textarea asp-for="JobDescription" class="form-control"></textarea>
+    </div>
+
+
+    <div class="mb-3">
+        <label>Closing Date</label>
+        <input asp-for="ClosingDate"
+               type="date"
+               class="form-control" />
+    </div>
+
+
+    <button type="submit" class="btn btn-primary">
+        Add Vacancy
+    </button>
+
+</form>
